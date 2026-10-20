@@ -1,0 +1,13 @@
+node_modules/
+.wxt/
+.output/
+playwright-report/
+test-results/
+.env*
+!.env.example
+.DS_Store
+**/__pycache__/
+tools/embed-server/model/
+tools/embed-server/.venv/
+tools/embed-server/.venv-cpu/
+tools/embed-server/model-cpu/

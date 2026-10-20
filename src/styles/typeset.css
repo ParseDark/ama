@@ -1,0 +1,93 @@
+.prose {
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.prose p {
+  margin: 0 0 0.8em;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.2em 0 0.6em;
+}
+.prose h1 {
+  font-size: 1.6em;
+}
+.prose h2 {
+  font-size: 1.3em;
+}
+.prose h3 {
+  font-size: 1.1em;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.6em;
+  margin: 0.6em 0 1em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li {
+  margin: 0.25em 0;
+}
+.prose blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  color: var(--muted-foreground);
+  margin: 1em 0;
+}
+.prose code {
+  font-size: 0.9em;
+  background: var(--muted);
+  border-radius: 3px;
+  padding: 0.12em 0.3em;
+}
+.prose pre {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 10px;
+  line-height: 1.6;
+  max-width: 100%;
+  margin: 10px 0;
+}
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+.prose table {
+  border-collapse: collapse;
+  display: block;
+  overflow: auto;
+  max-width: 100%;
+  font-size: 11px;
+  margin: 10px 0;
+}
+.prose td,
+.prose th {
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.prose th {
+  background: var(--muted);
+  font-weight: 500;
+}
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose img {
+  max-width: 100%;
+}
+.prose hr {
+  margin: 1.5em 0;
+}

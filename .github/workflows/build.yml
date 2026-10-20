@@ -1,0 +1,60 @@
+name: Build extension
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Use public registry
+        run: |
+          printf 'registry=https://registry.npmjs.org/\nlegacy-peer-deps=true\n' > .npmrc
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('pnpm-lock.yaml')
+          p.write_text(re.sub(r',?\s*tarball: [^,}\n]+', '', p.read_text()))
+          PY
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm compile
+      - run: pnpm test
+      - name: Embedding HTTP contract tests (no MLX required)
+        run: python3 -m unittest discover -s tools/embed-server -p 'test_*.py'
+      - run: pnpm zip
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ama-chrome-${{ github.sha }}
+          path: .output/ama-*-chrome.zip
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload browser failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Use public registry
+        run: |
+          printf 'registry=https://registry.npmjs.org/\nlegacy-peer-deps=true\n' > .npmrc
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('pnpm-lock.yaml')
+          p.write_text(re.sub(r',?\s*tarball: [^,}\n]+', '', p.read_text()))
+          PY
+      - run: pnpm install --frozen-lockfile
+      - name: Verify version
+        run: node --input-type=module -e 'import fs from "node:fs"; if (process.env.TAG !== `v${JSON.parse(fs.readFileSync("package.json")).version}`) process.exit(1)'
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm compile
+      - run: python3 -m unittest discover -s tools/embed-server -p 'test_*.py'
+      - run: pnpm zip
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ama-chrome-${{ env.TAG }}
+          path: .output/ama-*-chrome.zip
+          include-hidden-files: true
+          if-no-files-found: error
+      - name: Publish ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" .output/ama-*-chrome.zip --clobber
+          else
+            gh release create "$TAG" .output/ama-*-chrome.zip --generate-notes
+          fi
+      - name: Upload browser failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-browser-failure-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: ignore

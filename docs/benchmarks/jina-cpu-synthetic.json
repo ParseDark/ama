@@ -1,0 +1,7702 @@
+{
+  "description": "Synthetic AMA reference-retrieval benchmark, authored locally; not MTEB or a representative production dataset. Expected labels fixed before inference.",
+  "corpus_sha256": "8b38b1c69e64160e415cea60d291e9c4220d8ade71596c6b4cdb84b81dfd0072",
+  "documents": 24,
+  "queries": 68,
+  "timings": [
+    {
+      "kind": "document",
+      "count": 8,
+      "seconds": 0.637
+    },
+    {
+      "kind": "document",
+      "count": 8,
+      "seconds": 0.719
+    },
+    {
+      "kind": "document",
+      "count": 8,
+      "seconds": 0.676
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.527
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.499
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.537
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.49
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.494
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.505
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.519
+    },
+    {
+      "kind": "query",
+      "count": 8,
+      "seconds": 0.49
+    },
+    {
+      "kind": "query",
+      "count": 4,
+      "seconds": 0.242
+    }
+  ],
+  "near_domain_note": "Unknown facts with a related topic are reported separately: a relevant reference is not proof that it answers the question. Do not interpret selection as a factual answer.",
+  "dimensions_note": "Reduced dimensions are obtained by truncating the 1024-d vector then renormalizing, matching the server's Matryoshka path.",
+  "sweep_note": "Descriptive same-set threshold sweep, not held-out tuning; application defaults unchanged.",
+  "results": [
+    {
+      "dimensions": 1024,
+      "minimum": 0.28,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 1.0,
+      "injection_precision": 0.4057971014492754,
+      "selected_per_positive": 2.4642857142857144,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 1.0,
+      "groups": {
+        "english": {
+          "n": 19,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_en_zh": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "chinese": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_zh_en": {
+          "n": 17,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "hard_paraphrase": {
+          "n": 10,
+          "top1": 0.6,
+          "recall_at_3": 1.0
+        }
+      },
+      "rows": [
+        {
+          "group": "english",
+          "text": "Where can I find the sprint task board?",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.669
+            },
+            {
+              "id": "meeting",
+              "score": 0.3411
+            },
+            {
+              "id": "oncall",
+              "score": 0.2533
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I request paid vacation?",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.6536
+            },
+            {
+              "id": "expense",
+              "score": 0.4442
+            },
+            {
+              "id": "oncall",
+              "score": 0.2008
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How should failed Kafka messages be retried?",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.8192
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.5863
+            },
+            {
+              "id": "redis",
+              "score": 0.3468
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I replay records by resetting consumer offsets?",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7334
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5395
+            },
+            {
+              "id": "redis",
+              "score": 0.3259
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where is the Postgres database restore procedure?",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.7101
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.4225
+            },
+            {
+              "id": "password",
+              "score": 0.3271
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How can I diagnose a slow SQL query?",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.739
+            },
+            {
+              "id": "redis",
+              "score": 0.3325
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3114
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "redis",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I prevent a cache stampede?",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7026
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.278
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.2738
+            }
+          ],
+          "selected": [
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What is the command to roll back a Kubernetes deployment?",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.8769
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3353
+            },
+            {
+              "id": "github",
+              "score": 0.3271
+            }
+          ],
+          "selected": [
+            "k8s",
+            "postgres-backup",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I publish the extension ZIP as a release?",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.6743
+            },
+            {
+              "id": "npm",
+              "score": 0.3301
+            },
+            {
+              "id": "mcp",
+              "score": 0.3085
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I install exactly the locked Node dependencies in CI?",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.8189
+            },
+            {
+              "id": "github",
+              "score": 0.3897
+            },
+            {
+              "id": "python",
+              "score": 0.383
+            }
+          ],
+          "selected": [
+            "npm",
+            "github",
+            "python"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What local endpoint and dimension do I use for Jina embeddings?",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.6326
+            },
+            {
+              "id": "license",
+              "score": 0.3822
+            },
+            {
+              "id": "llm",
+              "score": 0.2666
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where do I configure the chat provider API key?",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.5355
+            },
+            {
+              "id": "history",
+              "score": 0.3898
+            },
+            {
+              "id": "password",
+              "score": 0.3762
+            }
+          ],
+          "selected": [
+            "llm",
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I connect an MCP tool server?",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.6382
+            },
+            {
+              "id": "ssh",
+              "score": 0.4207
+            },
+            {
+              "id": "vpn",
+              "score": 0.387
+            }
+          ],
+          "selected": [
+            "mcp",
+            "ssh",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "I forgot my account password. How can I reset it?",
+          "expected": [
+            "password"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.7978
+            },
+            {
+              "id": "ssh",
+              "score": 0.3202
+            },
+            {
+              "id": "memory",
+              "score": 0.2528
+            }
+          ],
+          "selected": [
+            "password",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Does full-page capture restore my scroll position?",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.6069
+            },
+            {
+              "id": "memory",
+              "score": 0.2268
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.2245
+            }
+          ],
+          "selected": [
+            "screenshot"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where can I remove a saved preference?",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.463
+            },
+            {
+              "id": "password",
+              "score": 0.295
+            },
+            {
+              "id": "history",
+              "score": 0.2754
+            }
+          ],
+          "selected": [
+            "memory",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Can I reopen an earlier chat session?",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6316
+            },
+            {
+              "id": "password",
+              "score": 0.4165
+            },
+            {
+              "id": "llm",
+              "score": 0.3639
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I avoid installing packages into system Python?",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.6541
+            },
+            {
+              "id": "npm",
+              "score": 0.4233
+            },
+            {
+              "id": "memory",
+              "score": 0.2586
+            }
+          ],
+          "selected": [
+            "python",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Is Jina v5 licensed for commercial use?",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.8141
+            },
+            {
+              "id": "embedding",
+              "score": 0.4094
+            },
+            {
+              "id": "llm",
+              "score": 0.2143
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I connect to the company intranet VPN?",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.815
+            },
+            {
+              "id": "ssh",
+              "score": 0.3632
+            },
+            {
+              "id": "embedding",
+              "score": 0.2842
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I log in to a server using a private key?",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.7515
+            },
+            {
+              "id": "password",
+              "score": 0.3804
+            },
+            {
+              "id": "vpn",
+              "score": 0.3398
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Where do I submit travel invoices for reimbursement?",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.6505
+            },
+            {
+              "id": "leave",
+              "score": 0.2671
+            },
+            {
+              "id": "password",
+              "score": 0.1964
+            }
+          ],
+          "selected": [
+            "expense"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "When is our weekly team progress meeting?",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.7553
+            },
+            {
+              "id": "jira",
+              "score": 0.2846
+            },
+            {
+              "id": "history",
+              "score": 0.2664
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Who should I page during a production incident?",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.5754
+            },
+            {
+              "id": "screenshot",
+              "score": 0.2228
+            },
+            {
+              "id": "meeting",
+              "score": 0.2086
+            }
+          ],
+          "selected": [
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "公司内网连不上，VPN应该怎么连接？",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8615
+            },
+            {
+              "id": "ssh",
+              "score": 0.3808
+            },
+            {
+              "id": "embedding",
+              "score": 0.3255
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "服务器如何用私钥SSH登录？",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.8558
+            },
+            {
+              "id": "password",
+              "score": 0.3519
+            },
+            {
+              "id": "vpn",
+              "score": 0.3445
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "出差的发票在哪里提交报销？",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.699
+            },
+            {
+              "id": "leave",
+              "score": 0.3386
+            },
+            {
+              "id": "jira",
+              "score": 0.2225
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "每周项目同步会是几点？",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.7231
+            },
+            {
+              "id": "leave",
+              "score": 0.253
+            },
+            {
+              "id": "jira",
+              "score": 0.2271
+            }
+          ],
+          "selected": [
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "线上故障应该联系哪个值班人员？",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.5866
+            },
+            {
+              "id": "vpn",
+              "score": 0.2521
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.2222
+            }
+          ],
+          "selected": [
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "迭代任务看板在哪里？",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.489
+            },
+            {
+              "id": "meeting",
+              "score": 0.3656
+            },
+            {
+              "id": "oncall",
+              "score": 0.3229
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "年假申请要去哪个系统？",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.5719
+            },
+            {
+              "id": "expense",
+              "score": 0.5484
+            },
+            {
+              "id": "oncall",
+              "score": 0.2873
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "上次那个消息失败重试和死信队列方案",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.6349
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.3526
+            },
+            {
+              "id": "redis",
+              "score": 0.3464
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "Kafka怎么重置消费位点重新消费？",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7067
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.6374
+            },
+            {
+              "id": "redis",
+              "score": 0.3359
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "数据库备份恢复怎么操作？",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.6534
+            },
+            {
+              "id": "password",
+              "score": 0.3275
+            },
+            {
+              "id": "redis",
+              "score": 0.3078
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "password",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "SQL执行很慢，怎么看执行计划？",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.708
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3347
+            },
+            {
+              "id": "redis",
+              "score": 0.3117
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "postgres-backup",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何避免缓存击穿时大量请求打到数据库？",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.6608
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.422
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.2734
+            }
+          ],
+          "selected": [
+            "redis",
+            "postgres-slow"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "容器发布出问题，怎么回滚上一个版本？",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.4869
+            },
+            {
+              "id": "github",
+              "score": 0.4495
+            },
+            {
+              "id": "npm",
+              "score": 0.3703
+            }
+          ],
+          "selected": [
+            "k8s",
+            "github",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何自动打包并上传GitHub Release？",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.7134
+            },
+            {
+              "id": "npm",
+              "score": 0.3588
+            },
+            {
+              "id": "mcp",
+              "score": 0.3017
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "CI安装依赖时如何保证锁文件不变？",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.5811
+            },
+            {
+              "id": "redis",
+              "score": 0.2756
+            },
+            {
+              "id": "python",
+              "score": 0.2724
+            }
+          ],
+          "selected": [
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "本机向量服务的地址和维度填什么？",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.3914
+            },
+            {
+              "id": "mcp",
+              "score": 0.2977
+            },
+            {
+              "id": "vpn",
+              "score": 0.2573
+            }
+          ],
+          "selected": [
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "大模型的接口地址和密钥在哪里设置？",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.3673
+            },
+            {
+              "id": "embedding",
+              "score": 0.3402
+            },
+            {
+              "id": "mcp",
+              "score": 0.3341
+            }
+          ],
+          "selected": [
+            "llm",
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎么配置外部工具服务器？",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.5351
+            },
+            {
+              "id": "ssh",
+              "score": 0.4202
+            },
+            {
+              "id": "embedding",
+              "score": 0.3706
+            }
+          ],
+          "selected": [
+            "mcp",
+            "ssh",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎样修改或删除之前记住的偏好？",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.534
+            },
+            {
+              "id": "password",
+              "score": 0.3097
+            },
+            {
+              "id": "history",
+              "score": 0.3063
+            }
+          ],
+          "selected": [
+            "memory",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "以前的对话在哪里找？",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6014
+            },
+            {
+              "id": "llm",
+              "score": 0.3229
+            },
+            {
+              "id": "password",
+              "score": 0.2995
+            }
+          ],
+          "selected": [
+            "history",
+            "llm",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何用虚拟环境隔离Python依赖？",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.8025
+            },
+            {
+              "id": "npm",
+              "score": 0.432
+            },
+            {
+              "id": "embedding",
+              "score": 0.3028
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "这个Jina模型能商用吗？",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.6963
+            },
+            {
+              "id": "embedding",
+              "score": 0.3729
+            },
+            {
+              "id": "llm",
+              "score": 0.2814
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "I need a few days away from work, not a travel reimbursement.",
+          "expected": [
+            "leave"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.5271
+            },
+            {
+              "id": "leave",
+              "score": 0.4383
+            },
+            {
+              "id": "meeting",
+              "score": 0.1561
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The database lost records; I need yesterday's dump, not query optimization.",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.5697
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.4473
+            },
+            {
+              "id": "redis",
+              "score": 0.3686
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The consumer needs to reread old records, not change retry backoff.",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.57
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.4029
+            },
+            {
+              "id": "redis",
+              "score": 0.3538
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The release is broken; undo the cluster deployment, not a git commit.",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.5199
+            },
+            {
+              "id": "github",
+              "score": 0.4226
+            },
+            {
+              "id": "npm",
+              "score": 0.4102
+            }
+          ],
+          "selected": [
+            "k8s",
+            "github",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "别改聊天模型，我要测试向量服务是否连通。",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.439
+            },
+            {
+              "id": "embedding",
+              "score": 0.4186
+            },
+            {
+              "id": "vpn",
+              "score": 0.3631
+            }
+          ],
+          "selected": [
+            "llm",
+            "embedding",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不要删历史对话，只把记住的偏好关掉。",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.4957
+            },
+            {
+              "id": "history",
+              "score": 0.4413
+            },
+            {
+              "id": "password",
+              "score": 0.3073
+            }
+          ],
+          "selected": [
+            "memory",
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不是要请假，我要把出差费用报给财务。",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.6969
+            },
+            {
+              "id": "leave",
+              "score": 0.3735
+            },
+            {
+              "id": "meeting",
+              "score": 0.1824
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "我要查任务负责人，不是生产故障值班人。",
+          "expected": [
+            "jira"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.5494
+            },
+            {
+              "id": "jira",
+              "score": 0.3108
+            },
+            {
+              "id": "meeting",
+              "score": 0.2543
+            }
+          ],
+          "selected": [
+            "oncall",
+            "jira"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Use the frozen dependency graph, not a package version upgrade.",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.6289
+            },
+            {
+              "id": "python",
+              "score": 0.3561
+            },
+            {
+              "id": "github",
+              "score": 0.3307
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Capture the entire long web page rather than only what is visible.",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.5658
+            },
+            {
+              "id": "mcp",
+              "score": 0.2461
+            },
+            {
+              "id": "memory",
+              "score": 0.2421
+            }
+          ],
+          "selected": [
+            "screenshot"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "unrelated",
+          "text": "How do I bake a chocolate cake?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.1356
+            },
+            {
+              "id": "github",
+              "score": 0.1304
+            },
+            {
+              "id": "python",
+              "score": 0.1169
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "法国首都是哪里？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.1156
+            },
+            {
+              "id": "llm",
+              "score": 0.1149
+            },
+            {
+              "id": "python",
+              "score": 0.1102
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "What is the weather tomorrow in Shanghai?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.1497
+            },
+            {
+              "id": "llm",
+              "score": 0.1185
+            },
+            {
+              "id": "leave",
+              "score": 0.1002
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "帮我推荐一部科幻电影。",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.1322
+            },
+            {
+              "id": "oncall",
+              "score": 0.1255
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.1245
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "How often should I water a cactus?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.1775
+            },
+            {
+              "id": "leave",
+              "score": 0.1019
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.0853
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "如何练习游泳换气？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.1413
+            },
+            {
+              "id": "ssh",
+              "score": 0.128
+            },
+            {
+              "id": "redis",
+              "score": 0.1241
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "Explain the orbit of Neptune.",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.136
+            },
+            {
+              "id": "embedding",
+              "score": 0.1336
+            },
+            {
+              "id": "meeting",
+              "score": 0.1272
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "清蒸鲈鱼需要几分钟？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.1414
+            },
+            {
+              "id": "license",
+              "score": 0.1083
+            },
+            {
+              "id": "leave",
+              "score": 0.1071
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What are our database credentials?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.3506
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3192
+            },
+            {
+              "id": "ssh",
+              "score": 0.2809
+            }
+          ],
+          "selected": [
+            "password",
+            "postgres-backup",
+            "ssh"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "我们公司今年还剩多少年假？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.3676
+            },
+            {
+              "id": "expense",
+              "score": 0.2439
+            },
+            {
+              "id": "vpn",
+              "score": 0.1801
+            }
+          ],
+          "selected": [
+            "leave"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What is the latest price of the Jina API?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.4247
+            },
+            {
+              "id": "license",
+              "score": 0.3792
+            },
+            {
+              "id": "llm",
+              "score": 0.2946
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "llm"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "公司VPN账号密码是什么？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.6755
+            },
+            {
+              "id": "password",
+              "score": 0.4266
+            },
+            {
+              "id": "ssh",
+              "score": 0.3973
+            }
+          ],
+          "selected": [
+            "vpn",
+            "password",
+            "ssh"
+          ],
+          "selected_relevant": 0
+        }
+      ]
+    },
+    {
+      "dimensions": 512,
+      "minimum": 0.28,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 1.0,
+      "injection_precision": 0.35668789808917195,
+      "selected_per_positive": 2.8035714285714284,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 1.0,
+      "groups": {
+        "english": {
+          "n": 19,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_en_zh": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "chinese": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_zh_en": {
+          "n": 17,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "hard_paraphrase": {
+          "n": 10,
+          "top1": 0.6,
+          "recall_at_3": 1.0
+        }
+      },
+      "rows": [
+        {
+          "group": "english",
+          "text": "Where can I find the sprint task board?",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.6767
+            },
+            {
+              "id": "meeting",
+              "score": 0.4295
+            },
+            {
+              "id": "oncall",
+              "score": 0.3301
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I request paid vacation?",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.6759
+            },
+            {
+              "id": "expense",
+              "score": 0.4838
+            },
+            {
+              "id": "oncall",
+              "score": 0.2444
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How should failed Kafka messages be retried?",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.8438
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.6089
+            },
+            {
+              "id": "redis",
+              "score": 0.3815
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I replay records by resetting consumer offsets?",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7344
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5586
+            },
+            {
+              "id": "redis",
+              "score": 0.371
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where is the Postgres database restore procedure?",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.7562
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.4601
+            },
+            {
+              "id": "password",
+              "score": 0.4088
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How can I diagnose a slow SQL query?",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7409
+            },
+            {
+              "id": "redis",
+              "score": 0.3794
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3371
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "redis",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I prevent a cache stampede?",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7175
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.3494
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.3397
+            }
+          ],
+          "selected": [
+            "redis",
+            "kafka-retry",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What is the command to roll back a Kubernetes deployment?",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.8789
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.4124
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.4009
+            }
+          ],
+          "selected": [
+            "k8s",
+            "kafka-retry",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I publish the extension ZIP as a release?",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.6902
+            },
+            {
+              "id": "npm",
+              "score": 0.4252
+            },
+            {
+              "id": "mcp",
+              "score": 0.4116
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I install exactly the locked Node dependencies in CI?",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.8437
+            },
+            {
+              "id": "python",
+              "score": 0.4815
+            },
+            {
+              "id": "github",
+              "score": 0.4521
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What local endpoint and dimension do I use for Jina embeddings?",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.6609
+            },
+            {
+              "id": "license",
+              "score": 0.4302
+            },
+            {
+              "id": "llm",
+              "score": 0.3114
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where do I configure the chat provider API key?",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.5576
+            },
+            {
+              "id": "password",
+              "score": 0.4476
+            },
+            {
+              "id": "history",
+              "score": 0.4244
+            }
+          ],
+          "selected": [
+            "llm",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I connect an MCP tool server?",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.672
+            },
+            {
+              "id": "embedding",
+              "score": 0.4578
+            },
+            {
+              "id": "ssh",
+              "score": 0.4484
+            }
+          ],
+          "selected": [
+            "mcp",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "I forgot my account password. How can I reset it?",
+          "expected": [
+            "password"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.816
+            },
+            {
+              "id": "ssh",
+              "score": 0.3855
+            },
+            {
+              "id": "memory",
+              "score": 0.3725
+            }
+          ],
+          "selected": [
+            "password",
+            "ssh",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Does full-page capture restore my scroll position?",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.6269
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3138
+            },
+            {
+              "id": "password",
+              "score": 0.3103
+            }
+          ],
+          "selected": [
+            "screenshot",
+            "postgres-backup",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where can I remove a saved preference?",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.4785
+            },
+            {
+              "id": "password",
+              "score": 0.3823
+            },
+            {
+              "id": "history",
+              "score": 0.3067
+            }
+          ],
+          "selected": [
+            "memory",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Can I reopen an earlier chat session?",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6501
+            },
+            {
+              "id": "password",
+              "score": 0.4776
+            },
+            {
+              "id": "llm",
+              "score": 0.4212
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I avoid installing packages into system Python?",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.7047
+            },
+            {
+              "id": "npm",
+              "score": 0.5124
+            },
+            {
+              "id": "memory",
+              "score": 0.4074
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Is Jina v5 licensed for commercial use?",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.8115
+            },
+            {
+              "id": "embedding",
+              "score": 0.4655
+            },
+            {
+              "id": "mcp",
+              "score": 0.3094
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I connect to the company intranet VPN?",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8214
+            },
+            {
+              "id": "embedding",
+              "score": 0.4013
+            },
+            {
+              "id": "ssh",
+              "score": 0.3913
+            }
+          ],
+          "selected": [
+            "vpn",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I log in to a server using a private key?",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.7509
+            },
+            {
+              "id": "password",
+              "score": 0.4366
+            },
+            {
+              "id": "vpn",
+              "score": 0.4274
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Where do I submit travel invoices for reimbursement?",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.673
+            },
+            {
+              "id": "leave",
+              "score": 0.2981
+            },
+            {
+              "id": "password",
+              "score": 0.2284
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "When is our weekly team progress meeting?",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.7749
+            },
+            {
+              "id": "jira",
+              "score": 0.3967
+            },
+            {
+              "id": "history",
+              "score": 0.3363
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Who should I page during a production incident?",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.5747
+            },
+            {
+              "id": "screenshot",
+              "score": 0.288
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.2873
+            }
+          ],
+          "selected": [
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "公司内网连不上，VPN应该怎么连接？",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8656
+            },
+            {
+              "id": "ssh",
+              "score": 0.4397
+            },
+            {
+              "id": "embedding",
+              "score": 0.4352
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "服务器如何用私钥SSH登录？",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.8501
+            },
+            {
+              "id": "vpn",
+              "score": 0.4301
+            },
+            {
+              "id": "password",
+              "score": 0.3932
+            }
+          ],
+          "selected": [
+            "ssh",
+            "vpn",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "出差的发票在哪里提交报销？",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7163
+            },
+            {
+              "id": "leave",
+              "score": 0.3718
+            },
+            {
+              "id": "meeting",
+              "score": 0.2839
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "每周项目同步会是几点？",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.7633
+            },
+            {
+              "id": "jira",
+              "score": 0.349
+            },
+            {
+              "id": "leave",
+              "score": 0.3214
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "线上故障应该联系哪个值班人员？",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.6126
+            },
+            {
+              "id": "embedding",
+              "score": 0.3292
+            },
+            {
+              "id": "password",
+              "score": 0.315
+            }
+          ],
+          "selected": [
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "迭代任务看板在哪里？",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.5601
+            },
+            {
+              "id": "meeting",
+              "score": 0.441
+            },
+            {
+              "id": "oncall",
+              "score": 0.4077
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "年假申请要去哪个系统？",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.6122
+            },
+            {
+              "id": "expense",
+              "score": 0.5684
+            },
+            {
+              "id": "oncall",
+              "score": 0.3635
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "上次那个消息失败重试和死信队列方案",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.6847
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.4301
+            },
+            {
+              "id": "redis",
+              "score": 0.4109
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "Kafka怎么重置消费位点重新消费？",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7261
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.6688
+            },
+            {
+              "id": "k8s",
+              "score": 0.4283
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "数据库备份恢复怎么操作？",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.6805
+            },
+            {
+              "id": "password",
+              "score": 0.4052
+            },
+            {
+              "id": "redis",
+              "score": 0.4049
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "password",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "SQL执行很慢，怎么看执行计划？",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7158
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.386
+            },
+            {
+              "id": "redis",
+              "score": 0.3603
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "postgres-backup",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何避免缓存击穿时大量请求打到数据库？",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.6718
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.442
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.325
+            }
+          ],
+          "selected": [
+            "redis",
+            "postgres-slow",
+            "kafka-retry"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "容器发布出问题，怎么回滚上一个版本？",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.517
+            },
+            {
+              "id": "github",
+              "score": 0.4775
+            },
+            {
+              "id": "python",
+              "score": 0.4677
+            }
+          ],
+          "selected": [
+            "k8s",
+            "github",
+            "python"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何自动打包并上传GitHub Release？",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.7364
+            },
+            {
+              "id": "npm",
+              "score": 0.4391
+            },
+            {
+              "id": "mcp",
+              "score": 0.3757
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "CI安装依赖时如何保证锁文件不变？",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.6428
+            },
+            {
+              "id": "python",
+              "score": 0.4199
+            },
+            {
+              "id": "redis",
+              "score": 0.3564
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "本机向量服务的地址和维度填什么？",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.4699
+            },
+            {
+              "id": "mcp",
+              "score": 0.3634
+            },
+            {
+              "id": "vpn",
+              "score": 0.3408
+            }
+          ],
+          "selected": [
+            "embedding",
+            "mcp",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "大模型的接口地址和密钥在哪里设置？",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.4307
+            },
+            {
+              "id": "embedding",
+              "score": 0.4237
+            },
+            {
+              "id": "mcp",
+              "score": 0.4006
+            }
+          ],
+          "selected": [
+            "llm",
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎么配置外部工具服务器？",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.5964
+            },
+            {
+              "id": "embedding",
+              "score": 0.4987
+            },
+            {
+              "id": "ssh",
+              "score": 0.4629
+            }
+          ],
+          "selected": [
+            "mcp",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎样修改或删除之前记住的偏好？",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.5483
+            },
+            {
+              "id": "password",
+              "score": 0.4158
+            },
+            {
+              "id": "history",
+              "score": 0.3417
+            }
+          ],
+          "selected": [
+            "memory",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "以前的对话在哪里找？",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6307
+            },
+            {
+              "id": "llm",
+              "score": 0.4003
+            },
+            {
+              "id": "password",
+              "score": 0.3769
+            }
+          ],
+          "selected": [
+            "history",
+            "llm",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何用虚拟环境隔离Python依赖？",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.8305
+            },
+            {
+              "id": "npm",
+              "score": 0.5125
+            },
+            {
+              "id": "embedding",
+              "score": 0.4211
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "这个Jina模型能商用吗？",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.7156
+            },
+            {
+              "id": "embedding",
+              "score": 0.4068
+            },
+            {
+              "id": "llm",
+              "score": 0.3293
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "I need a few days away from work, not a travel reimbursement.",
+          "expected": [
+            "leave"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.5636
+            },
+            {
+              "id": "leave",
+              "score": 0.4374
+            },
+            {
+              "id": "meeting",
+              "score": 0.2324
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The database lost records; I need yesterday's dump, not query optimization.",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.6078
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.489
+            },
+            {
+              "id": "redis",
+              "score": 0.425
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The consumer needs to reread old records, not change retry backoff.",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.5886
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.433
+            },
+            {
+              "id": "redis",
+              "score": 0.4249
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The release is broken; undo the cluster deployment, not a git commit.",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.5132
+            },
+            {
+              "id": "npm",
+              "score": 0.4684
+            },
+            {
+              "id": "github",
+              "score": 0.4609
+            }
+          ],
+          "selected": [
+            "k8s",
+            "npm",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "别改聊天模型，我要测试向量服务是否连通。",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.4941
+            },
+            {
+              "id": "embedding",
+              "score": 0.4811
+            },
+            {
+              "id": "vpn",
+              "score": 0.4087
+            }
+          ],
+          "selected": [
+            "llm",
+            "embedding",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不要删历史对话，只把记住的偏好关掉。",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.5212
+            },
+            {
+              "id": "history",
+              "score": 0.473
+            },
+            {
+              "id": "password",
+              "score": 0.3955
+            }
+          ],
+          "selected": [
+            "memory",
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不是要请假，我要把出差费用报给财务。",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7137
+            },
+            {
+              "id": "leave",
+              "score": 0.3668
+            },
+            {
+              "id": "meeting",
+              "score": 0.209
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "我要查任务负责人，不是生产故障值班人。",
+          "expected": [
+            "jira"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.5309
+            },
+            {
+              "id": "jira",
+              "score": 0.364
+            },
+            {
+              "id": "meeting",
+              "score": 0.3223
+            }
+          ],
+          "selected": [
+            "oncall",
+            "jira",
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Use the frozen dependency graph, not a package version upgrade.",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.6719
+            },
+            {
+              "id": "python",
+              "score": 0.4751
+            },
+            {
+              "id": "github",
+              "score": 0.4424
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Capture the entire long web page rather than only what is visible.",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.6175
+            },
+            {
+              "id": "mcp",
+              "score": 0.343
+            },
+            {
+              "id": "llm",
+              "score": 0.3385
+            }
+          ],
+          "selected": [
+            "screenshot"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "unrelated",
+          "text": "How do I bake a chocolate cake?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.1978
+            },
+            {
+              "id": "password",
+              "score": 0.1796
+            },
+            {
+              "id": "python",
+              "score": 0.1793
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "法国首都是哪里？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.2167
+            },
+            {
+              "id": "llm",
+              "score": 0.2088
+            },
+            {
+              "id": "license",
+              "score": 0.1982
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "What is the weather tomorrow in Shanghai?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.2266
+            },
+            {
+              "id": "github",
+              "score": 0.1858
+            },
+            {
+              "id": "leave",
+              "score": 0.1693
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "帮我推荐一部科幻电影。",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.2016
+            },
+            {
+              "id": "embedding",
+              "score": 0.1988
+            },
+            {
+              "id": "python",
+              "score": 0.1966
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "How often should I water a cactus?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.2186
+            },
+            {
+              "id": "github",
+              "score": 0.1335
+            },
+            {
+              "id": "npm",
+              "score": 0.1199
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "如何练习游泳换气？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.2063
+            },
+            {
+              "id": "password",
+              "score": 0.1803
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.1756
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "Explain the orbit of Neptune.",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.2
+            },
+            {
+              "id": "embedding",
+              "score": 0.1856
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.1849
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "清蒸鲈鱼需要几分钟？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.2204
+            },
+            {
+              "id": "ssh",
+              "score": 0.1978
+            },
+            {
+              "id": "oncall",
+              "score": 0.1923
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What are our database credentials?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.3913
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3715
+            },
+            {
+              "id": "mcp",
+              "score": 0.353
+            }
+          ],
+          "selected": [
+            "password",
+            "postgres-backup",
+            "mcp"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "我们公司今年还剩多少年假？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.3654
+            },
+            {
+              "id": "expense",
+              "score": 0.2795
+            },
+            {
+              "id": "oncall",
+              "score": 0.2133
+            }
+          ],
+          "selected": [
+            "leave"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What is the latest price of the Jina API?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.4406
+            },
+            {
+              "id": "license",
+              "score": 0.4193
+            },
+            {
+              "id": "llm",
+              "score": 0.3149
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "llm"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "公司VPN账号密码是什么？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.6979
+            },
+            {
+              "id": "password",
+              "score": 0.4684
+            },
+            {
+              "id": "ssh",
+              "score": 0.4592
+            }
+          ],
+          "selected": [
+            "vpn",
+            "password",
+            "ssh"
+          ],
+          "selected_relevant": 0
+        }
+      ]
+    },
+    {
+      "dimensions": 256,
+      "minimum": 0.28,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9553571428571429,
+      "injection_recall": 1.0,
+      "injection_precision": 0.34782608695652173,
+      "selected_per_positive": 2.875,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.5,
+      "near_domain_unknown_selected_rate": 1.0,
+      "groups": {
+        "english": {
+          "n": 19,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_en_zh": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "chinese": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_zh_en": {
+          "n": 17,
+          "top1": 0.9411764705882353,
+          "recall_at_3": 1.0
+        },
+        "hard_paraphrase": {
+          "n": 10,
+          "top1": 0.7,
+          "recall_at_3": 1.0
+        }
+      },
+      "rows": [
+        {
+          "group": "english",
+          "text": "Where can I find the sprint task board?",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.7129
+            },
+            {
+              "id": "meeting",
+              "score": 0.5323
+            },
+            {
+              "id": "oncall",
+              "score": 0.4741
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I request paid vacation?",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.6983
+            },
+            {
+              "id": "expense",
+              "score": 0.5212
+            },
+            {
+              "id": "oncall",
+              "score": 0.3369
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How should failed Kafka messages be retried?",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.8707
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.6203
+            },
+            {
+              "id": "redis",
+              "score": 0.4824
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I replay records by resetting consumer offsets?",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7723
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5995
+            },
+            {
+              "id": "redis",
+              "score": 0.4488
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where is the Postgres database restore procedure?",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.7984
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.592
+            },
+            {
+              "id": "password",
+              "score": 0.5261
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How can I diagnose a slow SQL query?",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7525
+            },
+            {
+              "id": "redis",
+              "score": 0.4198
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.4179
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "redis",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I prevent a cache stampede?",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7666
+            },
+            {
+              "id": "memory",
+              "score": 0.4537
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.4446
+            }
+          ],
+          "selected": [
+            "redis",
+            "memory",
+            "kafka-retry"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What is the command to roll back a Kubernetes deployment?",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.8791
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5295
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.5256
+            }
+          ],
+          "selected": [
+            "k8s",
+            "kafka-retry",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I publish the extension ZIP as a release?",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.7386
+            },
+            {
+              "id": "npm",
+              "score": 0.5551
+            },
+            {
+              "id": "mcp",
+              "score": 0.4942
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I install exactly the locked Node dependencies in CI?",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.8732
+            },
+            {
+              "id": "python",
+              "score": 0.5573
+            },
+            {
+              "id": "github",
+              "score": 0.5088
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What local endpoint and dimension do I use for Jina embeddings?",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.7035
+            },
+            {
+              "id": "license",
+              "score": 0.5744
+            },
+            {
+              "id": "llm",
+              "score": 0.3962
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where do I configure the chat provider API key?",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.6085
+            },
+            {
+              "id": "password",
+              "score": 0.5181
+            },
+            {
+              "id": "history",
+              "score": 0.5052
+            }
+          ],
+          "selected": [
+            "llm",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I connect an MCP tool server?",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.7188
+            },
+            {
+              "id": "embedding",
+              "score": 0.5794
+            },
+            {
+              "id": "vpn",
+              "score": 0.559
+            }
+          ],
+          "selected": [
+            "mcp",
+            "embedding",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "I forgot my account password. How can I reset it?",
+          "expected": [
+            "password"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.8567
+            },
+            {
+              "id": "ssh",
+              "score": 0.5144
+            },
+            {
+              "id": "redis",
+              "score": 0.4604
+            }
+          ],
+          "selected": [
+            "password",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Does full-page capture restore my scroll position?",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.6687
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.421
+            },
+            {
+              "id": "password",
+              "score": 0.3969
+            }
+          ],
+          "selected": [
+            "screenshot",
+            "postgres-backup",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where can I remove a saved preference?",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.5133
+            },
+            {
+              "id": "password",
+              "score": 0.4988
+            },
+            {
+              "id": "history",
+              "score": 0.4462
+            }
+          ],
+          "selected": [
+            "memory",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Can I reopen an earlier chat session?",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6873
+            },
+            {
+              "id": "password",
+              "score": 0.5231
+            },
+            {
+              "id": "llm",
+              "score": 0.4418
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I avoid installing packages into system Python?",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.7873
+            },
+            {
+              "id": "npm",
+              "score": 0.6244
+            },
+            {
+              "id": "memory",
+              "score": 0.5163
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Is Jina v5 licensed for commercial use?",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.8324
+            },
+            {
+              "id": "embedding",
+              "score": 0.6089
+            },
+            {
+              "id": "mcp",
+              "score": 0.4308
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I connect to the company intranet VPN?",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8545
+            },
+            {
+              "id": "embedding",
+              "score": 0.5101
+            },
+            {
+              "id": "ssh",
+              "score": 0.495
+            }
+          ],
+          "selected": [
+            "vpn",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I log in to a server using a private key?",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.7877
+            },
+            {
+              "id": "password",
+              "score": 0.5619
+            },
+            {
+              "id": "vpn",
+              "score": 0.5321
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Where do I submit travel invoices for reimbursement?",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7149
+            },
+            {
+              "id": "leave",
+              "score": 0.3383
+            },
+            {
+              "id": "meeting",
+              "score": 0.3075
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "When is our weekly team progress meeting?",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.8091
+            },
+            {
+              "id": "jira",
+              "score": 0.4761
+            },
+            {
+              "id": "history",
+              "score": 0.4214
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Who should I page during a production incident?",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.6444
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.4019
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.3773
+            }
+          ],
+          "selected": [
+            "oncall",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "公司内网连不上，VPN应该怎么连接？",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8883
+            },
+            {
+              "id": "ssh",
+              "score": 0.5334
+            },
+            {
+              "id": "embedding",
+              "score": 0.5268
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "服务器如何用私钥SSH登录？",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.8744
+            },
+            {
+              "id": "vpn",
+              "score": 0.5517
+            },
+            {
+              "id": "password",
+              "score": 0.5165
+            }
+          ],
+          "selected": [
+            "ssh",
+            "vpn",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "出差的发票在哪里提交报销？",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7549
+            },
+            {
+              "id": "password",
+              "score": 0.4082
+            },
+            {
+              "id": "leave",
+              "score": 0.397
+            }
+          ],
+          "selected": [
+            "expense",
+            "password",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "每周项目同步会是几点？",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.7974
+            },
+            {
+              "id": "jira",
+              "score": 0.407
+            },
+            {
+              "id": "leave",
+              "score": 0.3903
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "线上故障应该联系哪个值班人员？",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.6804
+            },
+            {
+              "id": "vpn",
+              "score": 0.4478
+            },
+            {
+              "id": "embedding",
+              "score": 0.4411
+            }
+          ],
+          "selected": [
+            "oncall",
+            "vpn",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "迭代任务看板在哪里？",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.592
+            },
+            {
+              "id": "meeting",
+              "score": 0.5589
+            },
+            {
+              "id": "oncall",
+              "score": 0.5391
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "年假申请要去哪个系统？",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.6812
+            },
+            {
+              "id": "expense",
+              "score": 0.6282
+            },
+            {
+              "id": "oncall",
+              "score": 0.4828
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "上次那个消息失败重试和死信队列方案",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.7404
+            },
+            {
+              "id": "oncall",
+              "score": 0.5538
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.5404
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "oncall",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "Kafka怎么重置消费位点重新消费？",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.775
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.7127
+            },
+            {
+              "id": "redis",
+              "score": 0.4937
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "数据库备份恢复怎么操作？",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.7385
+            },
+            {
+              "id": "redis",
+              "score": 0.5345
+            },
+            {
+              "id": "password",
+              "score": 0.5086
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "redis",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "SQL执行很慢，怎么看执行计划？",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7375
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.4611
+            },
+            {
+              "id": "redis",
+              "score": 0.4385
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "postgres-backup",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何避免缓存击穿时大量请求打到数据库？",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7087
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.4793
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.4311
+            }
+          ],
+          "selected": [
+            "redis",
+            "postgres-slow",
+            "kafka-retry"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "容器发布出问题，怎么回滚上一个版本？",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.6093
+            },
+            {
+              "id": "npm",
+              "score": 0.5933
+            },
+            {
+              "id": "memory",
+              "score": 0.5819
+            }
+          ],
+          "selected": [
+            "k8s",
+            "npm",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何自动打包并上传GitHub Release？",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.7447
+            },
+            {
+              "id": "npm",
+              "score": 0.5351
+            },
+            {
+              "id": "mcp",
+              "score": 0.4261
+            }
+          ],
+          "selected": [
+            "github",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "CI安装依赖时如何保证锁文件不变？",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.7294
+            },
+            {
+              "id": "python",
+              "score": 0.507
+            },
+            {
+              "id": "github",
+              "score": 0.469
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "本机向量服务的地址和维度填什么？",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.5968
+            },
+            {
+              "id": "mcp",
+              "score": 0.5034
+            },
+            {
+              "id": "memory",
+              "score": 0.4699
+            }
+          ],
+          "selected": [
+            "embedding",
+            "mcp",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "大模型的接口地址和密钥在哪里设置？",
+          "expected": [
+            "llm"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.5335
+            },
+            {
+              "id": "mcp",
+              "score": 0.5057
+            },
+            {
+              "id": "llm",
+              "score": 0.5007
+            }
+          ],
+          "selected": [
+            "embedding",
+            "mcp",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎么配置外部工具服务器？",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.635
+            },
+            {
+              "id": "embedding",
+              "score": 0.6103
+            },
+            {
+              "id": "ssh",
+              "score": 0.541
+            }
+          ],
+          "selected": [
+            "mcp",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎样修改或删除之前记住的偏好？",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.6069
+            },
+            {
+              "id": "password",
+              "score": 0.5278
+            },
+            {
+              "id": "history",
+              "score": 0.4646
+            }
+          ],
+          "selected": [
+            "memory",
+            "password",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "以前的对话在哪里找？",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6764
+            },
+            {
+              "id": "password",
+              "score": 0.4499
+            },
+            {
+              "id": "llm",
+              "score": 0.4446
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何用虚拟环境隔离Python依赖？",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.8638
+            },
+            {
+              "id": "npm",
+              "score": 0.611
+            },
+            {
+              "id": "embedding",
+              "score": 0.5012
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "这个Jina模型能商用吗？",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.7436
+            },
+            {
+              "id": "embedding",
+              "score": 0.5325
+            },
+            {
+              "id": "llm",
+              "score": 0.4303
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "I need a few days away from work, not a travel reimbursement.",
+          "expected": [
+            "leave"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.6189
+            },
+            {
+              "id": "leave",
+              "score": 0.511
+            },
+            {
+              "id": "meeting",
+              "score": 0.3296
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The database lost records; I need yesterday's dump, not query optimization.",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.6492
+            },
+            {
+              "id": "redis",
+              "score": 0.5595
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.5062
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "redis",
+            "postgres-slow"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The consumer needs to reread old records, not change retry backoff.",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.6432
+            },
+            {
+              "id": "redis",
+              "score": 0.5163
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.4945
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "redis",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The release is broken; undo the cluster deployment, not a git commit.",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.5782
+            },
+            {
+              "id": "npm",
+              "score": 0.5743
+            },
+            {
+              "id": "redis",
+              "score": 0.5584
+            }
+          ],
+          "selected": [
+            "k8s",
+            "npm",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "别改聊天模型，我要测试向量服务是否连通。",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.5676
+            },
+            {
+              "id": "llm",
+              "score": 0.5673
+            },
+            {
+              "id": "vpn",
+              "score": 0.5153
+            }
+          ],
+          "selected": [
+            "embedding",
+            "llm",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不要删历史对话，只把记住的偏好关掉。",
+          "expected": [
+            "memory"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.5701
+            },
+            {
+              "id": "history",
+              "score": 0.5549
+            },
+            {
+              "id": "password",
+              "score": 0.4731
+            }
+          ],
+          "selected": [
+            "memory",
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不是要请假，我要把出差费用报给财务。",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7421
+            },
+            {
+              "id": "leave",
+              "score": 0.4075
+            },
+            {
+              "id": "meeting",
+              "score": 0.2851
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave",
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "我要查任务负责人，不是生产故障值班人。",
+          "expected": [
+            "jira"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.6312
+            },
+            {
+              "id": "meeting",
+              "score": 0.4287
+            },
+            {
+              "id": "jira",
+              "score": 0.4144
+            }
+          ],
+          "selected": [
+            "oncall",
+            "meeting",
+            "jira"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Use the frozen dependency graph, not a package version upgrade.",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.7456
+            },
+            {
+              "id": "python",
+              "score": 0.5877
+            },
+            {
+              "id": "memory",
+              "score": 0.5226
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Capture the entire long web page rather than only what is visible.",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.7178
+            },
+            {
+              "id": "llm",
+              "score": 0.5051
+            },
+            {
+              "id": "history",
+              "score": 0.4975
+            }
+          ],
+          "selected": [
+            "screenshot",
+            "llm",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "unrelated",
+          "text": "How do I bake a chocolate cake?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.2816
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.2779
+            },
+            {
+              "id": "python",
+              "score": 0.2633
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "法国首都是哪里？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.33
+            },
+            {
+              "id": "meeting",
+              "score": 0.3183
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.3118
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "What is the weather tomorrow in Shanghai?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.2983
+            },
+            {
+              "id": "llm",
+              "score": 0.2928
+            },
+            {
+              "id": "expense",
+              "score": 0.278
+            }
+          ],
+          "selected": [
+            "meeting",
+            "llm"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "帮我推荐一部科幻电影。",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.3144
+            },
+            {
+              "id": "memory",
+              "score": 0.3022
+            },
+            {
+              "id": "screenshot",
+              "score": 0.2991
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "How often should I water a cactus?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.3108
+            },
+            {
+              "id": "github",
+              "score": 0.2361
+            },
+            {
+              "id": "leave",
+              "score": 0.2331
+            }
+          ],
+          "selected": [
+            "meeting"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "如何练习游泳换气？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.3406
+            },
+            {
+              "id": "password",
+              "score": 0.3273
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.2934
+            }
+          ],
+          "selected": [
+            "redis",
+            "password"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "Explain the orbit of Neptune.",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.2794
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.2588
+            },
+            {
+              "id": "meeting",
+              "score": 0.249
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "清蒸鲈鱼需要几分钟？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.3296
+            },
+            {
+              "id": "mcp",
+              "score": 0.2794
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.2769
+            }
+          ],
+          "selected": [
+            "license"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What are our database credentials?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.4705
+            },
+            {
+              "id": "vpn",
+              "score": 0.4682
+            },
+            {
+              "id": "mcp",
+              "score": 0.4663
+            }
+          ],
+          "selected": [
+            "ssh",
+            "vpn",
+            "mcp"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "我们公司今年还剩多少年假？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.4367
+            },
+            {
+              "id": "expense",
+              "score": 0.3446
+            },
+            {
+              "id": "vpn",
+              "score": 0.2917
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What is the latest price of the Jina API?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.5527
+            },
+            {
+              "id": "license",
+              "score": 0.5189
+            },
+            {
+              "id": "jira",
+              "score": 0.4492
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "jira"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "公司VPN账号密码是什么？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.7407
+            },
+            {
+              "id": "ssh",
+              "score": 0.5702
+            },
+            {
+              "id": "password",
+              "score": 0.562
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "password"
+          ],
+          "selected_relevant": 0
+        }
+      ]
+    },
+    {
+      "dimensions": 128,
+      "minimum": 0.28,
+      "positive_queries": 56,
+      "top1": 0.8928571428571429,
+      "recall_at_3": 1.0,
+      "mrr": 0.9375,
+      "injection_recall": 1.0,
+      "injection_precision": 0.3522012578616352,
+      "selected_per_positive": 2.8392857142857144,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.875,
+      "near_domain_unknown_selected_rate": 1.0,
+      "groups": {
+        "english": {
+          "n": 19,
+          "top1": 0.9473684210526315,
+          "recall_at_3": 1.0
+        },
+        "cross_en_zh": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "chinese": {
+          "n": 5,
+          "top1": 1.0,
+          "recall_at_3": 1.0
+        },
+        "cross_zh_en": {
+          "n": 17,
+          "top1": 0.9411764705882353,
+          "recall_at_3": 1.0
+        },
+        "hard_paraphrase": {
+          "n": 10,
+          "top1": 0.6,
+          "recall_at_3": 1.0
+        }
+      },
+      "rows": [
+        {
+          "group": "english",
+          "text": "Where can I find the sprint task board?",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.7617
+            },
+            {
+              "id": "meeting",
+              "score": 0.6227
+            },
+            {
+              "id": "oncall",
+              "score": 0.5515
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I request paid vacation?",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.7279
+            },
+            {
+              "id": "expense",
+              "score": 0.5972
+            },
+            {
+              "id": "history",
+              "score": 0.4622
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How should failed Kafka messages be retried?",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.9047
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.7281
+            },
+            {
+              "id": "k8s",
+              "score": 0.612
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "kafka-offset",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I replay records by resetting consumer offsets?",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.7984
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.6741
+            },
+            {
+              "id": "redis",
+              "score": 0.5344
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where is the Postgres database restore procedure?",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.8419
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.6876
+            },
+            {
+              "id": "k8s",
+              "score": 0.6691
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "postgres-slow",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How can I diagnose a slow SQL query?",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7685
+            },
+            {
+              "id": "embedding",
+              "score": 0.5489
+            },
+            {
+              "id": "python",
+              "score": 0.5455
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "embedding",
+            "python"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I prevent a cache stampede?",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7971
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5567
+            },
+            {
+              "id": "k8s",
+              "score": 0.5482
+            }
+          ],
+          "selected": [
+            "redis",
+            "kafka-retry",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What is the command to roll back a Kubernetes deployment?",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.9123
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.6349
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.6075
+            }
+          ],
+          "selected": [
+            "k8s",
+            "kafka-retry",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I publish the extension ZIP as a release?",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.817
+            },
+            {
+              "id": "npm",
+              "score": 0.6619
+            },
+            {
+              "id": "memory",
+              "score": 0.6114
+            }
+          ],
+          "selected": [
+            "github",
+            "npm",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I install exactly the locked Node dependencies in CI?",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.8942
+            },
+            {
+              "id": "github",
+              "score": 0.6352
+            },
+            {
+              "id": "python",
+              "score": 0.6035
+            }
+          ],
+          "selected": [
+            "npm",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "What local endpoint and dimension do I use for Jina embeddings?",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.7655
+            },
+            {
+              "id": "license",
+              "score": 0.6703
+            },
+            {
+              "id": "llm",
+              "score": 0.5123
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where do I configure the chat provider API key?",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.6968
+            },
+            {
+              "id": "password",
+              "score": 0.6476
+            },
+            {
+              "id": "mcp",
+              "score": 0.6223
+            }
+          ],
+          "selected": [
+            "llm",
+            "password",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I connect an MCP tool server?",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.8106
+            },
+            {
+              "id": "vpn",
+              "score": 0.6484
+            },
+            {
+              "id": "embedding",
+              "score": 0.6322
+            }
+          ],
+          "selected": [
+            "mcp",
+            "vpn",
+            "embedding"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "I forgot my account password. How can I reset it?",
+          "expected": [
+            "password"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.9056
+            },
+            {
+              "id": "ssh",
+              "score": 0.6052
+            },
+            {
+              "id": "redis",
+              "score": 0.5792
+            }
+          ],
+          "selected": [
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Does full-page capture restore my scroll position?",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.6934
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.6015
+            },
+            {
+              "id": "password",
+              "score": 0.509
+            }
+          ],
+          "selected": [
+            "screenshot",
+            "postgres-backup",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Where can I remove a saved preference?",
+          "expected": [
+            "memory"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.6403
+            },
+            {
+              "id": "memory",
+              "score": 0.5795
+            },
+            {
+              "id": "history",
+              "score": 0.5664
+            }
+          ],
+          "selected": [
+            "password",
+            "memory",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Can I reopen an earlier chat session?",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.727
+            },
+            {
+              "id": "password",
+              "score": 0.6128
+            },
+            {
+              "id": "jira",
+              "score": 0.5417
+            }
+          ],
+          "selected": [
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "How do I avoid installing packages into system Python?",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.849
+            },
+            {
+              "id": "npm",
+              "score": 0.6944
+            },
+            {
+              "id": "memory",
+              "score": 0.6057
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "english",
+          "text": "Is Jina v5 licensed for commercial use?",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.8633
+            },
+            {
+              "id": "embedding",
+              "score": 0.73
+            },
+            {
+              "id": "llm",
+              "score": 0.5958
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I connect to the company intranet VPN?",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8638
+            },
+            {
+              "id": "embedding",
+              "score": 0.6134
+            },
+            {
+              "id": "mcp",
+              "score": 0.6039
+            }
+          ],
+          "selected": [
+            "vpn",
+            "embedding",
+            "mcp"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "How do I log in to a server using a private key?",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.8434
+            },
+            {
+              "id": "password",
+              "score": 0.6846
+            },
+            {
+              "id": "vpn",
+              "score": 0.623
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Where do I submit travel invoices for reimbursement?",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7545
+            },
+            {
+              "id": "history",
+              "score": 0.4182
+            },
+            {
+              "id": "password",
+              "score": 0.4146
+            }
+          ],
+          "selected": [
+            "expense",
+            "history",
+            "password"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "When is our weekly team progress meeting?",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.8509
+            },
+            {
+              "id": "jira",
+              "score": 0.6228
+            },
+            {
+              "id": "history",
+              "score": 0.5227
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_en_zh",
+          "text": "Who should I page during a production incident?",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.7183
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.5361
+            },
+            {
+              "id": "screenshot",
+              "score": 0.4996
+            }
+          ],
+          "selected": [
+            "oncall",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "公司内网连不上，VPN应该怎么连接？",
+          "expected": [
+            "vpn"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.8973
+            },
+            {
+              "id": "embedding",
+              "score": 0.6141
+            },
+            {
+              "id": "ssh",
+              "score": 0.6015
+            }
+          ],
+          "selected": [
+            "vpn",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "服务器如何用私钥SSH登录？",
+          "expected": [
+            "ssh"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "ssh",
+              "score": 0.9062
+            },
+            {
+              "id": "password",
+              "score": 0.6388
+            },
+            {
+              "id": "vpn",
+              "score": 0.6081
+            }
+          ],
+          "selected": [
+            "ssh",
+            "password",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "出差的发票在哪里提交报销？",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7987
+            },
+            {
+              "id": "password",
+              "score": 0.5064
+            },
+            {
+              "id": "leave",
+              "score": 0.4824
+            }
+          ],
+          "selected": [
+            "expense",
+            "password",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "每周项目同步会是几点？",
+          "expected": [
+            "meeting"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.8609
+            },
+            {
+              "id": "jira",
+              "score": 0.5631
+            },
+            {
+              "id": "leave",
+              "score": 0.5392
+            }
+          ],
+          "selected": [
+            "meeting",
+            "jira",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "chinese",
+          "text": "线上故障应该联系哪个值班人员？",
+          "expected": [
+            "oncall"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.7223
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.5608
+            },
+            {
+              "id": "vpn",
+              "score": 0.5525
+            }
+          ],
+          "selected": [
+            "oncall",
+            "kafka-retry",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "迭代任务看板在哪里？",
+          "expected": [
+            "jira"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "jira",
+              "score": 0.6865
+            },
+            {
+              "id": "meeting",
+              "score": 0.6277
+            },
+            {
+              "id": "oncall",
+              "score": 0.6219
+            }
+          ],
+          "selected": [
+            "jira",
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "年假申请要去哪个系统？",
+          "expected": [
+            "leave"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.7355
+            },
+            {
+              "id": "expense",
+              "score": 0.6649
+            },
+            {
+              "id": "llm",
+              "score": 0.5634
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "上次那个消息失败重试和死信队列方案",
+          "expected": [
+            "kafka-retry"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.7729
+            },
+            {
+              "id": "oncall",
+              "score": 0.6708
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.6574
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "oncall",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "Kafka怎么重置消费位点重新消费？",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.8141
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.771
+            },
+            {
+              "id": "k8s",
+              "score": 0.6001
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "kafka-retry",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "数据库备份恢复怎么操作？",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.7917
+            },
+            {
+              "id": "redis",
+              "score": 0.6477
+            },
+            {
+              "id": "k8s",
+              "score": 0.6382
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "redis",
+            "k8s"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "SQL执行很慢，怎么看执行计划？",
+          "expected": [
+            "postgres-slow"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.7713
+            },
+            {
+              "id": "embedding",
+              "score": 0.598
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.5622
+            }
+          ],
+          "selected": [
+            "postgres-slow",
+            "embedding",
+            "postgres-backup"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何避免缓存击穿时大量请求打到数据库？",
+          "expected": [
+            "redis"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.7139
+            },
+            {
+              "id": "oncall",
+              "score": 0.5637
+            },
+            {
+              "id": "postgres-slow",
+              "score": 0.5448
+            }
+          ],
+          "selected": [
+            "redis",
+            "oncall",
+            "postgres-slow"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "容器发布出问题，怎么回滚上一个版本？",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.7422
+            },
+            {
+              "id": "github",
+              "score": 0.6904
+            },
+            {
+              "id": "npm",
+              "score": 0.6891
+            }
+          ],
+          "selected": [
+            "k8s",
+            "github",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何自动打包并上传GitHub Release？",
+          "expected": [
+            "github"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "github",
+              "score": 0.8035
+            },
+            {
+              "id": "npm",
+              "score": 0.5956
+            },
+            {
+              "id": "redis",
+              "score": 0.5409
+            }
+          ],
+          "selected": [
+            "github",
+            "npm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "CI安装依赖时如何保证锁文件不变？",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.7669
+            },
+            {
+              "id": "github",
+              "score": 0.586
+            },
+            {
+              "id": "python",
+              "score": 0.5715
+            }
+          ],
+          "selected": [
+            "npm",
+            "github",
+            "python"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "本机向量服务的地址和维度填什么？",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.6988
+            },
+            {
+              "id": "memory",
+              "score": 0.6094
+            },
+            {
+              "id": "license",
+              "score": 0.5794
+            }
+          ],
+          "selected": [
+            "embedding",
+            "memory",
+            "license"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "大模型的接口地址和密钥在哪里设置？",
+          "expected": [
+            "llm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "llm",
+              "score": 0.6665
+            },
+            {
+              "id": "embedding",
+              "score": 0.6568
+            },
+            {
+              "id": "memory",
+              "score": 0.6553
+            }
+          ],
+          "selected": [
+            "llm",
+            "embedding",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎么配置外部工具服务器？",
+          "expected": [
+            "mcp"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "mcp",
+              "score": 0.7489
+            },
+            {
+              "id": "embedding",
+              "score": 0.6945
+            },
+            {
+              "id": "ssh",
+              "score": 0.6576
+            }
+          ],
+          "selected": [
+            "mcp",
+            "embedding",
+            "ssh"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "怎样修改或删除之前记住的偏好？",
+          "expected": [
+            "memory"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "password",
+              "score": 0.6434
+            },
+            {
+              "id": "memory",
+              "score": 0.6319
+            },
+            {
+              "id": "history",
+              "score": 0.5814
+            }
+          ],
+          "selected": [
+            "password",
+            "memory",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "以前的对话在哪里找？",
+          "expected": [
+            "history"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.7046
+            },
+            {
+              "id": "password",
+              "score": 0.5382
+            },
+            {
+              "id": "llm",
+              "score": 0.5347
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "如何用虚拟环境隔离Python依赖？",
+          "expected": [
+            "python"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.8884
+            },
+            {
+              "id": "npm",
+              "score": 0.6936
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.6189
+            }
+          ],
+          "selected": [
+            "python",
+            "npm",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "cross_zh_en",
+          "text": "这个Jina模型能商用吗？",
+          "expected": [
+            "license"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.7936
+            },
+            {
+              "id": "embedding",
+              "score": 0.6462
+            },
+            {
+              "id": "llm",
+              "score": 0.5901
+            }
+          ],
+          "selected": [
+            "license",
+            "embedding",
+            "llm"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "I need a few days away from work, not a travel reimbursement.",
+          "expected": [
+            "leave"
+          ],
+          "rank": 2,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.6758
+            },
+            {
+              "id": "leave",
+              "score": 0.6175
+            },
+            {
+              "id": "history",
+              "score": 0.4264
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The database lost records; I need yesterday's dump, not query optimization.",
+          "expected": [
+            "postgres-backup"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "postgres-backup",
+              "score": 0.6912
+            },
+            {
+              "id": "k8s",
+              "score": 0.6152
+            },
+            {
+              "id": "redis",
+              "score": 0.614
+            }
+          ],
+          "selected": [
+            "postgres-backup",
+            "k8s",
+            "redis"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The consumer needs to reread old records, not change retry backoff.",
+          "expected": [
+            "kafka-offset"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "kafka-retry",
+              "score": 0.7019
+            },
+            {
+              "id": "redis",
+              "score": 0.5875
+            },
+            {
+              "id": "kafka-offset",
+              "score": 0.5737
+            }
+          ],
+          "selected": [
+            "kafka-retry",
+            "redis",
+            "kafka-offset"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "The release is broken; undo the cluster deployment, not a git commit.",
+          "expected": [
+            "k8s"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "k8s",
+              "score": 0.7146
+            },
+            {
+              "id": "npm",
+              "score": 0.6747
+            },
+            {
+              "id": "github",
+              "score": 0.6596
+            }
+          ],
+          "selected": [
+            "k8s",
+            "npm",
+            "github"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "别改聊天模型，我要测试向量服务是否连通。",
+          "expected": [
+            "embedding"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.697
+            },
+            {
+              "id": "llm",
+              "score": 0.6439
+            },
+            {
+              "id": "vpn",
+              "score": 0.6313
+            }
+          ],
+          "selected": [
+            "embedding",
+            "llm",
+            "vpn"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不要删历史对话，只把记住的偏好关掉。",
+          "expected": [
+            "memory"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "history",
+              "score": 0.6154
+            },
+            {
+              "id": "password",
+              "score": 0.6042
+            },
+            {
+              "id": "memory",
+              "score": 0.5771
+            }
+          ],
+          "selected": [
+            "history",
+            "password",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "不是要请假，我要把出差费用报给财务。",
+          "expected": [
+            "expense"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "expense",
+              "score": 0.7742
+            },
+            {
+              "id": "leave",
+              "score": 0.5259
+            },
+            {
+              "id": "meeting",
+              "score": 0.4071
+            }
+          ],
+          "selected": [
+            "expense",
+            "leave",
+            "meeting"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "我要查任务负责人，不是生产故障值班人。",
+          "expected": [
+            "jira"
+          ],
+          "rank": 3,
+          "top3": [
+            {
+              "id": "oncall",
+              "score": 0.6936
+            },
+            {
+              "id": "meeting",
+              "score": 0.5519
+            },
+            {
+              "id": "jira",
+              "score": 0.5168
+            }
+          ],
+          "selected": [
+            "oncall",
+            "meeting",
+            "jira"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Use the frozen dependency graph, not a package version upgrade.",
+          "expected": [
+            "npm"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "npm",
+              "score": 0.8074
+            },
+            {
+              "id": "python",
+              "score": 0.722
+            },
+            {
+              "id": "memory",
+              "score": 0.629
+            }
+          ],
+          "selected": [
+            "npm",
+            "python",
+            "memory"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "hard_paraphrase",
+          "text": "Capture the entire long web page rather than only what is visible.",
+          "expected": [
+            "screenshot"
+          ],
+          "rank": 1,
+          "top3": [
+            {
+              "id": "screenshot",
+              "score": 0.7805
+            },
+            {
+              "id": "llm",
+              "score": 0.6322
+            },
+            {
+              "id": "history",
+              "score": 0.6243
+            }
+          ],
+          "selected": [
+            "screenshot",
+            "llm",
+            "history"
+          ],
+          "selected_relevant": 1
+        },
+        {
+          "group": "unrelated",
+          "text": "How do I bake a chocolate cake?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.4038
+            },
+            {
+              "id": "expense",
+              "score": 0.3766
+            },
+            {
+              "id": "postgres-backup",
+              "score": 0.3621
+            }
+          ],
+          "selected": [
+            "redis"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "法国首都是哪里？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "python",
+              "score": 0.4559
+            },
+            {
+              "id": "memory",
+              "score": 0.4481
+            },
+            {
+              "id": "leave",
+              "score": 0.4427
+            }
+          ],
+          "selected": [],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "What is the weather tomorrow in Shanghai?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.4602
+            },
+            {
+              "id": "oncall",
+              "score": 0.4503
+            },
+            {
+              "id": "history",
+              "score": 0.4135
+            }
+          ],
+          "selected": [
+            "meeting",
+            "oncall"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "帮我推荐一部科幻电影。",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "kafka-offset",
+              "score": 0.4356
+            },
+            {
+              "id": "memory",
+              "score": 0.431
+            },
+            {
+              "id": "github",
+              "score": 0.4261
+            }
+          ],
+          "selected": [
+            "kafka-offset",
+            "memory",
+            "github"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "How often should I water a cactus?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "meeting",
+              "score": 0.4264
+            },
+            {
+              "id": "github",
+              "score": 0.3832
+            },
+            {
+              "id": "redis",
+              "score": 0.3481
+            }
+          ],
+          "selected": [
+            "meeting",
+            "github"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "如何练习游泳换气？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "redis",
+              "score": 0.4403
+            },
+            {
+              "id": "k8s",
+              "score": 0.3992
+            },
+            {
+              "id": "oncall",
+              "score": 0.3804
+            }
+          ],
+          "selected": [
+            "redis",
+            "k8s"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "Explain the orbit of Neptune.",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "postgres-slow",
+              "score": 0.3769
+            },
+            {
+              "id": "vpn",
+              "score": 0.3452
+            },
+            {
+              "id": "oncall",
+              "score": 0.3358
+            }
+          ],
+          "selected": [
+            "postgres-slow"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "unrelated",
+          "text": "清蒸鲈鱼需要几分钟？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "license",
+              "score": 0.465
+            },
+            {
+              "id": "python",
+              "score": 0.4346
+            },
+            {
+              "id": "kafka-retry",
+              "score": 0.4256
+            }
+          ],
+          "selected": [
+            "license"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What are our database credentials?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "memory",
+              "score": 0.6171
+            },
+            {
+              "id": "mcp",
+              "score": 0.6168
+            },
+            {
+              "id": "embedding",
+              "score": 0.5967
+            }
+          ],
+          "selected": [
+            "memory",
+            "mcp"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "我们公司今年还剩多少年假？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "leave",
+              "score": 0.5553
+            },
+            {
+              "id": "expense",
+              "score": 0.4673
+            },
+            {
+              "id": "license",
+              "score": 0.3959
+            }
+          ],
+          "selected": [
+            "leave",
+            "expense"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "What is the latest price of the Jina API?",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "embedding",
+              "score": 0.6536
+            },
+            {
+              "id": "license",
+              "score": 0.6021
+            },
+            {
+              "id": "jira",
+              "score": 0.5426
+            }
+          ],
+          "selected": [
+            "embedding",
+            "license",
+            "jira"
+          ],
+          "selected_relevant": 0
+        },
+        {
+          "group": "near_domain_unknown",
+          "text": "公司VPN账号密码是什么？",
+          "expected": [],
+          "rank": null,
+          "top3": [
+            {
+              "id": "vpn",
+              "score": 0.7996
+            },
+            {
+              "id": "ssh",
+              "score": 0.648
+            },
+            {
+              "id": "password",
+              "score": 0.6204
+            }
+          ],
+          "selected": [
+            "vpn",
+            "ssh",
+            "password"
+          ],
+          "selected_relevant": 0
+        }
+      ]
+    }
+  ],
+  "threshold_sweep": [
+    {
+      "dimensions": 1024,
+      "minimum": 0.28,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 1.0,
+      "injection_precision": 0.4057971014492754,
+      "selected_per_positive": 2.4642857142857144,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 1.0
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.35,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.9821428571428571,
+      "injection_precision": 0.5555555555555556,
+      "selected_per_positive": 1.7678571428571428,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 1.0
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.4,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.9464285714285714,
+      "injection_precision": 0.7066666666666667,
+      "selected_per_positive": 1.3392857142857142,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 0.5
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.45,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.8928571428571429,
+      "injection_precision": 0.8771929824561403,
+      "selected_per_positive": 1.0178571428571428,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 0.25
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.5,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.8214285714285714,
+      "injection_precision": 0.8679245283018868,
+      "selected_per_positive": 0.9464285714285714,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 0.25
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.55,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.75,
+      "injection_precision": 0.9333333333333333,
+      "selected_per_positive": 0.8035714285714286,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 0.25
+    },
+    {
+      "dimensions": 1024,
+      "minimum": 0.6,
+      "positive_queries": 56,
+      "top1": 0.9285714285714286,
+      "recall_at_3": 1.0,
+      "mrr": 0.9642857142857143,
+      "injection_recall": 0.6428571428571429,
+      "injection_precision": 0.972972972972973,
+      "selected_per_positive": 0.6607142857142857,
+      "unrelated_queries": 8,
+      "unrelated_false_injection_rate": 0.0,
+      "near_domain_unknown_selected_rate": 0.25
+    }
+  ]
+}
