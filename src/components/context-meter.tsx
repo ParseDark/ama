@@ -185,13 +185,13 @@ function BreakdownPopup({
           className="size-20"
           thickness={2.5}
         >
-          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-medium tabular-nums">
+          <span className="absolute inset-0 flex items-center justify-center text-[calc(11px*var(--ama-font-scale))] font-medium tabular-nums">
             {limit
               ? percentOf(usage.contextTokens, whole)
               : formatTokens(usage.contextTokens)}
           </span>
         </Ring>
-        <span className="text-[10px] tabular-nums">
+        <span className="text-[calc(10px*var(--ama-font-scale))] tabular-nums">
           {limit
             ? `${formatTokens(usage.contextTokens)} / ${formatTokens(limit)}`
             : `${formatTokens(usage.contextTokens)} tokens`}
@@ -213,13 +213,13 @@ function BreakdownPopup({
               <span className="tabular-nums">
                 {formatTokens(segment.tokens)}
               </span>
-              <span className="w-8 text-right tabular-nums text-[10px] opacity-70">
+              <span className="w-8 text-right tabular-nums text-[calc(10px*var(--ama-font-scale))] opacity-70">
                 {percentOf(segment.tokens, whole)}
               </span>
             </li>
           ))}
         </ul>
-        <div className="mt-1 border-t border-white/15 pt-1 text-[10px] tabular-nums opacity-80">
+        <div className="mt-1 border-t border-white/15 pt-1 text-[calc(10px*var(--ama-font-scale))] tabular-nums opacity-80">
           Last step: {formatTokens(usage.inputTokens)} in
           {usage.cachedInputTokens > 0
             ? ` (${formatTokens(usage.cachedInputTokens)} cached)`
@@ -227,29 +227,29 @@ function BreakdownPopup({
           · {formatTokens(usage.outputTokens)} out
         </div>
         {pricing && (
-          <div className="text-[10px] tabular-nums">
+          <div className="text-[calc(10px*var(--ama-font-scale))] tabular-nums">
             Cost of this reply:{" "}
             {formatCost(replyCost(usage.total, usage.inputTokens, pricing))}
           </div>
         )}
         {info?.source === "models.dev" && (
-          <div className="mt-1 text-[10px] text-amber-300">
+          <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] text-amber-300">
             Limit from the models.dev catalog; your gateway may be lower.
           </div>
         )}
         {!limit && (
-          <div className="mt-1 text-[10px] opacity-80">
+          <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] opacity-80">
             {infoFetched
               ? "No context limit was returned for this model."
               : "Fetch models in Settings to see the limit."}
           </div>
         )}
-        <div className="mt-1 text-[10px] opacity-70">
+        <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] opacity-70">
           Totals come from the provider; the split of the prompt by source is
           estimated.
         </div>
         {level !== "ok" && (
-          <div className="mt-1 text-[10px] text-amber-300">
+          <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] text-amber-300">
             Getting full: clear the chat (⌥⇧L) to start fresh.
           </div>
         )}
@@ -315,7 +315,7 @@ export function ContextMeter({
             <span
               role="status"
               aria-label={`Context window: ${label}`}
-              className={`context-meter inline-flex items-center gap-1 text-[11px] tabular-nums ${levelClass(level)}`}
+              className={`context-meter inline-flex items-center gap-1 text-[calc(11px*var(--ama-font-scale))] tabular-nums ${levelClass(level)}`}
             />
           }
         >

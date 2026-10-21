@@ -1,7 +1,9 @@
 import { it, expect } from "vitest";
 import {
   DEFAULT_SETTINGS as D,
+  DEFAULT_FONT_SCALE,
   getEmbeddingConfig,
+  getFontScale,
   getMcpServers,
   getConfigProblem,
   getModelGroups,
@@ -45,4 +47,19 @@ it("reports missing fields in priority order", () => {
   s.providers.openai.apiKey = "x";
   s.providers.openai.model = "";
   expect(getConfigProblem(s)).toBe("Model is required.");
+});
+it("keeps a valid text scale and falls back to the 13px default", () => {
+  expect(D.fontScale).toBe(DEFAULT_FONT_SCALE);
+  expect(getFontScale(D)).toBe(DEFAULT_FONT_SCALE);
+  expect(getFontScale({ ...D, fontScale: 1.15 })).toBe(1.15);
+  expect(getFontScale({ ...D, fontScale: 0.9 })).toBe(0.9);
+  for (const bad of [
+    undefined,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    0.1,
+    5,
+    "large" as unknown as number,
+  ])
+    expect(getFontScale({ ...D, fontScale: bad })).toBe(DEFAULT_FONT_SCALE);
 });

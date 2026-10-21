@@ -1,5 +1,11 @@
 # Validation record
 
+## Text size setting (v0.3.0)
+
+**Settings → Display → Text size** offers Small / Default / Large / Extra large (0.9 / 1 / 1.15 / 1.3 of the 13px baseline) plus **Reset**. The choice is stored as `Settings.fontScale`, validated by `getFontScale` (finite 0.8–1.5, otherwise 1), and included in optional configuration sync. `App` writes it to `--ama-font-scale` on `<html>`; every px font size in `globals.css`/`typeset.css` is multiplied by that variable, and Tailwind's text-size tokens (`--text-xs` … `--text-3xl`) are overridden so utility classes scale too. Spacing and layout do not scale.
+
+Verified locally in the built unpacked extension: computed sizes changed from 11px to 14.3px (hints) and 15px to 19.5px (headings) at Extra large, 0.9 at Small; the choice survived a panel reload, Reset returned to 1, and the four settings tabs and four option cards had no horizontal overflow at 400px panel width. Unit tests cover the default, invalid stored values, config-sync round-trip, the option markup and the applied CSS variable.
+
 ## Control+K and composer focus
 
 Per user request, macOS toggle now uses literal Control+K (`MacCtrl+K` in Chrome manifest), not Command+K. Panel key handling accepts unmodified Control+K only; Command/Alt/Shift variants do not close it. Existing Chrome installations may preserve an old command assignment; update it manually at `chrome://extensions/shortcuts` after reload. This does not claim external OS shortcut conflicts are eliminated.

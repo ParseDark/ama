@@ -58,7 +58,23 @@ export interface Settings {
   embedding?: EmbeddingConfig;
   webSearch?: WebSearchConfig;
   dangerMode?: boolean;
+  /** UI text multiplier; 1 keeps the panel's 13px base size. */
+  fontScale?: number;
 }
+export interface FontSizeOption {
+  scale: number;
+  label: string;
+}
+export const DEFAULT_FONT_SCALE = 1;
+export const MIN_FONT_SCALE = 0.8;
+export const MAX_FONT_SCALE = 1.5;
+/** Each step is visibly different in the side panel without breaking layout. */
+export const FONT_SIZE_OPTIONS: readonly FontSizeOption[] = [
+  { scale: 0.9, label: "Small" },
+  { scale: 1, label: "Default" },
+  { scale: 1.15, label: "Large" },
+  { scale: 1.3, label: "Extra large" },
+];
 export const PROVIDERS: Record<ProviderId, string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
@@ -68,6 +84,7 @@ export const PROVIDERS: Record<ProviderId, string> = {
 export const DEFAULT_SETTINGS: Settings = {
   provider: "openai-compatible",
   dangerMode: false,
+  fontScale: DEFAULT_FONT_SCALE,
   providers: {
     openai: { apiKey: "", model: "gpt-5", baseURL: "" },
     anthropic: { apiKey: "", model: "claude-sonnet-5-5", baseURL: "" },
@@ -120,6 +137,16 @@ export const getWebSearchConfig = (s: Settings): WebSearchConfig => ({
 });
 export const getMcpServers = (s: Settings) =>
   s.mcpServers ?? DEFAULT_MCP_SERVERS;
+/** Keeps unknown or out-of-range stored values (older/newer builds) usable. */
+export const getFontScale = (s: Settings) => {
+  const scale = s.fontScale;
+  return typeof scale === "number" &&
+    Number.isFinite(scale) &&
+    scale >= MIN_FONT_SCALE &&
+    scale <= MAX_FONT_SCALE
+    ? scale
+    : DEFAULT_FONT_SCALE;
+};
 export function getConfigProblem(s: Settings) {
   const c = s.providers[s.provider];
   return s.provider === "openai-compatible" && !c.baseURL.trim()

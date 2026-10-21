@@ -320,8 +320,8 @@ Rules:
   request start. The Settings view updates immediately because it watches the same store.
 - `testMcpServer(server, factory?)` in `mcp-tools.ts` loads a throwaway `McpTools` and closes it; Settings' Test
   connection uses the same helper.
-- Danger mode, configuration sync and the file workspace are deliberately **not** tool-settable; the prompt points
-  the user to Settings.
+- Danger mode, text size, configuration sync and the file workspace are deliberately **not** tool-settable; the
+  prompt points the user to Settings.
 
 Acceptance: no secrets in `get_settings`/approvals/results, add auto-names and auto-tests, an unreachable server is
 saved off, the same URL updates rather than duplicates, schema rejects `file://`, every write needs approval, update
@@ -1235,7 +1235,7 @@ Panel width is about 400 px. Use shadcn components; accessible names below are r
 
 ### Settings view (tabs)
 
-Header has "Back to chat" and the title "Settings". Tabs component with **Model / Memory / Tools**:
+Header has "Back to chat" and the title "Settings". Tabs component with **Model / Memory / Tools / Display**:
 
 - **Model**:
   - Provider select;
@@ -1248,6 +1248,9 @@ Header has "Back to chat" and the title "Settings". Tabs component with **Model 
 - **Memory**: **Manage memories** button (opens the Memory view), separator, Embeddings section (§13.3).
 - **Tools**: "MCP servers" section with a description, server cards (`role=group aria-label="MCP server {name}"`) and
   **Add server**. New servers start as `New server` at `http://127.0.0.1:3000/mcp`, disabled.
+- **Display**: "Text size" radiogroup (Small / Default / Large / Extra large) plus **Reset** when the stored
+  `fontScale` is not 1. Choosing a size sets `--ama-font-scale` on `<html>`, immediately rescaling every text size in
+  the panel without changing layout spacing.
 
 Settings auto-save on every change (no Save button).
 

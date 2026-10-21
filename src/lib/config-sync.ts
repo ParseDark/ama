@@ -34,6 +34,7 @@ const snapshotSchema = z.object({
       "openai-compatible": provider,
     }),
     dangerMode: z.boolean().optional(),
+    fontScale: z.number().finite().optional(),
     webSearch: z
       .object({
         enabled: z.boolean(),

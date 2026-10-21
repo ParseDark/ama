@@ -1,5 +1,5 @@
 .prose {
-  font-size: 12px;
+  font-size: calc(12px * var(--ama-font-scale));
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
@@ -54,7 +54,7 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   padding: 10px;
-  font-size: 10px;
+  font-size: calc(10px * var(--ama-font-scale));
   line-height: 1.6;
   max-width: 100%;
   margin: 10px 0;
@@ -68,7 +68,7 @@
   display: block;
   overflow: auto;
   max-width: 100%;
-  font-size: 11px;
+  font-size: calc(11px * var(--ama-font-scale));
   margin: 10px 0;
 }
 .prose td,

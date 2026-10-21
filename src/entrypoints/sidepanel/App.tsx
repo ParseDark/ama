@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { useSettings } from "@/hooks/use-settings";
-import { getConfigProblem } from "@/lib/settings";
+import { getConfigProblem, getFontScale } from "@/lib/settings";
+import { applyFontScale } from "@/lib/font-scale";
 import { activeSessionStore, loadSession, sessionsStore } from "@/lib/sessions";
 import { categorizeStoredMemories } from "@/lib/memory/classify";
 import { runLearning } from "@/lib/memory/learning";
@@ -11,6 +12,7 @@ import { HistoryView } from "@/components/history-view";
 import { MemoryView } from "@/components/memory-view";
 export default function App() {
   const { settings, setSettings, loaded } = useSettings(),
+    fontScale = getFontScale(settings),
     [view, setView] = useState<"chat" | "settings" | "history" | "memory">(
       "chat",
     ),
@@ -20,6 +22,9 @@ export default function App() {
       messages: UIMessage[];
     } | null>(null),
     initialized = useRef(false);
+  useEffect(() => {
+    applyFontScale(fontScale);
+  }, [fontScale]);
   useEffect(() => {
     if (!loaded || initialized.current) return;
     initialized.current = true;

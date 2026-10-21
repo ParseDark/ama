@@ -12,7 +12,7 @@ pnpm install --frozen-lockfile
 pnpm build
 ```
 
-In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3/`. Building also creates `.output/ama-0.1.0-chrome.zip`. Use a recent Chrome version supporting `chrome.sidePanel.close` for shortcut toggling.
+In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3/`. Building also creates `.output/ama-0.3.0-chrome.zip`. Use a recent Chrome version supporting `chrome.sidePanel.close` for shortcut toggling.
 
 Open AMA using the toolbar icon or **⌃K / Ctrl+K**. In Settings → Model, choose OpenAI, Anthropic, Google Gemini, or an OpenAI-compatible API, enter your endpoint/key/model, and optionally **Fetch** available models. The compatible URL defaults to `https://api.qnaigc.com/v1`, taken from the local shell's `OPENAI_BASE_URL` (no API key is bundled). Choose a model supported by that service using **Fetch**, or enter its model ID. Existing saved settings are preserved; update Base URL manually if you previously saved another endpoint. Settings save automatically.
 
@@ -76,7 +76,7 @@ In **Settings → Model → Chrome configuration sync**, choose explicitly:
 
 Off by default, enabled separately on each installation. Requires Chrome extension sync, the same Chrome account **and the same extension ID**. An unpacked extension may have a different ID on another machine; signing into Chrome alone does not guarantee sync. Chrome manages delivery; a local upload timestamp is not proof of delivery to another device. No new AMA backend/account.
 
-Includes provider choice, all provider keys/URLs/current and fetched model lists, complete embedding settings/token, DeepSeek web-search settings/key, all MCP servers/tokens/custom headers, and memory's enabled switch. This is deliberately **all configuration, including secrets**, per user request. Secrets leave the device through Chrome sync, with no extra AMA encryption/secret-vault guarantees. Never enable on untrusted profiles. Sync storage is restricted to trusted extension contexts. Excludes chat/history, memory contents, events/vectors, screenshots, file previews/backups and OS workspace handles/permissions; those still need local setup.
+Includes provider choice, all provider keys/URLs/current and fetched model lists, complete embedding settings/token, DeepSeek web-search settings/key, all MCP servers/tokens/custom headers, the Display text-size preference, and memory's enabled switch. This is deliberately **all configuration, including secrets**, per user request. Secrets leave the device through Chrome sync, with no extra AMA encryption/secret-vault guarantees. Never enable on untrusted profiles. Sync storage is restricted to trusted extension contexts. Excludes chat/history, memory contents, events/vectors, screenshots, file previews/backups and OS workspace handles/permissions; those still need local setup.
 
 Subsequent local edits upload after about 5 seconds (alarm fallback if the worker suspends); remote events update local configuration. Conflicts use a whole-snapshot last-revision rule (device timestamp, then revision ID), not per-field merging or distributed transactions. Concurrent/offline edits or skewed clocks can overwrite another device; explicit Upload/Use cloud lets you choose a winner. Imported model URLs and enabled MCP settings immediately become active, so only share a trusted Chrome profile.
 
@@ -87,6 +87,10 @@ Snapshots use gzip/base64 with a checksum, versioned chunks (each below Chrome's
 ## Shared model selector
 
 Model settings and the chat composer use the same searchable selector, selected-model indicator and shadcn-styled trigger. Settings scopes the list to the provider being configured; chat groups configured providers. Fetch refreshes the provider list as before. To use an unlisted model, type its ID in the search box and select **Use “…”** (for the current provider). Typing alone or pressing Escape does not change the saved model. Choices persist and appear in both places; reopening clears the search. Provider keys, URLs and fetched lists are preserved when selecting a model.
+
+## Text size
+
+**Settings → Display → Text size** makes AMA's text easier to read: choose **Small**, **Default**, **Large** or **Extra large** to scale messages, menus and hints without changing layout spacing. The panel previews the change immediately and **Reset** returns to Default. The choice saves with your settings on this device and travels with optional configuration sync; it changes only how AMA looks, never what is sent to the model.
 
 ## Danger mode
 
@@ -134,7 +138,7 @@ Once the chat model works, you can configure the rest conversationally. The assi
 - **Secrets are write-only.** Stored tokens and keys are never returned to the model or shown in tool results; `get_settings` reports only `hasToken`. A token you paste into chat is part of the saved conversation and is sent to the model again when the conversation continues. Use the Settings fields for secrets you do not want in chat. Configuration saved this way is still included in optional Chrome configuration sync, just like the corresponding Settings fields.
 - **API keys and provider base URLs stay in Settings.** They can be neither read nor changed from chat. The embeddings endpoint/model/token and the DeepSeek key are changed only in Settings; chat can switch embeddings or web search on/off.
 - **Changes apply to the next message.** A newly added or changed MCP server reconnects then, so its tools, web search, embeddings and memory recall become active from the next reply, not the reply that saved them. Settings updated by a tool appear immediately in Settings because both use the same local store.
-- **Not tool-configurable:** Danger mode (**Settings → Tools**), Chrome configuration sync (**Settings → Model**) and the local file workspace (**Settings → Tools → Files → Choose workspace**, which needs a user gesture). The assistant is told to point you there instead of claiming it changed them.
+- **Not tool-configurable:** Danger mode (**Settings → Tools**), text size (**Settings → Display**), Chrome configuration sync (**Settings → Model**) and the local file workspace (**Settings → Tools → Files → Choose workspace**, which needs a user gesture). The assistant is told to point you there instead of claiming it changed them.
 - MCP server names are case-insensitively unique and at most 40 characters. Matching accepts an exact name, the same URL, then a substring of the name or URL. Only `http(s)` URLs without embedded credentials are accepted, and headers use the same reserved-name/value validation as the Settings editor. Header values are never echoed.
 - Writes are serialized, so parallel tool calls cannot drop a change, and they still participate in the existing configuration sync.
 
@@ -204,9 +208,9 @@ Download the latest versioned package from [Releases](https://github.com/ParseDa
 
 ## Specification and validation
 
-[`REBUILD_SPEC.md`](REBUILD_SPEC.md) is the design/acceptance reference. The current regression suite passes **179 unit/integration tests, 25 unpacked-extension browser scenarios, and 2 Python HTTP-contract tests**, along with TypeScript, formatting, and the production build. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for coverage, reproduction commands, and remaining manual/external checks.
+[`REBUILD_SPEC.md`](REBUILD_SPEC.md) is the design/acceptance reference. The current regression suite passes **183 unit/integration tests, 25 unpacked-extension browser scenarios, and 2 Python HTTP-contract tests**, along with TypeScript, formatting, and the production build. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for coverage, reproduction commands, and remaining manual/external checks.
 
-Tests use fake browser APIs, AI SDK mock models, an actual unpacked Chromium extension and local provider mocks; they need no real API credentials. Automated HTTP embedding tests use a toy encoder, **not** the production model. Separately, actual Jina ONNX CPU inference passed local smoke/retrieval/latency checks (see the server README). MLX inference and live provider/MCP compatibility still need validation in their respective environments. The [v0.2.0 release](https://github.com/ParseDark/ama/releases/tag/v0.2.0) is built and published by GitHub Actions; both the main-branch build and tag-release workflows pass the full automated suite.
+Tests use fake browser APIs, AI SDK mock models, an actual unpacked Chromium extension and local provider mocks; they need no real API credentials. Automated HTTP embedding tests use a toy encoder, **not** the production model. Separately, actual Jina ONNX CPU inference passed local smoke/retrieval/latency checks (see the server README). MLX inference and live provider/MCP compatibility still need validation in their respective environments. The [v0.3.0 release](https://github.com/ParseDark/ama/releases/tag/v0.3.0) is built and published by GitHub Actions; both the main-branch build and tag-release workflows pass the full automated suite.
 
 ## License
 

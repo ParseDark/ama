@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { ArrowLeft, Brain, SlidersHorizontal, Wrench } from "lucide-react";
+import {
+  ArrowLeft,
+  Brain,
+  SlidersHorizontal,
+  Type,
+  Wrench,
+} from "lucide-react";
 import { PROVIDERS, type Settings, type ProviderId } from "@/lib/settings";
 import { listModelsWithInfo } from "@/lib/list-models";
 import { formatTokens } from "@/lib/context-usage";
@@ -12,6 +18,7 @@ import { EmbeddingSettings } from "./embedding-settings";
 import { McpSettings } from "./mcp-settings";
 import { FileSettings } from "./file-settings";
 import { WebSearchSettings } from "./web-search-settings";
+import { DisplaySettings } from "./display-settings";
 import { ModelPicker } from "./model-picker";
 import { ConfigSyncSettings } from "./config-sync-settings";
 export function SettingsView({
@@ -69,6 +76,10 @@ export function SettingsView({
           <TabsTrigger value="tools">
             <Wrench size={14} />
             Tools
+          </TabsTrigger>
+          <TabsTrigger value="display">
+            <Type size={14} />
+            Display
           </TabsTrigger>
         </TabsList>
         <TabsContent value="model" className="settings-body">
@@ -233,6 +244,14 @@ export function SettingsView({
           <FileSettings />
           <hr />
           <McpSettings settings={settings} onChange={onChange} />
+        </TabsContent>
+        <TabsContent value="display" className="settings-body">
+          <h2>Easy on the eyes</h2>
+          <p className="hint">
+            AMA is a dense side panel; pick the text size that feels right on
+            your screen.
+          </p>
+          <DisplaySettings settings={settings} onChange={onChange} />
         </TabsContent>
       </Tabs>
     </div>

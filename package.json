@@ -1,6 +1,6 @@
 {
   "name": "ama",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local-first Chrome side-panel assistant with page tools, memory, MCP, and optional semantic retrieval.",
   "private": true,
   "license": "MIT",
