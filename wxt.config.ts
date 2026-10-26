@@ -28,6 +28,11 @@ export default defineConfig({
       "alarms",
     ],
     host_permissions: ["<all_urls>"],
+    sandbox: { pages: ["sandbox.html"] },
+    content_security_policy: {
+      sandbox:
+        "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval' blob: https://esm.sh; worker-src blob:; connect-src https://esm.sh;",
+    },
     action: { default_title: "Open AMA" },
     commands: {
       "toggle-panel": {

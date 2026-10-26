@@ -33,6 +33,8 @@ import { relateToExisting, judgeRelations } from "./memory/relation";
 import { listMemories } from "./memory/store";
 import { createHistoryTools } from "./history-tools";
 import { createSettingsTools } from "./settings-tools";
+import { createCodeTools } from "./code-tools";
+import type { runCode } from "./code-runner";
 import { searchHistory } from "./history-search";
 import { filterMcpTools } from "./tool-filter";
 import { hostnameOf } from "./url";
@@ -87,6 +89,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       createModel?: typeof createModel;
       embeddingFetch?: typeof fetch;
       webFetch?: typeof fetch;
+      runCode?: typeof runCode;
       now?: () => number;
     } = {},
   ) {
@@ -145,6 +148,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       ...remote,
       ...createPageTools(run, { dangerMode: settings.dangerMode === true }),
       ...createFileTools(),
+      ...createCodeTools(this.options.runCode),
       ...createWebTools(settings, messages, this.options.webFetch),
       ...createHistoryTools({
         search: (q) => searchHistory(q, { config, excludeSessionId: chatId }),

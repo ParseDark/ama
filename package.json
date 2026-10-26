@@ -1,6 +1,6 @@
 {
   "name": "ama",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Local-first Chrome side-panel assistant with page tools, memory, MCP, and optional semantic retrieval.",
   "private": true,
   "license": "MIT",
@@ -44,6 +44,7 @@
     "clsx": "latest",
     "cn": "latest",
     "diff": "9.0.0",
+    "es-module-lexer": "2.3.2",
     "idb": "8.0.4",
     "ignore": "7.0.12",
     "lucide-react": "latest",

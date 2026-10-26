@@ -205,3 +205,74 @@ it("reports last-step usage, run totals and a calibrated breakdown across steps"
     messageMetadata: { usedMemories: [{ id: "p" }] },
   });
 });
+
+it("registers and executes run_js without creating a sandbox on transport import or construction", async () => {
+  expect(document.querySelector("iframe")).toBeNull();
+  const code = "export default async function(input) { return input.n * 2; }";
+  const response = {
+    id: "sandbox-1",
+    ok: true,
+    result: 42,
+    logs: ["done"],
+    error: null,
+  };
+  const runCode = vi.fn(async () => response);
+  let step = 0;
+  const model = new MockLanguageModelV4({
+    doStream: async () => ({
+      stream: new ReadableStream({
+        start(c) {
+          const first = step++ === 0;
+          c.enqueue({ type: "stream-start", warnings: [] });
+          if (first)
+            c.enqueue({
+              type: "tool-call",
+              toolCallId: "js-1",
+              toolName: "run_js",
+              input: JSON.stringify({ code, input: { n: 21 } }),
+            });
+          c.enqueue({
+            type: "finish",
+            finishReason: {
+              unified: first ? "tool-calls" : "stop",
+              raw: "stop",
+            },
+            usage,
+          });
+          c.close();
+        },
+      }),
+    }),
+  });
+  const transport = new LocalChatTransport({
+    loadSettings: async () => DEFAULT_SETTINGS,
+    readActivePage: async () => null,
+    createModel: async () => model as any,
+    runCode,
+  });
+  expect(document.querySelector("iframe")).toBeNull();
+  const stream = await transport.sendMessages({
+    chatId: "code",
+    trigger: "submit-message",
+    messages: [
+      {
+        id: "u",
+        role: "user",
+        parts: [{ type: "text", text: "Compute twice 21" }],
+      },
+    ],
+  } as any);
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  expect(runCode).toHaveBeenCalledExactlyOnceWith(code, { n: 21 });
+  expect(model.doStreamCalls[0].tools?.map((t) => t.name)).toContain("run_js");
+  expect(chunks).toContainEqual(
+    expect.objectContaining({
+      type: "tool-output-available",
+      toolCallId: "js-1",
+      output: response,
+    }),
+  );
+  expect(JSON.stringify(model.doStreamCalls[1].prompt)).toContain("sandbox-1");
+  expect(document.querySelector("iframe")).toBeNull();
+});
