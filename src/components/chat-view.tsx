@@ -123,14 +123,18 @@ export function ChatView({
   }, [status, messages]);
   const clear = useCallback(async () => {
     clearing.current = true;
+    const cleared = id;
     stop();
     setMessages([]);
     setImages([]);
     setCaptureError("");
     clearError();
-    await deleteSession(id);
+    // Remount first so a user who types immediately lands in the new chat. The
+    // old ID is tombstoned afterwards; a running tool cannot resurrect its data.
+    onNew();
+    await deleteSession(cleared);
     clearing.current = false;
-  }, [id, stop, setMessages, clearError]);
+  }, [id, stop, setMessages, clearError, onNew]);
   useEffect(() => {
     const fn = () => void clear();
     window.addEventListener("ama:clear-chat", fn);

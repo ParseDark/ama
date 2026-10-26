@@ -1,4 +1,6 @@
+import "fake-indexeddb/auto";
 import { it, expect, vi } from "vitest";
+import { createDataActions } from "@/lib/data/actions";
 import { MockLanguageModelV4 } from "ai/test";
 import { LocalChatTransport } from "@/lib/local-chat-transport";
 import {
@@ -270,9 +272,26 @@ it("registers and executes run_js without creating a sandbox on transport import
     expect.objectContaining({
       type: "tool-output-available",
       toolCallId: "js-1",
-      output: response,
+      output: expect.objectContaining({
+        ...response,
+        result: expect.objectContaining({
+          dataId: expect.any(String),
+          preview: 42,
+        }),
+      }),
     }),
   );
   expect(JSON.stringify(model.doStreamCalls[1].prompt)).toContain("sandbox-1");
+  const output = chunks.find(
+    (chunk) => chunk.type === "tool-output-available",
+  ) as any;
+  expect(
+    await createDataActions({ sessionId: "code" }).load(
+      output.output.result.dataId,
+    ),
+  ).toBe(42);
+  expect(model.doStreamCalls[0].tools?.map((t) => t.name)).toEqual(
+    expect.arrayContaining(["list_data", "inspect_data"]),
+  );
   expect(document.querySelector("iframe")).toBeNull();
 });

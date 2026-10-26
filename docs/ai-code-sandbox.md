@@ -1,21 +1,37 @@
 # AI 代码沙箱执行（v1）
 
-AI 工具 `run_js` 接收 `code` 和 JSON `input`，代码约定为 ES module：
+AI 工具 `run_js` 接收 `code`、数据引用与少量参数，代码约定为 ES module：
 
 ```js
 import { sum } from "lodash-es";
 
-export default async function (input) {
-  console.log("rows", input.length);
-  return { total: sum(input) };
+export default async function ({ data, params }) {
+  console.log("rows", data.orders.length);
+  return { total: sum(data.orders.map((row) => row.amount)) };
 }
 ```
 
-返回格式：
+调用时用 `data: { orders: dataId }` 引用已保存的原始数据（来自 `read_file`、`list_data` 或上一次执行结果），`params` 只放小参数。旧的 `input` 仍可用于不超过 16 KiB 的小对象。
+
+成功结果返回数据描述符，不把原始大数据重新输出给模型：
 
 ```json
-{ "id": "request-id", "ok": true, "result": { "total": 6 }, "logs": ["rows 3"], "error": null }
+{
+  "id": "request-id",
+  "ok": true,
+  "result": {
+    "dataId": "data-id",
+    "type": "object",
+    "bytes": 42,
+    "preview": { "total": 6 },
+    "previewTruncated": false
+  },
+  "logs": ["rows 3"],
+  "error": null
+}
 ```
+
+详细的数据仓库、容量限制和清理规则见 [ai-data-store.md](./ai-data-store.md)。
 
 - 裸包导入（包括作用域包、版本、子路径、re-export、字面量动态导入）通过模块解析器改写为 `https://esm.sh/...`。动态计算的包名不做改写，请使用字面量导入。
 - 返回值通过 JSON 序列化后返回；`undefined`、循环引用、`BigInt` 等不可序列化结果会报告错误。

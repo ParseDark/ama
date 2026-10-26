@@ -40,6 +40,9 @@ const axis = (text: string) =>
       : /kafka|retry|重试/i.test(text)
         ? [0, 0, 1, 0]
         : [0, 0, 0, 1];
+const dataPipelineQuery =
+  "Process a large dataset using stored data references";
+const dataPipelineTail = "UNPREVIEWED-DATA-TAIL-9f71c2";
 const form = `<!doctype html><title>Test checkout</title><main><h1>Test checkout</h1><p>Lookup code is ALPHA-42. This page contains a form to exercise browser actions.</p><form onsubmit="event.preventDefault();document.querySelector('#result').textContent='Submitted '+document.querySelector('#name').value"><label>Name<input id="name" placeholder="Full name"></label><label>Region<select><option value="us">United States</option><option value="uk">United Kingdom</option></select></label><label><input type="checkbox">Updates</label><button>Send order</button></form><p id="result"></p></main>`;
 function completion(res: any, content: any, stream: boolean) {
   const message = typeof content === "string" ? { content } : content;
@@ -337,6 +340,40 @@ test.beforeAll(async () => {
               url: "https://api-docs.deepseek.com/guides/search",
             })
           : tool("web_search", { query: "DeepSeek Search docs", count: 5 });
+    } else if (q === dataPipelineQuery) {
+      const calls = body.messages
+        .filter((m: any) => m.role === "assistant")
+        .flatMap((m: any) => m.tool_calls ?? [])
+        .filter((c: any) => c.function.name === "run_js");
+      const lastTool = () =>
+        JSON.parse(
+          body.messages.filter((m: any) => m.role === "tool").at(-1).content,
+        );
+      if (!calls.length)
+        reply = tool("run_js", {
+          // Split the sentinel so only real data can introduce the full marker.
+          code: `export default async function() {
+            const marker = "UNPREVIEWED-" + "DATA-TAIL-9f71c2";
+            return Array.from({ length: 12000 }, (_, index) => ({
+              index,
+              value: index * 7 + 3,
+              marker: index === 11999 ? marker : "row-" + index,
+            }));
+          }`,
+          input: null,
+        });
+      else if (calls.length === 1)
+        reply = tool("run_js", {
+          code: `export default async function({ data }) {
+            const rows = data.rows;
+            return { count: rows.length, tail: rows.at(-1).marker };
+          }`,
+          data: { rows: lastTool().result.dataId },
+        });
+      else {
+        const { count, tail } = lastTool().result.preview;
+        reply = `Data pipeline complete: ${count} rows, tail ${tail}`;
+      }
     } else if (!afterTool && q.startsWith("Danger read tab "))
       reply = tool("read_tab", { tab: Number(q.split(" ").at(-1)) });
     else if (!afterTool && q === "Danger forget password")
@@ -2806,6 +2843,55 @@ test("learning re-learns an old state, shows noticed rows and accepts a suggesti
   } finally {
     learning = false;
   }
+});
+
+test("run_js chains large results by data ID without copying datasets through the model", async () => {
+  await clear();
+  await site.bringToFront();
+  await send(dataPipelineQuery);
+  await expect(
+    panel.getByText("Data pipeline complete: 12000 rows", { exact: false }),
+  ).toBeVisible({ timeout: 30000 });
+  await expect(
+    panel.getByText(dataPipelineTail, { exact: false }),
+  ).toBeVisible();
+  const pipeline = requests.filter((r) =>
+    JSON.stringify(r.messages).includes(dataPipelineQuery),
+  );
+  const calls = pipeline.flatMap((r: any) =>
+    r.messages
+      .filter((m: any) => m.role === "assistant")
+      .flatMap((m: any) => m.tool_calls ?? [])
+      .filter((c: any) => c.function.name === "run_js")
+      .map((c: any) => ({ ...c, args: JSON.parse(c.function.arguments) })),
+  );
+  const reference = calls.find((c: any) => c.args.data);
+  expect(reference.args.data.rows).toMatch(/^[0-9a-f-]{36}$/);
+  expect(JSON.stringify(reference.args)).not.toContain(dataPipelineTail);
+  expect(reference.function.arguments.length).toBeLessThan(4000);
+  // The prompt that introduces the reference carries the ID and a bounded
+  // preview only; the original 12k rows never re-enter the model context.
+  const requestUsingReference = pipeline.find((r: any) =>
+    r.messages.some((m: any) =>
+      (m.tool_calls ?? []).some(
+        (c: any) =>
+          c.function.name === "run_js" && JSON.parse(c.function.arguments).data,
+      ),
+    ),
+  );
+  const introduced = requestUsingReference.messages.findIndex((m: any) =>
+    (m.tool_calls ?? []).some(
+      (c: any) =>
+        c.function.name === "run_js" && JSON.parse(c.function.arguments).data,
+    ),
+  );
+  const sent = JSON.stringify(
+    requestUsingReference.messages.slice(0, introduced + 1),
+  );
+  expect(sent).toContain(reference.args.data.rows);
+  expect(sent).not.toContain(dataPipelineTail);
+  expect(sent).not.toContain('"row-11999"');
+  expect(sent.length).toBeLessThan(200000);
 });
 
 test("capture context meter screenshots", async () => {

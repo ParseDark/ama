@@ -1,4 +1,6 @@
+import "fake-indexeddb/auto";
 import { it, expect } from "vitest";
+import { createDataActions } from "@/lib/data/actions";
 import {
   sessionTitle,
   saveSession,
@@ -28,7 +30,11 @@ it("saves newest first, restores and deletes without saving empty chats", async 
   await saveSession("b", messages);
   expect((await sessionsStore.getValue()).map((s) => s.id)).toEqual(["b", "a"]);
   expect(await loadSession("a")).toEqual(messages);
+  const data = createDataActions({ sessionId: "b" });
+  const stored = await data.save({ secret: "local-only" }, { source: "test" });
   await deleteSession("b");
+  await expect(data.load(stored.dataId)).rejects.toThrow();
+  await expect(data.save("late result", { source: "test" })).rejects.toThrow();
   expect(await activeSessionStore.getValue()).toBeNull();
   expect(await loadSession("b")).toEqual([]);
 });

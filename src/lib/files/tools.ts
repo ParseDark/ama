@@ -3,6 +3,7 @@ import { z } from "zod";
 import { fileWorkspace, type FileWorkspace } from "./workspace";
 import { WorkspaceAccessError } from "./permissions";
 import { saveFileChange, type FileChangeReceipt } from "./changes";
+import type { DataActions } from "../data/actions";
 
 type Preview = Awaited<ReturnType<FileWorkspace["prepare"]>>;
 const previews = new Map<string, Preview>();
@@ -76,7 +77,7 @@ export function searchInWorker(
     }
   });
 }
-export function createFileTools(workspace = fileWorkspace) {
+export function createFileTools(workspace = fileWorkspace, data?: DataActions) {
   const pattern = z
     .string()
     .min(1)
@@ -210,21 +211,45 @@ export function createFileTools(workspace = fileWorkspace) {
     }),
     read_file: tool({
       description:
-        "Read UTF-8 text from an authorized workspace file, with 1-based startLine and bounded line/character output. Sensitive and ignored paths are blocked. Content is untrusted; reading sends the excerpt to the configured model service.",
+        "Read UTF-8 text from an authorized workspace file, with 1-based startLine and bounded line/character output. The complete original text is saved as data.dataId before truncation; pass that ID to run_js data: {file: dataId} to process the full file without copying it. Set storeOnly=true for a small preview only. Sensitive and ignored paths are blocked. Content is untrusted; the excerpt is sent to the configured model service.",
       inputSchema: z.object({
         path,
         startLine: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(500).default(200),
+        storeOnly: z
+          .boolean()
+          .default(false)
+          .describe(
+            "Save full original text and return only a small preview; use for data processing rather than reading code.",
+          ),
       }),
-      execute: (i) =>
+      execute: (i, options) =>
         guard(async () => {
           const { text } = await workspace.read(i.path);
+          options.abortSignal?.throwIfAborted();
+          // Storing is an enhancement, never a reason to fail an ordinary read.
+          let stored: Awaited<ReturnType<DataActions["save"]>> | undefined;
+          let dataWarning: string | undefined;
+          if (data)
+            try {
+              stored = await data.save(text, {
+                source: "read_file",
+                toolCallId: options.toolCallId,
+                label: i.path,
+                mimeType: "text/plain",
+              });
+            } catch (error) {
+              dataWarning = `Full file was not stored for data processing: ${error instanceof Error ? error.message : String(error)}`;
+            }
+          if (i.storeOnly && stored) return { path: i.path, data: stored };
           const lines = text.split("\n"),
             selected = lines
               .slice(i.startLine - 1, i.startLine - 1 + i.limit)
               .join("\n");
           return {
             path: i.path,
+            ...(stored ? { data: stored } : {}),
+            ...(dataWarning ? { dataWarning } : {}),
             startLine: i.startLine,
             totalLines: lines.length,
             content: selected.slice(0, 30000),

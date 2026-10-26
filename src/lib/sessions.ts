@@ -1,6 +1,7 @@
 import { storage } from "wxt/utils/storage";
 import type { UIMessage } from "ai";
 import { messageText } from "./messages";
+import { deleteSessionData } from "./data/store";
 export interface SessionSummary {
   id: string;
   title: string;
@@ -52,6 +53,8 @@ export const saveSession = (id: string, messages: UIMessage[]) =>
   });
 export const deleteSession = (id: string) =>
   queue(async () => {
+    // Tombstone first: an already running tool must not recreate orphan data.
+    await deleteSessionData(id);
     await storage.removeItem(`local:session:${id}`);
     await sessionsStore.setValue(
       (await sessionsStore.getValue()).filter((s) => s.id !== id),
