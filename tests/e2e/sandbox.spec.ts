@@ -34,6 +34,13 @@ test("sandbox runs modules, isolates requests, reports errors and terminates loo
         body: "export const double = value => value * 2;",
       }),
     );
+    await context.route("https://api.example.com/data", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ fetched: true }),
+      }),
+    );
     const panel = await context.newPage();
     await panel.goto(`chrome-extension://${id}/sidepanel.html`);
     await panel.waitForSelector('iframe[src$="sandbox.html"]', {
@@ -85,6 +92,10 @@ test("sandbox runs modules, isolates requests, reports errors and terminates loo
           "loop",
           'export default async function() { console.log("loop"); while(true) {} }',
         ),
+        run(
+          "fetch",
+          "export default async function() { return await (await fetch('https://api.example.com/data')).json(); }",
+        ),
       ]);
     });
     expect(results[0]).toMatchObject({
@@ -109,6 +120,7 @@ test("sandbox runs modules, isolates requests, reports errors and terminates loo
       error: "Code must export default async function(input).",
     });
     expect(results[5]).toMatchObject({ ok: true, result: [42, 42] });
+    expect(results[7]).toMatchObject({ ok: true, result: { fetched: true } });
     expect(results[6]).toMatchObject({
       ok: false,
       logs: ["loop"],

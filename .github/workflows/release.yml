@@ -2,6 +2,7 @@ name: Release
 
 on:
   push:
+    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
@@ -13,16 +14,61 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  release:
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      TAG: ${{ inputs.tag || github.ref_name }}
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      publish: ${{ steps.version.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref_name }}
+          ref: ${{ inputs.tag || github.sha }}
+      - name: Resolve version and check existing tag
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          VERSION_TAG="v$(node -p 'require("./package.json").version')"
+          TAG="${REQUESTED_TAG:-$VERSION_TAG}"
+          if [ "$TAG" != "$VERSION_TAG" ]; then
+            echo "Tag $TAG does not match package version $VERSION_TAG" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/main ]; then
+            # A normal commit keeps producing a build artifact, but must not
+            # overwrite a published version. A new package version releases once.
+            gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" > refs.json
+            if node -e 'const refs = require("./refs.json"); process.exit(refs.some(r => r.ref === `refs/tags/${process.argv[1]}`) ? 0 : 1)' "$TAG"; then
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "publish=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then
+              echo "Pushed tag does not match package version" >&2
+              exit 1
+            fi
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.sha }}
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.9
@@ -63,7 +109,7 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" .output/ama-*-chrome.zip --clobber
           else
-            gh release create "$TAG" .output/ama-*-chrome.zip --generate-notes
+            gh release create "$TAG" .output/ama-*-chrome.zip --target "$(git rev-parse HEAD)" --generate-notes
           fi
       - name: Upload browser failure traces
         if: failure()

@@ -31,7 +31,7 @@ export default defineConfig({
     sandbox: { pages: ["sandbox.html"] },
     content_security_policy: {
       sandbox:
-        "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval' blob: https://esm.sh; worker-src blob:; connect-src https://esm.sh;",
+        "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval' blob: https://esm.sh; worker-src blob:; connect-src * data: blob:;",
     },
     action: { default_title: "Open AMA" },
     commands: {
