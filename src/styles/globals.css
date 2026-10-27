@@ -414,6 +414,8 @@ kbd {
   padding: 12px 14px;
   border-radius: 12px 12px 3px 12px;
   line-height: 1.65;
+  /* Inherits the fixed :root size otherwise, ignoring the text-size setting. */
+  font-size: calc(13px * var(--ama-font-scale));
 }
 .message-image {
   max-width: 100%;

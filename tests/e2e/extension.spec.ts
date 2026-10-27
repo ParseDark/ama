@@ -2894,6 +2894,42 @@ test("run_js chains large results by data ID without copying datasets through th
   expect(sent.length).toBeLessThan(200000);
 });
 
+test("text size setting scales both user and assistant message text", async () => {
+  await clear();
+  const setScale = async (scale: number) => {
+    await sw.evaluate(async (value) => {
+      const c = (globalThis as any).chrome;
+      const { settings } = await c.storage.local.get("settings");
+      settings.fontScale = value;
+      await c.storage.local.set({ settings });
+    }, scale);
+    await panel.reload();
+    await site.bringToFront();
+  };
+  const sizes = () =>
+    panel.evaluate(() => ({
+      user: parseFloat(
+        getComputedStyle(document.querySelector(".user-bubble")!).fontSize,
+      ),
+      assistant: parseFloat(
+        getComputedStyle(document.querySelector(".prose")!).fontSize,
+      ),
+    }));
+  try {
+    await setScale(1);
+    await send("What is the lookup code?");
+    await expect(panel.locator(".user-bubble")).toBeVisible();
+    await expect(panel.locator(".prose").first()).toBeVisible();
+    const base = await sizes();
+    await setScale(1.3);
+    const large = await sizes();
+    expect(large.user / base.user).toBeCloseTo(1.3, 2);
+    expect(large.assistant / base.assistant).toBeCloseTo(1.3, 2);
+  } finally {
+    await setScale(1);
+  }
+});
+
 test("capture context meter screenshots", async () => {
   mkdirSync("docs/screenshots", { recursive: true });
   await clear();
