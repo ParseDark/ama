@@ -28,18 +28,15 @@ export function HistoryView({
   settings,
   onBack,
   onOpen,
-  onDeleted,
 }: {
   settings: Settings;
   onBack: () => void;
   onOpen: (id: string) => void;
-  onDeleted?: (id: string) => void;
 }) {
   const [sessions, setSessions] = useState<SessionSummary[]>([]),
     [query, setQuery] = useState(""),
     [hits, setHits] = useState<Exchange[]>([]),
-    [busy, setBusy] = useState(false),
-    [deleteError, setDeleteError] = useState("");
+    [busy, setBusy] = useState(false);
   useEffect(() => {
     void sessionsStore.getValue().then(setSessions);
     return sessionsStore.watch(setSessions);
@@ -82,7 +79,6 @@ export function HistoryView({
         <span className="badge">{sessions.length}</span>
       </header>
       <div className="settings-body">
-        {deleteError && <p role="alert">{deleteError}</p>}
         {sessions.length > 0 && (
           <div className="search-field">
             <Search size={15} />
@@ -128,16 +124,7 @@ export function HistoryView({
                   variant="ghost"
                   size="icon"
                   aria-label={`Delete chat ${s.title}`}
-                  onClick={() => {
-                    setDeleteError("");
-                    void deleteSession(s.id)
-                      .then(() => onDeleted?.(s.id))
-                      .catch((e) =>
-                        setDeleteError(
-                          `Could not delete chat: ${e instanceof Error ? e.message : String(e)}`,
-                        ),
-                      );
-                  }}
+                  onClick={() => void deleteSession(s.id)}
                 >
                   <Trash2 size={14} />
                 </Button>

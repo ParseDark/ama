@@ -703,42 +703,6 @@ test("grounded streaming, copy, model fetching, history and reload", async () =>
   ).toHaveCount(0);
   await panel.getByRole("button", { name: "Back to chat" }).click();
 });
-test("new and cleared chats keep immediately typed text while capture status is delayed", async () => {
-  await panel.evaluate(() => {
-    const runtime = (globalThis as any).chrome.runtime;
-    const original = runtime.sendMessage.bind(runtime);
-    (globalThis as any).__restoreSendMessage = () => {
-      runtime.sendMessage = original;
-    };
-    runtime.sendMessage = (message: any, ...args: any[]) =>
-      message?.type === "network-capture" && message.action === "status"
-        ? new Promise((resolve, reject) =>
-            setTimeout(
-              () => original(message, ...args).then(resolve, reject),
-              1000,
-            ),
-          )
-        : original(message, ...args);
-  });
-  try {
-    const textbox = panel.getByRole("textbox", {
-      name: "Message",
-      exact: true,
-    });
-    await panel.getByRole("button", { name: "New chat", exact: true }).click();
-    await textbox.fill("Immediate new chat input");
-    await panel.waitForTimeout(1300);
-    await expect(textbox).toHaveValue("Immediate new chat input");
-    await panel
-      .getByRole("button", { name: "Clear chat (⌥⇧L)", exact: true })
-      .click();
-    await textbox.fill("Immediate cleared chat input");
-    await panel.waitForTimeout(1300);
-    await expect(textbox).toHaveValue("Immediate cleared chat input");
-  } finally {
-    await panel.evaluate(() => (globalThis as any).__restoreSendMessage());
-  }
-});
 test("highlight, safe fill, real approval label and original tab on resume", async () => {
   await clear();
   await site.bringToFront();

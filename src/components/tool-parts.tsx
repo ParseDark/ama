@@ -22,42 +22,6 @@ import { switchTab } from "@/lib/tabs";
 import { Button } from "./ui/button";
 import { WebToolPart } from "./web-tool-part";
 import { WEB_TOOLS } from "@/lib/web-search/tools";
-import { useActiveTab } from "@/hooks/use-active-tab";
-import { NETWORK_PRIVACY } from "./network-capture";
-function NetworkApproval({
-  part,
-  onApproval,
-}: {
-  part: any;
-  onApproval: (v: { id: string; approved: boolean }) => void;
-}) {
-  const tab = useActiveTab();
-  return (
-    <div className="approval-card" role="group" aria-label="Approval required">
-      <strong>
-        Capture network traffic on the current page
-        {tab?.title ? `: ${tab.title}` : ""}?
-      </strong>
-      <p>{NETWORK_PRIVACY} The current tab is selected when capture starts.</p>
-      <div className="row">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onApproval({ id: part.approval.id, approved: false })}
-        >
-          Deny
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onApproval({ id: part.approval.id, approved: true })}
-        >
-          Allow
-        </Button>
-      </div>
-    </div>
-  );
-}
 export function PlanPart({ part }: { part: any }) {
   const steps = part.input?.steps ?? [];
   return (
@@ -100,8 +64,6 @@ const builtins = new Set([
   "recall_memory",
   "search_history",
   "plan",
-  "capture_network_start",
-  "capture_network_stop",
 ]);
 export function ToolPart({
   part,
@@ -140,8 +102,6 @@ export function ToolPart({
     return <WebToolPart part={part} name={name} />;
   if (isSettings)
     return <SettingsToolView part={part} name={name} onApproval={onApproval} />;
-  if (approval && name === "capture_network_start")
-    return <NetworkApproval part={part} onApproval={onApproval} />;
   if (approval) {
     let question = "",
       reason = "";

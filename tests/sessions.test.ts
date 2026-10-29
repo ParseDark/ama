@@ -1,8 +1,5 @@
 import "fake-indexeddb/auto";
-import { it, expect, vi } from "vitest";
-vi.mock("@/lib/network/client", () => ({
-  networkClient: { clear: vi.fn().mockResolvedValue(undefined) },
-}));
+import { it, expect } from "vitest";
 import { createDataActions } from "@/lib/data/actions";
 import {
   sessionTitle,

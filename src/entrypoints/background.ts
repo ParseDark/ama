@@ -2,9 +2,7 @@ import { browser } from "wxt/browser";
 import { PanelTracker } from "@/lib/panel-connection";
 import { runLearning } from "@/lib/memory/learning";
 import { startConfigSync } from "@/lib/config-sync";
-import { initNetworkCapture } from "@/lib/network/background";
 export default defineBackground(() => {
-  initNetworkCapture();
   startConfigSync();
   const tracker = new PanelTracker();
   void browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
