@@ -28,6 +28,8 @@ export function sessionTitle(messages: UIMessage[]) {
       : "New chat";
 }
 let writes: Promise<unknown> = Promise.resolve();
+// Block late chat saves as soon as deletion is requested, even while queued.
+const deletedSessions = new Set<string>();
 function queue<T>(f: () => Promise<T>): Promise<T> {
   const p = writes.then(f, f);
   writes = p.catch(() => {});
@@ -35,7 +37,7 @@ function queue<T>(f: () => Promise<T>): Promise<T> {
 }
 export const saveSession = (id: string, messages: UIMessage[]) =>
   queue(async () => {
-    if (!messages.length) return;
+    if (!messages.length || deletedSessions.has(id)) return;
     const sessions = await sessionsStore.getValue(),
       old = sessions.find((s) => s.id === id),
       now = Date.now();
@@ -51,8 +53,9 @@ export const saveSession = (id: string, messages: UIMessage[]) =>
     ]);
     await activeSessionStore.setValue(id);
   });
-export const deleteSession = (id: string) =>
-  queue(async () => {
+export const deleteSession = (id: string) => {
+  deletedSessions.add(id);
+  return queue(async () => {
     // Tombstone first: an already running tool must not recreate orphan data.
     await deleteSessionData(id);
     await storage.removeItem(`local:session:${id}`);
@@ -62,3 +65,4 @@ export const deleteSession = (id: string) =>
     if ((await activeSessionStore.getValue()) === id)
       await activeSessionStore.setValue(null);
   });
+};

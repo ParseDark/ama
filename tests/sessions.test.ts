@@ -38,3 +38,11 @@ it("saves newest first, restores and deletes without saving empty chats", async 
   expect(await activeSessionStore.getValue()).toBeNull();
   expect(await loadSession("b")).toEqual([]);
 });
+it("blocks a late save from resurrecting a deleted chat", async () => {
+  await saveSession("c", messages);
+  await deleteSession("c");
+  await saveSession("c", messages);
+  expect((await sessionsStore.getValue()).map((s) => s.id)).not.toContain("c");
+  expect(await loadSession("c")).toEqual([]);
+  expect(await activeSessionStore.getValue()).not.toBe("c");
+});

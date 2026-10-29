@@ -703,6 +703,41 @@ test("grounded streaming, copy, model fetching, history and reload", async () =>
   ).toHaveCount(0);
   await panel.getByRole("button", { name: "Back to chat" }).click();
 });
+test("new and cleared chats keep immediately typed text while deletion is delayed", async () => {
+  await panel.evaluate(() => {
+    const area = (globalThis as any).chrome.storage.local;
+    const original = area.remove;
+    (globalThis as any).__restoreRemove = () => {
+      area.remove = original;
+    };
+    area.remove = (keys: unknown) =>
+      new Promise((resolve, reject) =>
+        setTimeout(
+          () =>
+            Promise.resolve(original.call(area, keys)).then(resolve, reject),
+          1000,
+        ),
+      );
+  });
+  try {
+    const textbox = panel.getByRole("textbox", {
+      name: "Message",
+      exact: true,
+    });
+    await panel.getByRole("button", { name: "New chat", exact: true }).click();
+    await textbox.fill("Immediate new chat input");
+    await panel.waitForTimeout(1300);
+    await expect(textbox).toHaveValue("Immediate new chat input");
+    await panel
+      .getByRole("button", { name: "Clear chat (⌥⇧L)", exact: true })
+      .click();
+    await textbox.fill("Immediate cleared chat input");
+    await panel.waitForTimeout(1300);
+    await expect(textbox).toHaveValue("Immediate cleared chat input");
+  } finally {
+    await panel.evaluate(() => (globalThis as any).__restoreRemove());
+  }
+});
 test("highlight, safe fill, real approval label and original tab on resume", async () => {
   await clear();
   await site.bringToFront();
