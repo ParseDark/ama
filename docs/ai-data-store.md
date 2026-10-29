@@ -5,7 +5,7 @@
 ## 数据流
 
 ```text
-read_file / 上一次 run_js 结果
+read_file / capture_network_stop / 上一次 run_js 结果
         ↓ 自动保存原始值（截断、预览之前）
 扩展 IndexedDB（ama-data）
         ↓ 模型只看到 dataId、类型、字节数、有界预览
@@ -25,6 +25,12 @@ Worker: module.default({ data: { name: 原始值 }, params })
 - `logs` 每条最多 2,000 字符，总计最多 8 KiB / 50 条，返回 `logsTruncated`。
 - `read_file` 在返回摘录前保存**完整原文**；`storeOnly=true` 时只返回描述符。存储失败不会让普通读取失败，而是返回 `dataWarning`。
 - `list_data` 返回最多 100 条元信息（不含预览）；`inspect_data` 用 `offset`/`limit` 获取有界预览。
+
+## 网络抓包来源
+
+`capture_network_stop` 将当前会话完整保留的请求记录分批保存，返回 `dataRefs` 和有界响应预览。用 `run_js({ data: { network: dataRefs[0].dataId }, code })` 加载原始记录；多批次可传多个命名引用并在脚本中合并。每批最多 8MiB、最多 8 个引用，不改变下面的数据仓库配额。
+
+按用户最新要求，网络认证头不脱敏：Cookie、Authorization、Set-Cookie 原值也会随完整记录保存和传给 sandbox。头、URL、body 可能含敏感数据，脚本输出和显式查看结果可能进入模型上下文。采集最多 200 条、单响应最多 100KiB，不能把“完整保留”理解为无限制抓包。详见 [network-capture.md](./network-capture.md)。
 
 ## 存储约束
 

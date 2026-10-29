@@ -19,6 +19,7 @@ export default defineConfig({
     description:
       "Read the current page as Markdown and chat about it with any LLM provider.",
     permissions: [
+      "debugger",
       "sidePanel",
       "storage",
       "unlimitedStorage",

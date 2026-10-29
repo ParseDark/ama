@@ -34,6 +34,8 @@ import { listMemories } from "./memory/store";
 import { createHistoryTools } from "./history-tools";
 import { createSettingsTools } from "./settings-tools";
 import { createCodeTools } from "./code-tools";
+import { createNetworkTools } from "./network/tools";
+import type { NetworkClient } from "./network/client";
 import { createDataActions } from "./data/actions";
 import { createDataTools } from "./data/tools";
 import type { runCode } from "./code-runner";
@@ -92,6 +94,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       embeddingFetch?: typeof fetch;
       webFetch?: typeof fetch;
       runCode?: typeof runCode;
+      networkClient?: NetworkClient;
       now?: () => number;
     } = {},
   ) {
@@ -152,6 +155,10 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       ...createPageTools(run, { dangerMode: settings.dangerMode === true }),
       ...createFileTools(undefined, data),
       ...createCodeTools(data, this.options.runCode),
+      ...createNetworkTools(chatId, data, run, {
+        client: this.options.networkClient,
+        dangerMode: settings.dangerMode === true,
+      }),
       ...createDataTools(data),
       ...createWebTools(settings, messages, this.options.webFetch),
       ...createHistoryTools({

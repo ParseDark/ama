@@ -529,6 +529,15 @@ kbd {
 .error {
   color: #b53e3e;
 }
+.network-capture {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: calc(12px * var(--ama-font-scale));
+}
+.network-capture p {
+  margin: 4px 0;
+  line-height: 1.4;
+}
 .approval-card {
   background: #f9f2e7;
   border: 1px solid #e7d5af;

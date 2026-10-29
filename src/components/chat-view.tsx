@@ -35,6 +35,7 @@ import { Tooltip } from "./ui/tooltip";
 import { ModelPicker } from "./model-picker";
 import { ChatMessage } from "./chat-message";
 import { MemorySuggestion } from "./memory-suggestion";
+import { NetworkCapture } from "./network-capture";
 import { ContextMeter, currentModelInfo, lastUsage } from "./context-meter";
 export function ChatView({
   id,
@@ -43,6 +44,7 @@ export function ChatView({
   active = true,
   onSettingsChange,
   onNew,
+  onClearError,
   onHistory,
   onSettings,
 }: {
@@ -52,6 +54,7 @@ export function ChatView({
   active?: boolean;
   onSettingsChange: (s: Settings) => void;
   onNew: () => void;
+  onClearError: (error: unknown) => void;
   onHistory: () => void;
   onSettings: () => void;
 }) {
@@ -72,7 +75,6 @@ export function ChatView({
     stop,
     setMessages,
     regenerate,
-    clearError,
     addToolApprovalResponse,
   } = useChat({
     id,
@@ -121,20 +123,12 @@ export function ChatView({
     const timer = setTimeout(() => void runLearning(), 300000);
     return () => clearTimeout(timer);
   }, [status, messages]);
-  const clear = useCallback(async () => {
+  const clear = useCallback(() => {
     clearing.current = true;
-    const cleared = id;
     stop();
-    setMessages([]);
-    setImages([]);
-    setCaptureError("");
-    clearError();
-    // Remount first so a user who types immediately lands in the new chat. The
-    // old ID is tombstoned afterwards; a running tool cannot resurrect its data.
     onNew();
-    await deleteSession(cleared);
-    clearing.current = false;
-  }, [id, stop, setMessages, clearError, onNew]);
+    void deleteSession(id).catch(onClearError);
+  }, [id, stop, onNew, onClearError]);
   useEffect(() => {
     const fn = () => void clear();
     window.addEventListener("ama:clear-chat", fn);
@@ -193,7 +187,6 @@ export function ChatView({
               variant="ghost"
               size="icon"
               aria-label="Clear chat (⌥⇧L)"
-              disabled={!messages.length}
               onClick={() => void clear()}
             >
               <Trash2 size={16} />
@@ -204,7 +197,6 @@ export function ChatView({
               variant="ghost"
               size="icon"
               aria-label="New chat"
-              disabled={!messages.length}
               onClick={onNew}
             >
               <Plus size={18} />
@@ -232,6 +224,7 @@ export function ChatView({
           </Tooltip>
         </div>
       </header>
+      <NetworkCapture sessionId={id} />
       <main className="message-scroller">
         {settings.dangerMode === true && (
           <p className="hint" role="status">
