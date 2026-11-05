@@ -28,7 +28,16 @@ it("danger mode skips native browser approvals without removing tab ownership or
     },
   };
   const tools: any = createPageTools(run, deps);
-  for (const name of ["read_tab", "fill", "select", "check", "click"]) {
+  for (const name of [
+    "read_tab",
+    "fill",
+    "select",
+    "check",
+    "click",
+    "scroll",
+    "double_click",
+    "drag",
+  ]) {
     expect(
       await tools[name].needsApproval(
         { tab: 2, id: "e1" },
@@ -44,6 +53,17 @@ it("danger mode skips native browser approvals without removing tab ownership or
   expect(execute).toHaveBeenCalled();
   expect((await tools.close_tab.execute({ tab: 2 })).ok).toBe(false);
   expect(close).not.toHaveBeenCalled();
+  await tools.scroll.execute({ tab: 2, deltaX: 0, deltaY: 500 });
+  await tools.drag.execute({
+    tab: 2,
+    sourceId: "e1",
+    targetId: "e2",
+    mode: "auto",
+  });
+  // Even Danger mode must not double-submit a committing control.
+  expect((await tools.double_click.execute({ tab: 2, id: "e1" })).ok).toBe(
+    false,
+  );
   await tools.read_tab.execute({ tab: 3 });
   // A temporary Danger mode bypass must not become a permanent per-chat grant.
   expect(run.isAllowed(2)).toBe(false);

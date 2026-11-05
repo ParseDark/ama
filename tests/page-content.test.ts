@@ -1,4 +1,4 @@
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
 import { extractPageContent, accessibleName } from "@/lib/page-content";
 it("indexes stable named controls without typed values", () => {
   document.body.innerHTML =
@@ -32,6 +32,43 @@ it("prioritizes non-links and caps at 400", () => {
   const p = extractPageContent(document);
   expect(p.elements).toHaveLength(400);
   expect(p.elements[0]).toContain("Important");
+});
+it("indexes drag/drop targets and scroll containers without exposing editable contents", () => {
+  document.body.innerHTML =
+    '<div draggable="true">Card<input value="SECRET"><textarea>PRIVATE</textarea></div><div ondrop="void 0" aria-label="Drop here"></div><div id="scroller"><div>Row</div></div><div role="slider" aria-label="Volume"></div>';
+  const el = document.getElementById("scroller")!;
+  el.style.overflowY = "auto";
+  Object.defineProperties(el, {
+    scrollHeight: { value: 500 },
+    clientHeight: { value: 100 },
+  });
+  const p = extractPageContent(document);
+  expect(p.elements.join("\n")).toContain('"Drop here"');
+  expect(p.elements.join("\n")).toContain('slider "Volume"');
+  expect(p.elements.join("\n")).toContain("scrollable x=0/0 y=0/400");
+  expect(p.elements.join("\n")).not.toMatch(/SECRET|PRIVATE/);
+});
+it("prioritizes current viewport targets beyond the old 400-element cutoff", () => {
+  document.body.innerHTML = Array.from(
+    { length: 450 },
+    (_, i) => `<button>Item ${i}</button>`,
+  ).join("");
+  const last = document.querySelectorAll("button")[449];
+  const spy = vi.spyOn(last, "getBoundingClientRect").mockReturnValue({
+    top: 10,
+    left: 10,
+    bottom: 30,
+    right: 100,
+    width: 90,
+    height: 20,
+  } as DOMRect);
+  try {
+    const p = extractPageContent(document);
+    expect(p.elements).toHaveLength(400);
+    expect(p.elements[0]).toContain('"Item 449" (in-view)');
+  } finally {
+    spy.mockRestore();
+  }
 });
 it("strips overlays and noise, renders single-line GFM cells", () => {
   document.body.innerHTML =

@@ -2,6 +2,12 @@ import { it, expect, vi } from "vitest";
 import { createPageTools, getApprovalDetails } from "@/lib/page-tools";
 import { RunContext } from "@/lib/run-context";
 import { describeClickTarget } from "@/lib/page-actions";
+import {
+  scrollPage,
+  doubleClickElement,
+  dragElement,
+} from "@/lib/page-gestures";
+import { asSchema } from "ai";
 it("asks only for external tabs and committing clicks, using browser facts", async () => {
   const run = new RunContext(1),
     execute = vi.fn(async (_id, fn) =>
@@ -50,6 +56,80 @@ it("asks only for external tabs and committing clicks, using browser facts", asy
   expect((await tools.close_tab.execute({ tab: 2 })).ok).toBe(false);
   await tools.close_tab.execute({ tab: 3 });
   expect(tabs.close).toHaveBeenCalledWith(3);
+});
+it("approves drags, guards double-submit, and returns refreshed gesture state", async () => {
+  const run = new RunContext(1);
+  let committing = false;
+  const execute = vi.fn(async (_tab, fn, args) =>
+    fn === describeClickTarget
+      ? { found: true, submit: committing, label: `item ${args[0]}` }
+      : { ok: true, dispatched: true, verified: false },
+  );
+  const readPage = vi.fn(async (tabId: number) => ({
+    tabId,
+    url: "https://example.com",
+    title: "After",
+    markdown: "x".repeat(20000),
+    elements: ["[e2] Target"],
+    selection: "",
+    truncated: false,
+  }));
+  const tools: any = createPageTools(run, {
+    run: execute as any,
+    readPage,
+    wait: async () => {},
+    tabs: { get: async () => ({ title: "Other" }) } as any,
+  });
+  expect(await tools.scroll.needsApproval({}, { toolCallId: "scroll" })).toBe(
+    false,
+  );
+  expect(
+    await tools.scroll.needsApproval({ tab: 2 }, { toolCallId: "external" }),
+  ).toBe(true);
+  expect(
+    await tools.double_click.needsApproval(
+      { id: "a" },
+      { toolCallId: "double" },
+    ),
+  ).toBe(false);
+  expect(
+    await tools.drag.needsApproval(
+      { sourceId: "a", targetId: "b" },
+      { toolCallId: "drag" },
+    ),
+  ).toBe(true);
+  expect(getApprovalDetails("drag")).toMatchObject({
+    label: "item a",
+    targetLabel: "item b",
+  });
+  const scroll = await tools.scroll.execute({ deltaX: 0, deltaY: 500 });
+  expect(execute).toHaveBeenCalledWith(1, scrollPage, [null, 0, 500]);
+  expect(scroll.page.markdown).toHaveLength(12000);
+  expect(scroll.page.truncated).toBe(true);
+  expect(scroll.page.elements).toEqual(["[e2] Target"]);
+  await tools.double_click.execute({ id: "a" });
+  expect(execute).toHaveBeenCalledWith(1, doubleClickElement, ["a"]);
+  await tools.drag.execute({
+    sourceId: "a",
+    targetId: "b",
+    mode: "auto",
+    tab: 2,
+  });
+  expect(execute).toHaveBeenCalledWith(2, dragElement, ["a", "b", "auto"]);
+  expect(run.isAllowed(2)).toBe(true);
+  execute.mockClear();
+  committing = true;
+  expect((await tools.double_click.execute({ id: "a" })).ok).toBe(false);
+  expect(execute).toHaveBeenCalledTimes(1);
+  const schema = asSchema(tools.scroll.inputSchema);
+  expect((await schema.validate!({ deltaY: 50 })).success).toBe(true);
+  for (const value of [
+    {},
+    { deltaY: 0 },
+    { deltaX: 10001 },
+    { deltaY: Infinity },
+  ])
+    expect((await schema.validate!(value)).success).toBe(false);
 });
 it("does not act without a scriptable start tab", async () => {
   const tools: any = createPageTools(new RunContext());

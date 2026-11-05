@@ -9,6 +9,7 @@ import {
   describeClickTarget,
 } from "./page-actions";
 import { highlightElement } from "./highlight";
+import { scrollPage, doubleClickElement, dragElement } from "./page-gestures";
 import { getTab, listTabs, openTab, switchTab, closeTab } from "./tabs";
 import type { RunContext } from "./run-context";
 const tab = z.number().int().optional();
@@ -17,6 +18,7 @@ export interface ApprovalDetails {
   tabTitle?: string;
   label?: string;
   submit?: boolean;
+  targetLabel?: string;
 }
 const approvals = new Map<string, ApprovalDetails>();
 export const getApprovalDetails = (id: string) => approvals.get(id);
@@ -81,6 +83,26 @@ export function createPageTools(
     return {
       ...((await execute(id, fn, args)) as Record<string, unknown>),
       tabId: id,
+    };
+  };
+  const afterGesture = async (
+    result: Record<string, unknown> & { tabId: number },
+  ) => {
+    await (
+      deps.wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)))
+    )(250);
+    const page = await read(result.tabId);
+    return {
+      ...result,
+      page: page
+        ? {
+            url: page.url,
+            title: page.title,
+            elements: page.elements,
+            markdown: page.markdown.slice(0, 12000),
+            truncated: page.truncated || page.markdown.length > 12000,
+          }
+        : null,
     };
   };
   const readResult = async (id: number) => {
@@ -162,6 +184,80 @@ export function createPageTools(
             : null,
         };
       },
+    }),
+    scroll: tool({
+      description:
+        "Scroll a page or the nearest scrollable ancestor of an indexed element by CSS pixels. Positive deltaY moves down, positive deltaX right. Not a real mouse wheel: no map/chart zoom. Returns offsets, movement and fresh page state. Stop at a boundary; do not loop on an unmoved result.",
+      inputSchema: z
+        .object({
+          tab,
+          id: z.string().optional(),
+          deltaX: z.number().finite().min(-10000).max(10000).default(0),
+          deltaY: z.number().finite().min(-10000).max(10000).default(0),
+        })
+        .refine((i) => i.deltaX !== 0 || i.deltaY !== 0, {
+          message: "Provide a non-zero scroll delta.",
+        }),
+      needsApproval: requireApproval,
+      execute: async (i) =>
+        afterGesture(
+          await act(i, scrollPage, [i.id ?? null, i.deltaX, i.deltaY]),
+        ),
+    }),
+    double_click: tool({
+      description:
+        "Send a synthetic double-click to an indexed element, then read the page. Two single-click handlers may also run. Committing targets are rejected: use click instead. Does not provide trusted input or native text selection. Verify the result before continuing.",
+      inputSchema: z.object({ id: z.string(), tab }),
+      needsApproval: (i, o) => requireApproval(i, o, true),
+      execute: async (i) => {
+        const info = await execute(target(i.tab), describeClickTarget, [i.id]);
+        if (!info?.found)
+          return {
+            ok: false,
+            tabId: target(i.tab),
+            error: "The element is no longer on the page.",
+          };
+        if (info.submit)
+          return {
+            ok: false,
+            tabId: target(i.tab),
+            error:
+              "Double-clicking a committing control could submit twice. Use click with approval instead.",
+          };
+        return afterGesture(await act(i, doubleClickElement, [i.id]));
+      },
+    }),
+    drag: tool({
+      description:
+        "Experimental synthetic drag between two indexed elements in the same document. Both endpoints must fit in the viewport together. auto chooses HTML5 for draggable sources, pointer otherwise; never retries with a different mode automatically. Always asks approval unless Danger mode is on. No files, cross-tab/frame drags, pointer capture or trusted input. Events dispatched is NOT proof of success; inspect page state before proceeding.",
+      inputSchema: z.object({
+        tab,
+        sourceId: z.string(),
+        targetId: z.string(),
+        mode: z.enum(["auto", "html5", "pointer"]).default("auto"),
+      }),
+      needsApproval: async (i, o) => {
+        if (deps.dangerMode === true) return false;
+        const tabId = target(i.tab);
+        const t = run.isAllowed(tabId) ? null : await tabs.get(tabId);
+        const source = await execute(tabId, describeClickTarget, [i.sourceId]);
+        const destination = await execute(tabId, describeClickTarget, [
+          i.targetId,
+        ]);
+        approvals.set(o.toolCallId, {
+          tabId,
+          ...(!run.isAllowed(tabId)
+            ? { tabTitle: t?.title ?? "Untitled tab" }
+            : {}),
+          label: source?.label || "missing source",
+          targetLabel: destination?.label || "missing target",
+        });
+        return true;
+      },
+      execute: async (i) =>
+        afterGesture(
+          await act(i, dragElement, [i.sourceId, i.targetId, i.mode]),
+        ),
     }),
     read_tab: tool({
       description: "Read a tab as Markdown; defaults to the task start tab.",

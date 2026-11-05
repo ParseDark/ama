@@ -1,5 +1,15 @@
 # Validation record
 
+## Page gestures: scroll, double-click and experimental drag
+
+Added `scroll`, `double_click` and `drag` using the existing `scripting.executeScript` backend; no new manifest permissions or debugger attachment. Scroll supports the page and nearest scrolling container, bounded per-axis deltas, actual offsets/movement/boundaries and refreshed page state. Double-click sends explicit click sequences plus `dblclick`, rejects recognized committing controls even in Danger mode, and checks visibility/coverage/staleness. Drag supports explicit/auto HTML5 and pointer modes in the same document, accepts HTML5 drop only after cancelled `dragover`, and cleans up dragend/pointerup on early exits. Ordinary mode always approves drags; cross-user-tab access retains approval, and Danger mode bypasses do not become permanent tab grants. Gesture cards describe synthetic events, not verified application success.
+
+Page extraction adds draggable/drop/double-click/slider/grid/list targets, scrolling-container metadata and viewport-first ranking within the 400-element cap. Editable descendant contents are excluded from wrapper names. Extra scroll-container inspection is limited to 10,000 elements.
+
+Validation: **62 unit/integration files / 231 tests**, **30 real unpacked-Chromium scenarios**, TypeScript, formatting and production ZIP build passed. New unit coverage checks nearest-container scrolling, bounds/no movement, event sequence/count, disabled/covered/missing/stale targets, accepted/rejected/cancelled HTML5 drops with shared DataTransfer, pointer button state and release cleanup, schema limits, approvals/Danger mode, UI copy and viewport indexing past 400 items. The new local-provider extension scenario verifies both scroll axes, page scrolling with omitted id, two click handlers plus double-click editing, denied drag without a drop, approved HTML5 data transfer and pointer drag with visible result changes. Existing regression scenarios remain passing. Full-suite screenshot refresh artifacts were discarded as unrelated.
+
+These are deterministic local fixtures, not a universal-site compatibility claim. Synthetic events have `isTrusted=false`. Native text selection, actual wheel zoom, pointer capture, cross-viewport/frame/tab and file/system drags, arbitrary JavaScript-only unindexed targets and complex canvas interactions are not supported. No external destructive operation or real payment was performed.
+
 ## Text size setting (v0.3.0)
 
 **Settings → Display → Text size** offers Small / Default / Large / Extra large (0.9 / 1 / 1.15 / 1.3 of the 13px baseline) plus **Reset**. The choice is stored as `Settings.fontScale`, validated by `getFontScale` (finite 0.8–1.5, otherwise 1), and included in optional configuration sync. `App` writes it to `--ama-font-scale` on `<html>`; every px font size in `globals.css`/`typeset.css` is multiplied by that variable, and Tailwind's text-size tokens (`--text-xs` … `--text-3xl`) are overridden so utility classes scale too. Spacing and layout do not scale.

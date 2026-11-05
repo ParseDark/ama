@@ -54,6 +54,9 @@ const builtins = new Set([
   "select",
   "check",
   "click",
+  "scroll",
+  "double_click",
+  "drag",
   "read_tab",
   "open_tab",
   "list_tabs",
@@ -91,12 +94,13 @@ export function ToolPart({
     "output-denied",
   ].includes(part.state);
   useEffect(() => {
-    if (approval && tab && input.id)
+    const id = input.id ?? input.sourceId;
+    if (approval && tab && id)
       void runInTab(tab, highlightElement, [
-        input.id,
+        id,
         "Waiting for your approval",
       ]).catch(() => {});
-  }, [approval, tab, input.id]);
+  }, [approval, tab, input.id, input.sourceId]);
   if (name === "plan") return <PlanPart part={part} />;
   if (name === "web_search" || name === "web_fetch")
     return <WebToolPart part={part} name={name} />;
@@ -123,19 +127,26 @@ export function ToolPart({
     } else {
       const where = details?.tabTitle ? ` in "${details.tabTitle}"` : "";
       question =
-        name === "click"
-          ? `Click ${details?.label ?? "this element"}${where}?`
-          : name === "fill"
-            ? `Type "${input.text}"${where}?`
-            : name === "select"
-              ? `Select "${input.option}"${where}?`
-              : name === "check"
-                ? `${input.checked ? "Check" : "Uncheck"} a box${where}?`
-                : `Read the tab "${details?.tabTitle ?? tab}"?`;
+        name === "click" || name === "double_click"
+          ? `${name === "double_click" ? "Double-click" : "Click"} ${details?.label ?? "this element"}${where}?`
+          : name === "drag"
+            ? `Drag ${details?.label ?? input.sourceId} to ${details?.targetLabel ?? input.targetId}${where}?`
+            : name === "scroll"
+              ? `Scroll ${input.id ? "this container" : "the page"} by (${input.deltaX ?? 0}, ${input.deltaY ?? 0}) pixels${where}?`
+              : name === "fill"
+                ? `Type "${input.text}"${where}?`
+                : name === "select"
+                  ? `Select "${input.option}"${where}?`
+                  : name === "check"
+                    ? `${input.checked ? "Check" : "Uncheck"} a box${where}?`
+                    : `Read the tab "${details?.tabTitle ?? tab}"?`;
       reason = [
         details?.tabTitle ? "You haven't shared this tab in this chat." : "",
         details?.submit
           ? "This looks like it submits or commits something on the page."
+          : "",
+        name === "drag"
+          ? "Dragging may immediately move, save or delete data. Experimental DOM simulation; success must be checked."
           : "",
       ]
         .filter(Boolean)
@@ -214,6 +225,18 @@ export function ToolPart({
   else if (name === "select") label = `Selected "${input.option}"`;
   else if (name === "check") label = input.checked ? "Checked" : "Unchecked";
   else if (name === "click") label = `Clicked ${details?.label ?? "element"}`;
+  else if (name === "double_click")
+    label = pending
+      ? "Double-clicking element…"
+      : "Double-click events sent · verify result";
+  else if (name === "drag")
+    label = pending ? "Dragging element…" : "Drag events sent · verify result";
+  else if (name === "scroll")
+    label = pending
+      ? "Scrolling…"
+      : out.moved
+        ? `Scrolled to (${out.after?.x}, ${out.after?.y})`
+        : "No scroll movement · boundary reached";
   else if (name === "read_tab") label = `Read "${out.title ?? "page"}"`;
   else if (name === "open_tab") label = `Opened ${out.title ?? input.url}`;
   else if (name === "list_tabs") label = "Looked at your tabs";
@@ -229,9 +252,9 @@ export function ToolPart({
       <button
         title={label}
         onClick={() => {
-          if (tab && input.id)
+          if (tab && (input.id ?? input.sourceId))
             void runInTab(tab, highlightElement, [
-              input.id,
+              input.id ?? input.sourceId,
               input.note ?? label,
             ]).catch(() => {});
           else if (tab && ["open_tab", "read_tab", "switch_tab"].includes(name))

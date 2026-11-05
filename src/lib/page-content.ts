@@ -31,6 +31,14 @@ export function accessibleName(el: Element, doc: Document) {
           })
           .join(" ")
       : "";
+  const editableSelector = "input,textarea,select,[contenteditable]";
+  const text = !control
+    ? el.querySelector(editableSelector)
+      ? (el.cloneNode(true) as Element)
+      : el
+    : null;
+  if (text && text !== el)
+    text.querySelectorAll(editableSelector).forEach((e) => e.remove());
   const candidates = [
     el.getAttribute("aria-label"),
     labelled,
@@ -40,7 +48,7 @@ export function accessibleName(el: Element, doc: Document) {
     ["submit", "button", "reset"].includes(el.getAttribute("type") ?? "")
       ? el.getAttribute("value")
       : null,
-    !control ? el.textContent : null,
+    text?.textContent,
     el.getAttribute("title"),
     el.querySelector("img[alt]")?.getAttribute("alt"),
   ];
@@ -51,21 +59,57 @@ export function accessibleName(el: Element, doc: Document) {
 }
 export function extractPageContent(doc: Document): PageContent {
   const selector =
-    'a[href],button,input:not([type=hidden]),textarea,select,summary,[contenteditable=""],[contenteditable="true"],[role="button"],[role="link"],[role="searchbox"],[role="textbox"],[role="combobox"],[role="tab"],[role="menuitem"],[role="checkbox"],[role="radio"],[role="switch"],h1,h2,h3,h4';
+    'a[href],button,input:not([type=hidden]),textarea,select,summary,[contenteditable=""],[contenteditable="true"],[role="button"],[role="link"],[role="searchbox"],[role="textbox"],[role="combobox"],[role="tab"],[role="menuitem"],[role="checkbox"],[role="radio"],[role="switch"],[role="slider"],[role="gridcell"],[role="listitem"],[role="list"],[draggable="true"],[ondblclick],[ondrop],[aria-dropeffect],h1,h2,h3,h4';
+  const scrollable = new Set<HTMLElement>();
+  // Bound extra layout inspection. Index named or unnamed scrolling containers,
+  // without turning every generic div into a target.
+  for (const el of Array.from(
+    doc.querySelectorAll<HTMLElement>("body *"),
+  ).slice(0, 10000)) {
+    if (el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth)
+      continue;
+    const style = doc.defaultView?.getComputedStyle(el);
+    if (
+      style &&
+      ((el.scrollHeight > el.clientHeight &&
+        /^(auto|scroll|overlay)$/.test(style.overflowY)) ||
+        (el.scrollWidth > el.clientWidth &&
+          /^(auto|scroll|overlay)$/.test(style.overflowX)))
+    )
+      scrollable.add(el);
+  }
   const candidates = Array.from(
-    doc.querySelectorAll<HTMLElement>(selector),
+    new Set([...doc.querySelectorAll<HTMLElement>(selector), ...scrollable]),
   ).filter(
     (el) =>
       !el.closest("#ama-highlight") &&
       (!el.checkVisibility ||
         el.checkVisibility({ visibilityProperty: true })) &&
       (accessibleName(el, doc) ||
-        el.matches("input,textarea,select,[contenteditable]")),
+        el.matches(
+          "input,textarea,select,[contenteditable],[draggable=true],[ondblclick],[ondrop],[aria-dropeffect],[role=slider],[role=gridcell],[role=listitem],[role=list]",
+        ) ||
+        scrollable.has(el)),
   );
-  const sorted = [
-    ...candidates.filter((e) => e.tagName !== "A"),
-    ...candidates.filter((e) => e.tagName === "A"),
-  ].slice(0, 400);
+  const inViewport = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return (
+      r.width > 0 &&
+      r.height > 0 &&
+      r.bottom > 0 &&
+      r.right > 0 &&
+      r.top < (doc.defaultView?.innerHeight ?? 0) &&
+      r.left < (doc.defaultView?.innerWidth ?? 0)
+    );
+  };
+  const visible = new Set(candidates.filter(inViewport));
+  const sorted = candidates
+    .sort(
+      (a, b) =>
+        Number(visible.has(b)) - Number(visible.has(a)) ||
+        Number(a.tagName === "A") - Number(b.tagName === "A"),
+    )
+    .slice(0, 400);
   let next = Number(doc.documentElement.dataset.amaNextId) || 0;
   const elements = sorted.map((el) => {
     if (!el.dataset.amaId) el.dataset.amaId = `e${++next}`;
@@ -77,7 +121,21 @@ export function extractPageContent(doc: Document): PageContent {
         el.getAttribute("type") !== "text"
           ? ` type=${el.getAttribute("type")}`
           : "";
-    return `[${el.dataset.amaId}] ${kind}${type} "${accessibleName(el, doc)}"`;
+    const flags = [
+      visible.has(el) ? "in-view" : "",
+      el.draggable ? "draggable" : "",
+      scrollable.has(el)
+        ? `scrollable x=${el.scrollLeft}/${Math.max(0, el.scrollWidth - el.clientWidth)} y=${el.scrollTop}/${Math.max(0, el.scrollHeight - el.clientHeight)}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const name = scrollable.has(el)
+      ? el.getAttribute("aria-label") ||
+        el.getAttribute("title") ||
+        "scroll container"
+      : accessibleName(el, doc);
+    return `[${el.dataset.amaId}] ${kind}${type} "${name.replace(/\s+/g, " ").trim().slice(0, 80)}"${flags ? ` (${flags})` : ""}`;
   });
   doc.documentElement.dataset.amaNextId = String(next);
   const clean = (root: Element) => {

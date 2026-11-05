@@ -44,6 +44,14 @@ const dataPipelineQuery =
   "Process a large dataset using stored data references";
 const dataPipelineTail = "UNPREVIEWED-DATA-TAIL-9f71c2";
 const form = `<!doctype html><title>Test checkout</title><main><h1>Test checkout</h1><p>Lookup code is ALPHA-42. This page contains a form to exercise browser actions.</p><form onsubmit="event.preventDefault();document.querySelector('#result').textContent='Submitted '+document.querySelector('#name').value"><label>Name<input id="name" placeholder="Full name"></label><label>Region<select><option value="us">United States</option><option value="uk">United Kingdom</option></select></label><label><input type="checkbox">Updates</label><button>Send order</button></form><p id="result"></p></main>`;
+const gesturePage = `<!doctype html><title>Gesture playground</title>
+<style>body{margin:16px}#scroll-box{overflow:auto;width:300px;height:100px}#scroll-content{width:700px;height:600px}#source,#drop,#pointer,#pointer-target{display:inline-block;width:120px;height:60px;margin:8px;background:#ddd}#tail{height:2000px}</style>
+<button type="button" id="double" onclick="document.querySelector('#click-count').textContent=Number(document.querySelector('#click-count').textContent)+1" ondblclick="document.querySelector('#double-result').textContent='Editing'">Open editor</button><span id="click-count">0</span><p id="double-result"></p>
+<div id="scroll-box" aria-label="Scrollable rows"><div id="scroll-content">Scrollable content</div></div>
+<div id="source" draggable="true" aria-label="Drag card" ondragstart="event.dataTransfer.setData('text/plain','Card moved')">Card</div>
+<div id="drop" role="list" aria-label="Drop zone" ondragover="event.preventDefault()" ondrop="event.preventDefault();document.querySelector('#drag-result').textContent=event.dataTransfer.getData('text/plain')">Destination</div><p id="drag-result"></p>
+<div id="pointer" role="slider" aria-label="Pointer handle" onpointerdown="window.dragging=true">Handle</div><div id="pointer-target" role="button" aria-label="Pointer destination">Destination</div><p id="pointer-result"></p><div id="tail">Page tail</div>
+<script>document.addEventListener('pointermove',e=>{if(window.dragging&&e.buttons===1)window.dragMoved=true});document.addEventListener('pointerup',()=>{if(window.dragging&&window.dragMoved)document.querySelector('#pointer-result').textContent='Pointer moved';window.dragging=false});</script>`;
 function completion(res: any, content: any, stream: boolean) {
   const message = typeof content === "string" ? { content } : content;
   if (!stream) {
@@ -179,9 +187,11 @@ test.beforeAll(async () => {
     if (req.method === "GET") {
       res.setHeader("Content-Type", "text/html");
       res.end(
-        req.url === "/tall"
-          ? "<!doctype html><title>Tall page</title><style>body{margin:0}header{position:sticky;top:0;height:70px;background:red}main{height:3930px;background:linear-gradient(white,blue)}</style><header>Sticky once</header><main>Tall page</main>"
-          : form,
+        req.url === "/gestures"
+          ? gesturePage
+          : req.url === "/tall"
+            ? "<!doctype html><title>Tall page</title><style>body{margin:0}header{position:sticky;top:0;height:70px;background:red}main{height:3930px;background:linear-gradient(white,blue)}</style><header>Sticky once</header><main>Tall page</main>"
+            : form,
       );
       return;
     }
@@ -374,7 +384,27 @@ test.beforeAll(async () => {
         const { count, tail } = lastTool().result.preview;
         reply = `Data pipeline complete: ${count} rows, tail ${tail}`;
       }
-    } else if (!afterTool && q.startsWith("Danger read tab "))
+    } else if (!afterTool && q === "gesture scroll container")
+      reply = tool("scroll", {
+        id: idFor(body, '"Scrollable rows"'),
+        deltaX: 150,
+        deltaY: 200,
+      });
+    else if (!afterTool && q === "gesture scroll page")
+      reply = tool("scroll", { deltaY: 500 });
+    else if (!afterTool && q === "gesture double click")
+      reply = tool("double_click", { id: idFor(body, '"Open editor"') });
+    else if (!afterTool && q === "gesture html5 drag")
+      reply = tool("drag", {
+        sourceId: idFor(body, '"Drag card"'),
+        targetId: idFor(body, '"Drop zone"'),
+      });
+    else if (!afterTool && q === "gesture pointer drag")
+      reply = tool("drag", {
+        sourceId: idFor(body, '"Pointer handle"'),
+        targetId: idFor(body, '"Pointer destination"'),
+      });
+    else if (!afterTool && q.startsWith("Danger read tab "))
       reply = tool("read_tab", { tab: Number(q.split(" ").at(-1)) });
     else if (!afterTool && q === "Danger forget password")
       reply = tool("forget", { query: "password" });
@@ -830,6 +860,68 @@ test("select/check, denied submit, background lookup plan and user-tab approval"
   await expect(panel.getByText(/Skipped: read_tab/)).toBeVisible();
   expect(other.isClosed()).toBe(false);
   await other.close();
+});
+
+test("page gestures scroll containers/page, double-click and approve HTML5/pointer drags", async () => {
+  await clear();
+  await site.goto(base + "/gestures");
+  await site.bringToFront();
+  try {
+    await send("gesture scroll container");
+    await expect
+      .poll(() => site.locator("#scroll-box").evaluate((e) => e.scrollTop))
+      .toBe(200);
+    expect(
+      await site.locator("#scroll-box").evaluate((e) => e.scrollLeft),
+    ).toBe(150);
+    await expect(
+      panel.getByText("Scrolled to (150, 200)", { exact: true }),
+    ).toBeVisible();
+    await send("gesture double click");
+    await expect(site.locator("#double-result")).toHaveText("Editing");
+    await expect(site.locator("#click-count")).toHaveText("2");
+    await expect(
+      panel.getByText("Double-click events sent · verify result", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await send("gesture html5 drag");
+    const approval = panel.getByRole("group", { name: "Approval required" });
+    await expect(approval).toContainText(
+      'Drag div "Drag card" to list "Drop zone"',
+    );
+    await panel.getByRole("button", { name: "Deny", exact: true }).click();
+    await expect(panel.getByText(/Skipped: drag/)).toBeVisible();
+    await expect(site.locator("#drag-result")).toHaveText("");
+    await send("gesture html5 drag");
+    await expect(approval).toBeVisible();
+    await panel.getByRole("button", { name: "Allow", exact: true }).click();
+    await expect(site.locator("#drag-result")).toHaveText("Card moved");
+    await expect(
+      panel.getByText("Drag events sent · verify result", { exact: true }),
+    ).toBeVisible();
+    await send("gesture pointer drag");
+    await expect(approval).toContainText("Pointer handle");
+    await panel.getByRole("button", { name: "Allow", exact: true }).click();
+    await expect(site.locator("#pointer-result")).toHaveText("Pointer moved");
+    await send("gesture scroll page");
+    await expect.poll(() => site.evaluate(() => scrollY)).toBeGreaterThan(0);
+    await expect(
+      panel.getByRole("button", { name: "Send", exact: true }),
+    ).toBeVisible();
+    const results = requests
+      .filter((r) => r.stream)
+      .at(-1)
+      .messages.filter(
+        (m: any) => m.role === "tool" && m.content.startsWith("{"),
+      )
+      .map((m: any) => JSON.parse(m.content));
+    expect(results.at(-1).page.elements).toBeDefined();
+    expect(results.at(-1).moved).toBe(true);
+  } finally {
+    await site.goto(base);
+    await site.bringToFront();
+  }
 });
 
 test("screenshots attach as images and full-page capture restores page state", async () => {
