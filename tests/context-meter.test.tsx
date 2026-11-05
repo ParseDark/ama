@@ -2,6 +2,7 @@ import { it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   ContextMeter,
+  compactMeter,
   Ring,
   currentModelInfo,
   lastUsage,
@@ -45,6 +46,73 @@ it("renders one arc per non-zero source and the window label", () => {
   expect(html).toContain('aria-label="Context window: 1.3k / 100k"');
   expect(html).toContain('data-segments="7"');
   expect(html).toContain("1.3k / 100k");
+});
+
+it("places the compact tick at the actual safe-input trigger, not 72% of the window", () => {
+  const settings = structuredClone(DEFAULT_SETTINGS);
+  settings.providers[settings.provider].modelInfo = {
+    [settings.providers[settings.provider].model]: {
+      contextWindowTokens: 100000,
+      maxInputTokens: 100000,
+      maxOutputTokens: 8192,
+    },
+  };
+  const marker = compactMeter(settings);
+  expect(marker.threshold).toBe(Math.floor((100000 - 8192) * 0.85) * 0.72);
+  expect(marker.threshold / marker.whole).toBeCloseTo(0.56186, 4);
+  const html = renderToStaticMarkup(
+    <ContextMeter
+      usage={usage}
+      settings={settings}
+      info={currentModelInfo(settings)}
+    />,
+  );
+  expect(html).toContain(`data-compact-threshold="${marker.threshold}"`);
+  expect(html).toContain('data-compact-enabled="true"');
+  expect(html).toContain("Solid ring tick");
+  expect(html).not.toContain('stroke-dasharray="0.7 0.8"');
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const tick = doc.querySelector("[data-compact-threshold] line")!;
+  const angle = (marker.threshold / marker.whole) * 2 * Math.PI;
+  expect(Number(tick.getAttribute("x1"))).toBeCloseTo(
+    8 + 4.2 * Math.cos(angle),
+  );
+  expect(Number(tick.getAttribute("y1"))).toBeCloseTo(
+    8 + 4.2 * Math.sin(angle),
+  );
+});
+
+it("renders a disabled dashed threshold and follows overrides, input-only caps and fallback scales", () => {
+  const settings = structuredClone(DEFAULT_SETTINGS);
+  settings.providers[settings.provider].model = "unknown-context-test";
+  const fallback = compactMeter(settings);
+  expect(fallback).toMatchObject({ fallback: true, whole: 32768 });
+  settings.compaction = { enabled: false, contextTokens: 64000 };
+  const marker = compactMeter(settings);
+  expect(marker).toMatchObject({
+    whole: 64000,
+    fallback: false,
+    enabled: false,
+  });
+  const html = renderToStaticMarkup(
+    <ContextMeter
+      usage={usage}
+      settings={settings}
+      info={currentModelInfo(settings)}
+    />,
+  );
+  expect(html).toContain('data-compact-enabled="false"');
+  expect(html).toContain('stroke-dasharray="0.7 0.8"');
+  expect(html).toContain("Auto compact off");
+  expect(html).toContain("Dashed ring tick");
+  settings.compaction = undefined;
+  settings.providers[settings.provider].modelInfo = {
+    "unknown-context-test": {
+      contextWindowTokens: 100000,
+      maxInputTokens: 40000,
+    },
+  };
+  expect(compactMeter(settings).threshold).toBe(40000 * 0.85 * 0.72);
 });
 
 it("renders tokens without a limit and hides when there is no usage", () => {

@@ -8,6 +8,7 @@ import {
   type ModelMessage,
 } from "ai";
 import {
+  COMPACT_TRIGGER_RATIO,
   budgetPage,
   compactHistory,
   contextBudget,
@@ -260,7 +261,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       modelMessages = thinToolResults(modelMessages);
       if (
         fixedTokens + modelMessageTokens(modelMessages) >
-        budget.input * 0.72
+        budget.input * COMPACT_TRIGGER_RATIO
       ) {
         compact = await compactHistory(
           messages,
@@ -357,7 +358,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
           ? thinToolResults(stepMessages)
           : stepMessages;
         let size = fixedTokens + modelMessageTokens(working);
-        if (autoCompact && size > budget.input * 0.72) {
+        if (autoCompact && size > budget.input * COMPACT_TRIGGER_RATIO) {
           const cut = stepCut(working);
           if (cut) {
             const started = performance.now();

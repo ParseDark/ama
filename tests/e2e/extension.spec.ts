@@ -2867,6 +2867,118 @@ test("settings tools deny, connect, update and switch the model without echoing 
   }
 });
 
+test("context ring marks the real compact threshold, disabled mode and fallback scale", async () => {
+  await clear();
+  const original = await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome;
+    const { settings: original } = await c.storage.local.get("settings");
+    const settings = structuredClone(original);
+    settings.compaction = { enabled: true, contextTokens: 100000 };
+    const usage = {
+      model: "test-model",
+      contextTokens: 45000,
+      inputTokens: 43000,
+      outputTokens: 2000,
+      cachedInputTokens: 0,
+      total: {
+        inputTokens: 43000,
+        outputTokens: 2000,
+        cachedInputTokens: 0,
+        cacheWriteTokens: 0,
+      },
+      breakdown: {
+        system: 4000,
+        tools: 6000,
+        page: 8000,
+        memory: 1000,
+        conversation: 16000,
+        run: 8000,
+        output: 2000,
+      },
+    };
+    await c.storage.local.set({
+      settings,
+      activeSessionId: "meter-compact-test",
+      sessions: [
+        {
+          id: "meter-compact-test",
+          title: "Compact threshold preview",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ],
+      "session:meter-compact-test": [
+        {
+          id: "u",
+          role: "user",
+          parts: [{ type: "text", text: "Compact threshold preview" }],
+        },
+        {
+          id: "a",
+          role: "assistant",
+          parts: [{ type: "text", text: "Context is preserved." }],
+          metadata: { usage },
+        },
+      ],
+    });
+    return original;
+  });
+  try {
+    await panel.reload();
+    const ring = panel.locator(".context-meter [data-compact-threshold]");
+    await expect(ring).toHaveAttribute("data-compact-enabled", "true");
+    const ratio = Number(await ring.getAttribute("data-compact-ratio"));
+    expect(ratio).toBeGreaterThan(0.55);
+    expect(ratio).toBeLessThan(0.6);
+    await panel.locator(".context-meter").hover();
+    const popup = panel.locator(".context-popup");
+    await expect(popup.locator("[data-compact-legend]")).toContainText(
+      "Auto compact ·",
+    );
+    await expect(popup).toContainText("input threshold");
+    await expect(popup.locator("[data-compact-threshold]")).toHaveAttribute(
+      "data-compact-ratio",
+      String(ratio),
+    );
+    await popup.screenshot({ path: "/tmp/ama-compact-ring-popup.png" });
+    await panel.mouse.move(0, 0);
+    await sw.evaluate(async () => {
+      const c = (globalThis as any).chrome;
+      const { settings } = await c.storage.local.get("settings");
+      settings.compaction.enabled = false;
+      await c.storage.local.set({ settings });
+    });
+    await expect(ring).toHaveAttribute("data-compact-enabled", "false");
+    await expect(ring.locator("line").last()).toHaveAttribute(
+      "stroke-dasharray",
+      "0.7 0.8",
+    );
+    await panel.locator(".context-meter").hover();
+    await expect(popup.locator("[data-compact-legend]")).toContainText(
+      "Auto compact off",
+    );
+    await panel.mouse.move(0, 0);
+    await sw.evaluate(async () => {
+      const c = (globalThis as any).chrome;
+      const { settings } = await c.storage.local.get("settings");
+      settings.compaction = { enabled: true };
+      settings.providers[settings.provider].model = "unknown-ring-model";
+      await c.storage.local.set({ settings });
+    });
+    await panel.locator(".context-meter").hover();
+    await expect(popup).toContainText(
+      "Ring scale uses the fallback 32.8k total window",
+    );
+    await expect(ring).toHaveAttribute("data-compact-enabled", "true");
+    await clear();
+  } finally {
+    await sw.evaluate(async (settings) => {
+      await (globalThis as any).chrome.storage.local.set({ settings });
+    }, original);
+    await panel.reload();
+  }
+});
+
 test("context meter merges split usage, breaks the prompt down and warns when full", async () => {
   await clear();
   await sw.evaluate(async () => {

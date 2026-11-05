@@ -11,6 +11,18 @@ import {
 import type { ContextPart } from "@/lib/context-breakdown";
 import type { ReplyUsage } from "@/lib/local-chat-transport";
 import { catalogModelInfo } from "@/lib/model-catalog";
+import { COMPACT_TRIGGER_RATIO, contextBudget } from "@/lib/compaction";
+
+export function compactMeter(settings: Settings) {
+  const budget = contextBudget(settings);
+  return {
+    threshold: budget.input * COMPACT_TRIGGER_RATIO,
+    whole: budget.total,
+    enabled: settings.compaction?.enabled !== false,
+    fallback: budget.fallback,
+  };
+}
+type CompactMarker = ReturnType<typeof compactMeter>;
 
 const C = 2 * Math.PI * 6;
 
@@ -76,16 +88,27 @@ export function Ring({
   whole,
   className = "size-4",
   thickness = 3,
+  compact,
   children,
 }: {
   segments: RingSegment[];
   whole: number;
   className?: string;
   thickness?: number;
+  compact?: CompactMarker;
   children?: React.ReactNode;
 }) {
   const visible = segments.filter((s) => s.tokens > 0);
   let offset = 0;
+  const angle = compact
+    ? Math.max(0, Math.min(1, compact.threshold / whole)) * 2 * Math.PI
+    : 0;
+  const tick = {
+    x1: 8 + 4.2 * Math.cos(angle),
+    y1: 8 + 4.2 * Math.sin(angle),
+    x2: 8 + 7.5 * Math.cos(angle),
+    y2: 8 + 7.5 * Math.sin(angle),
+  };
   return (
     <span className={`relative inline-flex shrink-0 ${className}`}>
       <svg
@@ -122,6 +145,27 @@ export function Ring({
           offset += length;
           return circle;
         })}
+        {compact && (
+          <g
+            data-compact-threshold={compact.threshold}
+            data-compact-ratio={compact.threshold / whole}
+            data-compact-enabled={compact.enabled}
+          >
+            <line {...tick} stroke="var(--background)" strokeWidth={2} />
+            <line
+              {...tick}
+              stroke="currentColor"
+              strokeWidth={1}
+              strokeLinecap="round"
+              strokeDasharray={compact.enabled ? undefined : "0.7 0.8"}
+              className={
+                compact.enabled
+                  ? "text-amber-500 dark:text-amber-400"
+                  : "text-muted-foreground"
+              }
+            />
+          </g>
+        )}
       </svg>
       {children}
     </span>
@@ -147,12 +191,14 @@ function BreakdownPopup({
   infoFetched,
   limit,
   level,
+  compact,
 }: {
   usage: ReplyUsage;
   info?: ModelInfo;
   infoFetched?: boolean;
   limit?: number;
   level: MeterLevel;
+  compact?: CompactMarker;
 }) {
   const breakdown = usage.breakdown,
     segments = breakdown
@@ -169,7 +215,7 @@ function BreakdownPopup({
             tokens: usage.contextTokens,
           },
         ],
-    whole = limit ?? usage.contextTokens,
+    whole = compact?.whole ?? limit ?? usage.contextTokens,
     pricing: ModelPricing | undefined = info?.pricing,
     ratio = limit ? usage.contextTokens / limit : undefined;
   return (
@@ -182,6 +228,7 @@ function BreakdownPopup({
             color: s.color,
           }))}
           whole={whole}
+          compact={compact}
           className="size-20"
           thickness={2.5}
         >
@@ -244,6 +291,39 @@ function BreakdownPopup({
               : "Fetch models in Settings to see the limit."}
           </div>
         )}
+        {compact && (
+          <div
+            className="mt-2 border-t border-white/15 pt-2 text-[calc(10px*var(--ama-font-scale))]"
+            data-compact-legend
+          >
+            <div className="flex items-center gap-1.5 font-medium">
+              <span
+                aria-hidden="true"
+                className={`h-3 border-l-2 ${compact.enabled ? "border-amber-500 dark:border-amber-400" : "border-muted-foreground border-dashed"}`}
+              />
+              {compact.enabled ? "Auto compact" : "Auto compact off"} · ~
+              {formatTokens(compact.threshold)} input (
+              {percentOf(compact.threshold, compact.whole)} of window)
+            </div>
+            <p className="mt-1 opacity-80">
+              Tick = estimated input threshold, checked before each model step.
+              The ring includes input + output; reaching the tick is not a
+              guarantee of compaction.
+            </p>
+            {!compact.enabled && (
+              <p className="mt-1 opacity-80">
+                Dashed tick shows where automatic compact would start. Manual
+                Compact is still available.
+              </p>
+            )}
+            {compact.fallback && (
+              <p className="mt-1 opacity-80">
+                Ring scale uses the fallback {formatTokens(compact.whole)} total
+                window; model limit unknown.
+              </p>
+            )}
+          </div>
+        )}
         <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] opacity-70">
           Totals come from the provider; the split of the prompt by source is
           estimated.
@@ -251,7 +331,10 @@ function BreakdownPopup({
         {level !== "ok" && (
           <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] text-amber-300">
             Getting full: use Compact to summarize older history without
-            deleting the chat. Automatic compact checks before each model step.
+            deleting the chat.{" "}
+            {compact?.enabled === false
+              ? "Automatic compact is off."
+              : "Automatic compact checks before each model step."}
           </div>
         )}
       </div>
@@ -283,13 +366,19 @@ export function ContextMeter({
   usage,
   info,
   infoFetched = false,
+  settings,
 }: {
+  settings?: Settings;
   usage?: ReplyUsage;
   info?: ModelInfo;
   infoFetched?: boolean;
 }) {
   if (!usage) return null;
-  const limit = info?.contextWindowTokens ?? info?.maxInputTokens,
+  const compact = settings ? compactMeter(settings) : undefined;
+  const limit =
+      compact && !compact.fallback
+        ? compact.whole
+        : (info?.contextWindowTokens ?? info?.maxInputTokens),
     label = limit
       ? `${formatTokens(usage.contextTokens)} / ${formatTokens(limit)}`
       : `${formatTokens(usage.contextTokens)} tokens`,
@@ -309,7 +398,7 @@ export function ContextMeter({
             tokens: usage.contextTokens,
           },
         ],
-    whole = limit ?? usage.contextTokens;
+    whole = compact?.whole ?? limit ?? usage.contextTokens;
   return (
     <BaseTooltip.Provider delay={120} closeDelay={80}>
       <BaseTooltip.Root>
@@ -318,6 +407,11 @@ export function ContextMeter({
             <span
               role="status"
               aria-label={`Context window: ${label}`}
+              aria-description={
+                compact
+                  ? `${compact.enabled ? "Auto compact" : "Auto compact off"}: estimated input threshold ${Math.round(compact.threshold).toLocaleString("en-US")} tokens, ${percentOf(compact.threshold, compact.whole)} of ${compact.fallback ? "fallback " : ""}window. ${compact.enabled ? "Solid" : "Dashed"} ring tick.`
+                  : undefined
+              }
               className={`context-meter inline-flex items-center gap-1 text-[calc(11px*var(--ama-font-scale))] tabular-nums ${levelClass(level)}`}
             />
           }
@@ -329,6 +423,8 @@ export function ContextMeter({
               color: s.color,
             }))}
             whole={whole}
+            compact={compact}
+            className="size-5"
           />
           <span>{label}</span>
         </BaseTooltip.Trigger>
@@ -344,6 +440,7 @@ export function ContextMeter({
                 infoFetched={infoFetched}
                 limit={limit}
                 level={level}
+                compact={compact}
               />
             </BaseTooltip.Popup>
           </BaseTooltip.Positioner>

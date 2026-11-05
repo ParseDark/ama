@@ -10,6 +10,9 @@ import { catalogModelInfo } from "./model-catalog";
 import { estimateTokens } from "./memory/selector";
 import type { ActivePage } from "./page-content";
 
+/** Fraction of the safe input budget that starts automatic compact attempts. */
+export const COMPACT_TRIGGER_RATIO = 0.72;
+
 export interface CompactRecord {
   version: 1;
   covered: number;

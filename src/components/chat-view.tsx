@@ -358,6 +358,7 @@ export function ChatView({
             <ModelPicker settings={settings} onChange={onSettingsChange} />
             <span className="spacer" />
             <ContextMeter
+              settings={settings}
               usage={lastUsage(messages)}
               info={currentModelInfo(settings)}
               infoFetched={
