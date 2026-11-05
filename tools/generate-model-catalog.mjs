@@ -59,6 +59,9 @@ function entry(model) {
   if (input === undefined && output === undefined && !cost) return undefined;
   return {
     ...(input !== undefined ? { i: input } : {}),
+    ...(number(model.limit?.context) !== undefined
+      ? { c: number(model.limit.context) }
+      : {}),
     ...(output !== undefined ? { o: output } : {}),
     ...(cost ? { p: cost } : {}),
   };
@@ -81,7 +84,7 @@ for (const [key, model] of Object.entries(canonical ?? {})) {
   const leaf = key.split("/").pop();
   if (!leaf || canonicalModels[leaf]) continue;
   const value = entry(model);
-  if (value) canonicalModels[leaf] = { i: value.i, o: value.o };
+  if (value) canonicalModels[leaf] = { i: value.i, c: value.c, o: value.o };
 }
 
 // Any provider model ID covers custom gateways. Keep limits only: provider
@@ -92,7 +95,7 @@ for (const provider of Object.values(providers)) {
     const id = String(model.id ?? key).toLowerCase();
     if (!id || anyModel[id]) continue;
     const value = entry(model);
-    if (value) anyModel[id] = { i: value.i, o: value.o };
+    if (value) anyModel[id] = { i: value.i, c: value.c, o: value.o };
   }
 }
 

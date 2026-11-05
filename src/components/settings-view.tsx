@@ -21,6 +21,7 @@ import { WebSearchSettings } from "./web-search-settings";
 import { DisplaySettings } from "./display-settings";
 import { ModelPicker } from "./model-picker";
 import { ConfigSyncSettings } from "./config-sync-settings";
+import { CompactSettings } from "./compact-settings";
 export function SettingsView({
   settings,
   onChange,
@@ -194,6 +195,8 @@ export function SettingsView({
             />
           </Field>
           {error && <p role="alert">{error}</p>}
+          <hr />
+          <CompactSettings settings={settings} onChange={onChange} />
           <hr />
           <ConfigSyncSettings />
         </TabsContent>

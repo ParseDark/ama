@@ -81,6 +81,20 @@ export function modelInfoOf(raw: any): ModelInfo | undefined {
       metadata.max_output_tokens,
       metadata.max_tokens,
     );
+  const contextWindowTokens = first(
+    raw?.context_length,
+    raw?.contextLength,
+    raw?.context_window,
+    raw?.contextWindow,
+    raw?.context_size,
+    raw?.max_context_length,
+    capabilities.context_length,
+    capabilities.context_window,
+    limits.context_length,
+    limits.context_window,
+    metadata.context_length,
+    metadata.context_window,
+  );
   let pricing: ModelPricing | undefined;
   const p = raw?.pricing ?? capabilities.pricing;
   if (p?.unit === "usd_per_mtok") {
@@ -99,6 +113,7 @@ export function modelInfoOf(raw: any): ModelInfo | undefined {
     return undefined;
   return {
     ...(maxInputTokens !== undefined ? { maxInputTokens } : {}),
+    ...(contextWindowTokens !== undefined ? { contextWindowTokens } : {}),
     ...(maxOutputTokens !== undefined ? { maxOutputTokens } : {}),
     ...(pricing ? { pricing } : {}),
   };

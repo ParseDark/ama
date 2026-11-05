@@ -5,7 +5,26 @@ import {
   type ChatTransport,
   type LanguageModelUsage,
   type UIMessage,
+  type ModelMessage,
 } from "ai";
+import {
+  budgetPage,
+  compactHistory,
+  contextBudget,
+  handoffMessage,
+  hasPendingTools,
+  modelMessageTokens,
+  modelSummarizer,
+  stepCut,
+  summarizeText,
+  textTokens,
+  thinToolResults,
+  validRecord,
+  type CompactRecord,
+  type Summarize,
+} from "./compaction";
+import { loadCompact, saveCompact } from "./sessions";
+import { createChatHistoryTool } from "./chat-history-tool";
 import {
   settingsStore,
   getConfigProblem,
@@ -82,8 +101,38 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         : { type: "error", error: "Interrupted" },
     );
   }
+  async compact(chatId: string, messages: UIMessage[], signal?: AbortSignal) {
+    if (hasPendingTools(messages))
+      throw new Error("Finish or deny pending tool approvals before Compact.");
+    const settings = await (
+      this.options.loadSettings ?? (() => settingsStore.getValue())
+    )();
+    const problem = getConfigProblem(settings);
+    if (problem) throw new Error(problem);
+    const summarize =
+      this.options.summarize ??
+      modelSummarizer(
+        await (this.options.createModel ?? createModel)(settings),
+      );
+    const record = await compactHistory(
+      messages,
+      await loadCompact(chatId),
+      summarize,
+      contextBudget(settings).input,
+      `${settings.provider}/${settings.providers[settings.provider].model}`,
+      signal,
+    );
+    if (!record)
+      throw new Error(
+        "Not enough completed history to compact. Two recent turns are retained.",
+      );
+    signal?.throwIfAborted();
+    await saveCompact(chatId, record, signal);
+    return record;
+  }
   constructor(
     private options: {
+      summarize?: Summarize;
       loadSettings?: () => Promise<Settings>;
       saveSettings?: (settings: Settings) => Promise<void>;
       readActivePage?: typeof readActivePage;
@@ -131,6 +180,13 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       this.mcp.load(getMcpServers(settings)),
       loadMemoryContext(queryVector, config),
     ]);
+    const budget = contextBudget(settings);
+    const model = await (this.options.createModel ?? createModel)(settings);
+    const summarize = this.options.summarize ?? modelSummarizer(model);
+    const saved = await loadCompact(chatId);
+    let compact: CompactRecord | null = (await validRecord(saved, messages))
+      ? saved
+      : null;
     const domain = hostnameOf(page?.url),
       plan = planFor(memory, domain, config),
       models = memoryModels(settings);
@@ -154,6 +210,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       ...createCodeTools(data, this.options.runCode),
       ...createDataTools(data),
       ...createWebTools(settings, messages, this.options.webFetch),
+      ...createChatHistoryTool(messages),
       ...createHistoryTools({
         search: (q) => searchHistory(q, { config, excludeSessionId: chatId }),
       }),
@@ -172,23 +229,78 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
           }),
       }),
     };
+    const pageView = budgetPage(page, budget.input);
     const memoryBlocks = splitMemoryBlocks(plan, domain),
       instructions = buildInstructions(
-        page,
+        pageView,
         mcp.servers,
         memoryBlocks,
         getWebSearchConfig(settings),
         settings.dangerMode === true,
       );
+    const autoCompact = settings.compaction?.enabled !== false;
+    const modelView = async () => {
+      const tail = await convertToModelMessages(
+        messages.slice(compact?.covered ?? 0),
+        { tools },
+      );
+      return compact ? [handoffMessage(compact.summary), ...tail] : tail;
+    };
+    let modelMessages = await modelView();
+    const toolEstimate = await estimatePrompt({
+      instructions: "",
+      pageText: "",
+      memoryText: "",
+      tools,
+      messages: [],
+    });
+    const fixedTokens =
+      textTokens(instructions) + Math.ceil(toolEstimate.tools * 1.3);
+    if (autoCompact) {
+      modelMessages = thinToolResults(modelMessages);
+      if (
+        fixedTokens + modelMessageTokens(modelMessages) >
+        budget.input * 0.72
+      ) {
+        compact = await compactHistory(
+          messages,
+          compact,
+          summarize,
+          budget.input,
+          `${settings.provider}/${settings.providers[settings.provider].model}`,
+          abortSignal,
+        );
+        if (compact) {
+          await saveCompact(chatId, compact, abortSignal);
+          modelMessages = thinToolResults(await modelView());
+        }
+      }
+    }
     const estimate = await estimatePrompt({
       instructions,
-      pageText: page
-        ? [page.markdown, page.elements.join("\n"), page.selection].join("\n")
+      pageText: pageView
+        ? [
+            pageView.markdown,
+            pageView.elements.join("\n"),
+            pageView.selection,
+          ].join("\n")
         : "",
       memoryText: memoryBlocks.preferences + memoryBlocks.references,
       tools,
-      messages,
+      messages: [],
     });
+    // Measure the model-facing history, not the retained full UI transcript.
+    estimate.conversation = Math.round(modelMessageTokens(modelMessages) / 1.3);
+    let runCompact:
+      | {
+          count: number;
+          beforeTokens: number;
+          afterTokens: number;
+          inputTokens: number;
+          outputTokens: number;
+          durationMs: number;
+        }
+      | undefined;
     // Usage is reported per step. Keep the first prompt and the latest context
     // so the meter can show the window and the breakdown can separate them.
     let firstStep: LanguageModelUsage | undefined,
@@ -235,22 +347,91 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       };
     };
     const result = streamText({
-      model: await (this.options.createModel ?? createModel)(settings),
+      model,
       instructions,
-      messages: await convertToModelMessages(messages, { tools }),
+      messages: modelMessages,
+      maxOutputTokens: budget.output,
+      prepareStep: async ({ messages: stepMessages }) => {
+        abortSignal?.throwIfAborted();
+        let working: ModelMessage[] = autoCompact
+          ? thinToolResults(stepMessages)
+          : stepMessages;
+        let size = fixedTokens + modelMessageTokens(working);
+        if (autoCompact && size > budget.input * 0.72) {
+          const cut = stepCut(working);
+          if (cut) {
+            const started = performance.now();
+            const beforeTokens = modelMessageTokens(working);
+            const source = JSON.stringify(working.slice(cut.start, cut.end));
+            const summary = await summarizeText(
+              source,
+              "",
+              summarize,
+              budget.input,
+              abortSignal,
+            );
+            const replacement = handoffMessage(summary.summary);
+            if (
+              modelMessageTokens([replacement]) <
+              modelMessageTokens(working.slice(cut.start, cut.end))
+            ) {
+              working = [
+                ...working.slice(0, cut.start),
+                replacement,
+                ...working.slice(cut.end),
+              ];
+              const afterTokens = modelMessageTokens(working);
+              size = fixedTokens + afterTokens;
+              runCompact = {
+                count: (runCompact?.count ?? 0) + 1,
+                beforeTokens,
+                afterTokens,
+                inputTokens:
+                  (runCompact?.inputTokens ?? 0) + summary.inputTokens,
+                outputTokens:
+                  (runCompact?.outputTokens ?? 0) + summary.outputTokens,
+                durationMs:
+                  (runCompact?.durationMs ?? 0) +
+                  Math.round(performance.now() - started),
+              };
+            }
+          }
+        }
+        if (size > budget.input)
+          throw new Error(
+            `Context budget exceeded (${size.toLocaleString()} estimated tokens; safe input budget ${budget.input.toLocaleString()}). Original history is retained. Use Compact, reduce the current request, or adjust the context-window override in Settings. Pending tools are never discarded.`,
+          );
+        return { messages: working };
+      },
       tools,
       stopWhen: isStepCount(60),
       abortSignal,
     });
-    const metadata = plan.injected.length
-      ? {
-          usedMemories: plan.injected.map(({ id, text, scope }) => ({
-            id,
-            text,
-            scope,
-          })),
-        }
-      : undefined;
+    const metadata = {
+      ...(compact
+        ? {
+            compaction: {
+              covered: compact.covered,
+              createdAt: compact.createdAt,
+              model: compact.model,
+              beforeTokens: compact.beforeTokens,
+              afterTokens: compact.afterTokens,
+              inputTokens: compact.inputTokens,
+              outputTokens: compact.outputTokens,
+              durationMs: compact.durationMs,
+            },
+          }
+        : {}),
+      ...(plan.injected.length
+        ? {
+            usedMemories: plan.injected.map(({ id, text, scope }) => ({
+              id,
+              text,
+              scope,
+            })),
+          }
+        : {}),
+    };
     return result.toUIMessageStream({
       onError: (e) => (e instanceof Error ? e.message : String(e)),
       messageMetadata: ({ part }) => {
@@ -269,6 +450,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
           return {
             ...(metadata ?? {}),
             usage,
+            ...(runCompact ? { runCompaction: runCompact } : {}),
             ...(generationStats ? { generationStats } : {}),
           };
         }

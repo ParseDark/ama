@@ -250,7 +250,8 @@ function BreakdownPopup({
         </div>
         {level !== "ok" && (
           <div className="mt-1 text-[calc(10px*var(--ama-font-scale))] text-amber-300">
-            Getting full: clear the chat (⌥⇧L) to start fresh.
+            Getting full: use Compact to summarize older history without
+            deleting the chat. Automatic compact checks before each model step.
           </div>
         )}
       </div>
@@ -270,10 +271,12 @@ export function lastUsage(messages: UIMessage[]): ReplyUsage | undefined {
 export function currentModelInfo(settings: Settings): ModelInfo | undefined {
   const config = settings.providers[settings.provider];
   if (!config) return undefined;
-  return (
+  const info =
     config.modelInfo?.[config.model] ??
-    catalogModelInfo(settings.provider, config.model, config.baseURL)
-  );
+    catalogModelInfo(settings.provider, config.model, config.baseURL);
+  return settings.compaction?.contextTokens
+    ? { ...info, contextWindowTokens: settings.compaction.contextTokens }
+    : info;
 }
 
 export function ContextMeter({
@@ -286,7 +289,7 @@ export function ContextMeter({
   infoFetched?: boolean;
 }) {
   if (!usage) return null;
-  const limit = info?.maxInputTokens,
+  const limit = info?.contextWindowTokens ?? info?.maxInputTokens,
     label = limit
       ? `${formatTokens(usage.contextTokens)} / ${formatTokens(limit)}`
       : `${formatTokens(usage.contextTokens)} tokens`,

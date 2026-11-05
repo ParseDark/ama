@@ -7,6 +7,7 @@ import type { ModelInfo, ModelPricing, ProviderId } from "./settings";
 
 type CatalogEntry = {
   i?: number;
+  c?: number;
   o?: number;
   p?: ModelPricing;
 };
@@ -63,6 +64,7 @@ function toModelInfo(entry: CatalogEntry): ModelInfo | undefined {
     return undefined;
   return {
     ...(maxInputTokens !== undefined ? { maxInputTokens } : {}),
+    ...(entry.c !== undefined ? { contextWindowTokens: entry.c } : {}),
     ...(maxOutputTokens !== undefined ? { maxOutputTokens } : {}),
     ...(pricing ? { pricing } : {}),
     source: "models.dev",
@@ -99,6 +101,12 @@ export function mergeModelInfo(
     merged.maxInputTokens = catalog.maxInputTokens;
     limitFromCatalog = true;
   }
+  if (
+    merged.contextWindowTokens === undefined &&
+    catalog.contextWindowTokens !== undefined &&
+    gateway.maxInputTokens === undefined
+  )
+    merged.contextWindowTokens = catalog.contextWindowTokens;
   if (
     merged.maxOutputTokens === undefined &&
     catalog.maxOutputTokens !== undefined

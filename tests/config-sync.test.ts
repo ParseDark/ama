@@ -31,6 +31,7 @@ async function privateConfig() {
   const settings = structuredClone(DEFAULT_SETTINGS);
   settings.dangerMode = true;
   settings.fontScale = 1.15;
+  settings.compaction = { enabled: false, contextTokens: 64000 };
   settings.webSearch = {
     enabled: true,
     provider: "deepseek",

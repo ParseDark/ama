@@ -66,6 +66,7 @@ const builtins = new Set([
   "forget",
   "recall_memory",
   "search_history",
+  "read_chat_history",
   "plan",
 ]);
 export function ToolPart({
@@ -215,6 +216,7 @@ export function ToolPart({
         `Forgot: ${out.removed?.map((m: any) => m.text).join("; ")}`);
   else if (name === "recall_memory") label = "Looked up saved references";
   else if (name === "search_history") label = "Searched earlier chats";
+  else if (name === "read_chat_history") label = "Read original chat history";
   else if (name === "highlight")
     label = pending
       ? `Locating ${input.note}…`

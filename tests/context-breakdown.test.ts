@@ -81,6 +81,15 @@ it("calibrates prompt parts to the real first-step input", () => {
   expect(breakdown.output).toBe(50);
 });
 
+it("keeps breakdown totals correct when in-run Compact shrinks the input", () => {
+  const result = calibrate(
+    { system: 100, tools: 100, page: 600, memory: 100, conversation: 100 },
+    { firstInput: 20000, lastInput: 10000, output: 50 },
+  );
+  expect(Object.values(result).reduce((a, b) => a + b, 0)).toBe(10050);
+  expect(result.run).toBe(0);
+});
+
 it("puts everything under system when there is nothing to scale", () => {
   const breakdown = calibrate(
     { system: 0, tools: 0, page: 0, memory: 0, conversation: 0 },

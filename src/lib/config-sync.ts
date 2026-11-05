@@ -34,6 +34,12 @@ const snapshotSchema = z.object({
       "openai-compatible": provider,
     }),
     dangerMode: z.boolean().optional(),
+    compaction: z
+      .object({
+        enabled: z.boolean(),
+        contextTokens: z.number().int().min(4096).max(2000000).optional(),
+      })
+      .optional(),
     fontScale: z.number().finite().optional(),
     webSearch: z
       .object({

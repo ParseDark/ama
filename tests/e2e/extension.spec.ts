@@ -304,7 +304,10 @@ test.beforeAll(async () => {
             : q === "Fill context window"
               ? "Full context test"
               : "**Grounded answer**: ALPHA-42";
-    if (body.messages[0].content.includes("Decide whether"))
+    if (body.messages[0].content.includes("Produce a concise task handoff"))
+      reply =
+        "Goal: answer the user's question. Confirmed lookup code ALPHA-42 from page. User constraints preserved. No payment approved; verify current page before actions.";
+    else if (body.messages[0].content.includes("Decide whether"))
       reply = tool("answer", {
         asksToRemember: /remember|记住|以后用/.test(q),
       });
@@ -639,6 +642,110 @@ async function clear() {
     panel.getByRole("heading", { name: "Ask about this page" }),
   ).toBeVisible();
 }
+test("manual Compact preserves original chat and reuses a persisted handoff after reload", async () => {
+  await clear();
+  for (let i = 0; i < 3; i++) {
+    await send(
+      `Compact source ${i}: ALPHA-42 ${"Keep original reference. ".repeat(100)}`,
+    );
+    await expect(
+      panel.getByRole("button", { name: "Stop", exact: true }),
+    ).toBeHidden();
+    await expect(
+      panel.getByText("Grounded answer", { exact: false }).last(),
+    ).toBeVisible();
+  }
+  await panel.getByRole("button", { name: "Compact", exact: true }).click();
+  await expect(panel.getByText(/Compacted history/)).toBeVisible();
+  const stored = await sw.evaluate(async () => {
+    const all = await (globalThis as any).chrome.storage.local.get(null);
+    return {
+      summary: Object.entries(all).filter(([k]) => k.startsWith("compact:")),
+      originals: Object.entries(all).filter(([k]) => k.startsWith("session:")),
+    };
+  });
+  expect(stored.summary.length).toBeGreaterThan(0);
+  expect(JSON.stringify(stored.originals)).toContain("Compact source 0");
+  await panel.reload();
+  await expect(panel.getByText(/Compacted history/)).toBeVisible();
+  await site.bringToFront();
+  await send("Continue with the compact handoff");
+  await expect(
+    panel.getByRole("button", { name: "Stop", exact: true }),
+  ).toBeHidden();
+  const prompt = requests.filter((r) => r.stream).at(-1);
+  expect(JSON.stringify(prompt.messages)).toContain("Historical task handoff");
+  expect(JSON.stringify(prompt.messages)).not.toContain("Compact source 0");
+  expect(JSON.stringify(prompt.messages)).toContain("Compact source 2");
+  await clear();
+});
+
+test("automatic Compact summarizes long history before streaming and leaves original messages local", async () => {
+  const original = await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome;
+    const { settings: old } = await c.storage.local.get("settings");
+    const settings = structuredClone(old);
+    settings.compaction = { enabled: true, contextTokens: 32768 };
+    const messages = Array.from({ length: 7 }, (_, i) => ({
+      id: `auto-${i}`,
+      role: i % 2 ? "assistant" : "user",
+      parts: [
+        {
+          type: "text",
+          text:
+            i < 4
+              ? `AUTO-OLD-${i} ${"事实".repeat(10000)}`
+              : `AUTO-RECENT-${i}`,
+        },
+      ],
+    }));
+    await c.storage.local.set({
+      settings,
+      activeSessionId: "auto-compact-e2e",
+      "session:auto-compact-e2e": messages,
+      sessions: [
+        {
+          id: "auto-compact-e2e",
+          title: "Automatic compact test",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ],
+    });
+    return old;
+  });
+  try {
+    await panel.reload();
+    await site.bringToFront();
+    await send("Continue automatic compact test");
+    await expect(panel.getByText(/Compacted history/)).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "Stop", exact: true }),
+    ).toBeHidden();
+    const prompt = requests.filter((r) => r.stream).at(-1);
+    expect(JSON.stringify(prompt.messages)).toContain(
+      "Historical task handoff",
+    );
+    expect(JSON.stringify(prompt.messages)).not.toContain("AUTO-OLD-0");
+    expect(JSON.stringify(prompt.messages)).toContain("AUTO-RECENT-6");
+    const source = await sw.evaluate(
+      async () =>
+        (
+          await (globalThis as any).chrome.storage.local.get(
+            "session:auto-compact-e2e",
+          )
+        )["session:auto-compact-e2e"],
+    );
+    expect(JSON.stringify(source)).toContain("AUTO-OLD-0");
+    await clear();
+  } finally {
+    await sw.evaluate(async (old) => {
+      await (globalThis as any).chrome.storage.local.set({ settings: old });
+    }, original);
+    await panel.reload();
+  }
+});
+
 test("grounded streaming, copy, model fetching, history and reload", async () => {
   await send("What is the lookup code?");
   await expect(
@@ -2861,7 +2968,7 @@ test("context meter merges split usage, breaks the prompt down and warns when fu
   await expect(full).toHaveClass(/text-destructive/);
   await full.hover();
   await expect(panel.locator(".context-popup")).toContainText(
-    "Getting full: clear the chat",
+    "Getting full: use Compact",
   );
   await panel.reload();
   await expect(

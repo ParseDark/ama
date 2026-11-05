@@ -12,6 +12,8 @@ export interface ModelPricing extends TokenPrices {
   long?: TokenPrices;
 }
 export interface ModelInfo {
+  /** Total input + output window, if explicitly reported. */
+  contextWindowTokens?: number;
   maxInputTokens?: number;
   maxOutputTokens?: number;
   pricing?: ModelPricing;
@@ -58,6 +60,12 @@ export interface Settings {
   embedding?: EmbeddingConfig;
   webSearch?: WebSearchConfig;
   dangerMode?: boolean;
+  compaction?: {
+    /** Defaults to true. Does not delete the original chat. */
+    enabled: boolean;
+    /** Optional total context-window override for the current gateway. */
+    contextTokens?: number;
+  };
   /** UI text multiplier; 1 keeps the panel's 13px base size. */
   fontScale?: number;
 }

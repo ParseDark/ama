@@ -36,6 +36,7 @@ import { ModelPicker } from "./model-picker";
 import { ChatMessage } from "./chat-message";
 import { MemorySuggestion } from "./memory-suggestion";
 import { ContextMeter, currentModelInfo, lastUsage } from "./context-meter";
+import { CompactControls } from "./compact-controls";
 export function ChatView({
   id,
   initialMessages,
@@ -101,6 +102,7 @@ export function ChatView({
   const tab = useActiveTab(),
     domain = hostnameOf(tab?.url),
     { memories, enabled } = useMemory();
+  const [compacting, setCompacting] = useState(false);
   const [text, setText] = useState(""),
     [images, setImages] = useState<string[]>([]),
     [captureError, setCaptureError] = useState(""),
@@ -139,7 +141,7 @@ export function ChatView({
     return () => window.removeEventListener("ama:clear-chat", fn);
   }, [clear]);
   const send = (value = text) => {
-    if (busy || (!value.trim() && !images.length)) return;
+    if (busy || compacting || (!value.trim() && !images.length)) return;
     const content =
       value.trim() ||
       (images.length ? "What is shown in this screenshot?" : "");
@@ -281,6 +283,7 @@ export function ChatView({
               <Button
                 size="sm"
                 variant="ghost"
+                disabled={compacting}
                 onClick={() => void regenerate()}
               >
                 Retry
@@ -288,6 +291,13 @@ export function ChatView({
             )}
           </div>
         )}
+        <CompactControls
+          id={id}
+          messages={messages}
+          busy={busy}
+          transport={transport}
+          onBusyChange={setCompacting}
+        />
         <div className="composer">
           {images.length > 0 && (
             <div className="attachments">
@@ -375,7 +385,9 @@ export function ChatView({
               <Button
                 size="icon"
                 aria-label="Send"
-                disabled={capturing || (!text.trim() && !images.length)}
+                disabled={
+                  capturing || compacting || (!text.trim() && !images.length)
+                }
                 onClick={() => send()}
               >
                 <ArrowUp size={17} />

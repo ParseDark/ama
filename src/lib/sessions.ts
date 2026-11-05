@@ -2,6 +2,21 @@ import { storage } from "wxt/utils/storage";
 import type { UIMessage } from "ai";
 import { messageText } from "./messages";
 import { deleteSessionData } from "./data/store";
+import type { CompactRecord } from "./compaction";
+export const loadCompact = (id: string) =>
+  storage.getItem<CompactRecord | null>(`local:compact:${id}`, {
+    fallback: null,
+  });
+export const saveCompact = (
+  id: string,
+  record: CompactRecord,
+  signal?: AbortSignal,
+) =>
+  queue(async () => {
+    signal?.throwIfAborted();
+    if (!deletedSessions.has(id))
+      await storage.setItem(`local:compact:${id}`, record);
+  });
 export interface SessionSummary {
   id: string;
   title: string;
@@ -59,6 +74,7 @@ export const deleteSession = (id: string) => {
     // Tombstone first: an already running tool must not recreate orphan data.
     await deleteSessionData(id);
     await storage.removeItem(`local:session:${id}`);
+    await storage.removeItem(`local:compact:${id}`);
     await sessionsStore.setValue(
       (await sessionsStore.getValue()).filter((s) => s.id !== id),
     );

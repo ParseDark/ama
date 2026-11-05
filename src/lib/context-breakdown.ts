@@ -93,10 +93,16 @@ export function calibrate(
   const estimated = PROMPT_PARTS.reduce((sum, part) => sum + estimate[part], 0),
     prompt = estimated
       ? largestRemainder(
-          PROMPT_PARTS.map((part) => (estimate[part] / estimated) * firstInput),
-          firstInput,
+          // In-run Compact can make the final input smaller than the first.
+          PROMPT_PARTS.map(
+            (part) =>
+              (estimate[part] / estimated) * Math.min(firstInput, lastInput),
+          ),
+          Math.min(firstInput, lastInput),
         )
-      : PROMPT_PARTS.map((part) => (part === "system" ? firstInput : 0));
+      : PROMPT_PARTS.map((part) =>
+          part === "system" ? Math.min(firstInput, lastInput) : 0,
+        );
   return {
     ...(Object.fromEntries(
       PROMPT_PARTS.map((part, i) => [part, prompt[i]!]),

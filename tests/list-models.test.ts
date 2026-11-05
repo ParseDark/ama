@@ -120,9 +120,14 @@ it("maps Google and alternative context fields", () => {
   ).toEqual({ maxInputTokens: 1000000, maxOutputTokens: 8192 });
   expect(
     modelInfoOf({ id: "x", context_length: 200000, max_output_tokens: 4096 }),
-  ).toEqual({ maxInputTokens: 200000, maxOutputTokens: 4096 });
+  ).toEqual({
+    maxInputTokens: 200000,
+    contextWindowTokens: 200000,
+    maxOutputTokens: 4096,
+  });
   expect(modelInfoOf({ id: "x", context_window: 32000 })).toEqual({
     maxInputTokens: 32000,
+    contextWindowTokens: 32000,
   });
   expect(modelInfoOf({ id: "x", max_input_tokens: 0 })).toBeUndefined();
   expect(
@@ -140,7 +145,11 @@ it("parses context_length/max_tokens (including numeric strings) and nested limi
       context_length: "128000",
       max_tokens: "32000",
     }),
-  ).toEqual({ maxInputTokens: 128000, maxOutputTokens: 32000 });
+  ).toEqual({
+    maxInputTokens: 128000,
+    contextWindowTokens: 128000,
+    maxOutputTokens: 32000,
+  });
   expect(
     modelInfoOf({
       id: "nested",
@@ -155,7 +164,11 @@ it("parses context_length/max_tokens (including numeric strings) and nested limi
       id: "limits",
       limits: { context_window: 64000, max_output_tokens: 4096 },
     }),
-  ).toEqual({ maxInputTokens: 64000, maxOutputTokens: 4096 });
+  ).toEqual({
+    maxInputTokens: 64000,
+    contextWindowTokens: 64000,
+    maxOutputTokens: 4096,
+  });
 });
 
 it("accepts an array or models wrapper from compatible gateways", async () => {
@@ -166,7 +179,7 @@ it("accepts an array or models wrapper from compatible gateways", async () => {
   );
   expect(array).toEqual({
     models: ["a"],
-    info: { a: { maxInputTokens: 1000 } },
+    info: { a: { maxInputTokens: 1000, contextWindowTokens: 1000 } },
   });
   const wrapped = await listModelsWithInfo(
     "openai-compatible",
