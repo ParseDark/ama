@@ -14,7 +14,7 @@ pnpm build
 
 In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3/`. Building also creates `.output/ama-0.3.0-chrome.zip`. Use a recent Chrome version supporting `chrome.sidePanel.close` for shortcut toggling.
 
-Open AMA using the toolbar icon or **⌃K / Ctrl+K**. In Settings → Model, choose OpenAI, Anthropic, Google Gemini, or an OpenAI-compatible API, enter your endpoint/key/model, and optionally **Fetch** available models. The compatible URL defaults to `https://api.qnaigc.com/v1`, taken from the local shell's `OPENAI_BASE_URL` (no API key is bundled). Choose a model supported by that service using **Fetch**, or enter its model ID. Existing saved settings are preserved; update Base URL manually if you previously saved another endpoint. Settings save automatically.
+Open AMA using the toolbar icon or **⌘K / Ctrl+K**. In Settings → Model, choose OpenAI, Anthropic, Google Gemini, or an OpenAI-compatible API, enter your endpoint/key/model, and optionally **Fetch** available models. The compatible URL defaults to `https://api.qnaigc.com/v1`, taken from the local shell's `OPENAI_BASE_URL` (no API key is bundled). Choose a model supported by that service using **Fetch**, or enter its model ID. Existing saved settings are preserved; update Base URL manually if you previously saved another endpoint. Settings save automatically.
 
 ```sh
 pnpm dev          # WXT development build
@@ -50,11 +50,11 @@ The chat composer automatically receives the cursor when opened or when returnin
 
 ### Shortcuts
 
-**macOS uses Control+K (⌃K), not Command+K.** Chrome's manifest spelling is `MacCtrl+K`; `Ctrl+K` alone is mapped to Command on macOS. Existing installations may retain the previous binding: after reloading, open `chrome://extensions/shortcuts` and set AMA → Toggle the AMA side panel to **Control+K** manually if necessary. Side-panel keyboard handling uses Control+K too and leaves Command+K untouched.
+**macOS uses Command+K (⌘K); Windows/Linux use Ctrl+K.** Existing installations may retain the previous binding: after reloading, open `chrome://extensions/shortcuts` and set AMA → Toggle the AMA side panel to **Command+K** on macOS manually if necessary. Side-panel keyboard handling uses the same platform-specific shortcut, without Alt/Shift or an extra Control/Command modifier.
 
 | Shortcut                              | Action                                       |
 | ------------------------------------- | -------------------------------------------- |
-| ⌃K / Ctrl+K                           | Toggle panel (close when panel focused)      |
+| ⌘K / Ctrl+K                           | Toggle panel (close when panel focused)      |
 | ⌥⇧L on macOS / Ctrl+Shift+L elsewhere | Clear current chat and its saved history     |
 | ⌘⇧L / Ctrl+Shift+L inside panel       | Also clear                                   |
 | Enter / Shift+Enter                   | Send / newline; IME composition is respected |

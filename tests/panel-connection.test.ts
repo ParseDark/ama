@@ -17,20 +17,32 @@ it("counts overlapping ports and toggles synchronously", () => {
   t.clear(1);
   expect(b.postMessage).toHaveBeenCalledWith({ type: "ama:clear-chat" });
 });
-it("closes only for Control+K, leaving Command+K and modified chords alone", () => {
-  const e = {
-    code: "KeyK",
-    ctrlKey: true,
-    metaKey: false,
-    altKey: false,
-    shiftKey: false,
-  };
-  expect(panelShortcut(e)).toBe("close");
-  expect(panelShortcut({ ...e, ctrlKey: false, metaKey: true })).toBeNull();
-  expect(panelShortcut({ ...e, metaKey: true })).toBeNull();
-  expect(panelShortcut({ ...e, altKey: true })).toBeNull();
-  expect(panelShortcut({ ...e, shiftKey: true })).toBeNull();
-});
+it.each(["MacIntel", "Win32", "Linux x86_64"])(
+  "uses the platform toggle modifier on %s and rejects modified chords",
+  (platform) => {
+    const e = {
+      code: "KeyK",
+      ctrlKey: true,
+      metaKey: false,
+      altKey: false,
+      shiftKey: false,
+    };
+    const mac = platform === "MacIntel";
+    const chord = { ...e, ctrlKey: !mac, metaKey: mac };
+    expect(panelShortcut(chord, platform)).toBe("close");
+    expect(
+      panelShortcut({ ...chord, ctrlKey: mac, metaKey: !mac }, platform),
+    ).toBeNull();
+    expect(
+      panelShortcut({ ...chord, ctrlKey: true, metaKey: true }, platform),
+    ).toBeNull();
+    expect(panelShortcut({ ...chord, altKey: true }, platform)).toBeNull();
+    expect(panelShortcut({ ...chord, shiftKey: true }, platform)).toBeNull();
+    expect(
+      panelShortcut({ ...chord, ctrlKey: false, metaKey: false }, platform),
+    ).toBeNull();
+  },
+);
 it("uses physical L code for Option-shift including macOS Ò", () => {
   const e = {
     code: "KeyL",
@@ -44,12 +56,15 @@ it("uses physical L code for Option-shift including macOS Ò", () => {
     panelShortcut({ ...e, altKey: false, metaKey: true, shiftKey: false }),
   ).toBeNull();
   expect(
-    panelShortcut({
-      ...e,
-      code: "KeyK",
-      altKey: false,
-      ctrlKey: true,
-      shiftKey: false,
-    }),
+    panelShortcut(
+      {
+        ...e,
+        code: "KeyK",
+        altKey: false,
+        ctrlKey: true,
+        shiftKey: false,
+      },
+      "Win32",
+    ),
   ).toBe("close");
 });

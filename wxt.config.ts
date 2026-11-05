@@ -36,7 +36,7 @@ export default defineConfig({
     action: { default_title: "Open AMA" },
     commands: {
       "toggle-panel": {
-        suggested_key: { default: "Ctrl+K", mac: "MacCtrl+K" },
+        suggested_key: { default: "Ctrl+K", mac: "Command+K" },
         description: "Toggle the AMA side panel",
       },
       "clear-chat": {

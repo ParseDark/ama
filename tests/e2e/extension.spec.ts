@@ -1559,12 +1559,15 @@ test("copy feedback, panel shortcuts, alarm learning and no-new-signals guard", 
       (window as any).__shortcutCloses++;
     };
   });
+  const mac = await panel.evaluate(() =>
+    /Mac|iPhone|iPad|iPod/i.test(navigator.platform),
+  );
   try {
-    await textbox.press("Meta+k");
+    await textbox.press(mac ? "Control+k" : "Meta+k");
     expect(await panel.evaluate(() => (window as any).__shortcutCloses)).toBe(
       0,
     );
-    await textbox.press("Control+k");
+    await textbox.press(mac ? "Meta+k" : "Control+k");
     expect(await panel.evaluate(() => (window as any).__shortcutCloses)).toBe(
       1,
     );
@@ -1578,7 +1581,7 @@ test("copy feedback, panel shortcuts, alarm learning and no-new-signals guard", 
       (globalThis as any).chrome.runtime.getManifest().commands["toggle-panel"]
         .suggested_key,
   );
-  expect(toggleKey).toEqual({ default: "Ctrl+K", mac: "MacCtrl+K" });
+  expect(toggleKey).toEqual({ default: "Ctrl+K", mac: "Command+K" });
   await textbox.press("Meta+l");
   await expect(panel.locator(".message-user")).toHaveCount(1);
   await textbox.press("Meta+Shift+l");
