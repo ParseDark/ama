@@ -12,7 +12,7 @@ pnpm install --frozen-lockfile
 pnpm build
 ```
 
-In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3/`. Building also creates `.output/ama-0.3.0-chrome.zip`. Use a recent Chrome version supporting `chrome.sidePanel.close` for shortcut toggling.
+In `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3/`. Building also creates `.output/ama-<version>-chrome.zip` using the version in `package.json`. Use a recent Chrome version supporting `chrome.sidePanel.close` for shortcut toggling.
 
 Open AMA using the toolbar icon or **⌘K / Ctrl+K**. In Settings → Model, choose OpenAI, Anthropic, Google Gemini, or an OpenAI-compatible API, enter your endpoint/key/model, and optionally **Fetch** available models. The compatible URL defaults to `https://api.qnaigc.com/v1`, taken from the local shell's `OPENAI_BASE_URL` (no API key is bundled). Choose a model supported by that service using **Fetch**, or enter its model ID. Existing saved settings are preserved; update Base URL manually if you previously saved another endpoint. Settings save automatically.
 
