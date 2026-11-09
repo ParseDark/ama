@@ -1,6 +1,6 @@
 import { it, expect } from "vitest";
 import { buildInstructions } from "@/lib/prompt";
-it("orders preferences, page, tools, references, selection", () => {
+it("keeps stable rules and server configuration before dynamic page data", () => {
   const prompt = buildInstructions(
     {
       tabId: 1,
@@ -23,10 +23,11 @@ it("orders preferences, page, tools, references, selection", () => {
     { preferences: "PREFERENCE", references: "REFERENCE_BLOCK" },
   );
   const sections = [
+    "When the user asks you to do something",
+    "The user connected",
     "PREFERENCE",
     "<page",
     "<elements>",
-    "The user connected",
     "REFERENCE_BLOCK",
     "<selection>",
   ];

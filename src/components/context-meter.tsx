@@ -273,6 +273,20 @@ function BreakdownPopup({
             : ""}{" "}
           · {formatTokens(usage.outputTokens)} out
         </div>
+        <div
+          className="mt-1 text-[calc(10px*var(--ama-font-scale))] tabular-nums"
+          aria-label="Reply cache usage"
+        >
+          This reply: {formatTokens(usage.total.cachedInputTokens)} cached /{" "}
+          {formatTokens(usage.total.inputTokens)} input (
+          {percentOf(usage.total.cachedInputTokens, usage.total.inputTokens)})
+          {usage.total.cacheWriteTokens > 0 &&
+            ` · ${formatTokens(usage.total.cacheWriteTokens)} cache write`}
+          <div className="opacity-70">
+            Across all tool steps. Zero means no cache reads reported; the
+            provider may omit cache usage.
+          </div>
+        </div>
         {pricing && (
           <div className="text-[calc(10px*var(--ama-font-scale))] tabular-nums">
             Cost of this reply:{" "}
@@ -427,6 +441,12 @@ export function ContextMeter({
             className="size-5"
           />
           <span>{label}</span>
+          <span className="opacity-70" aria-label="Cached input this reply">
+            · Cache{" "}
+            {usage.total.cachedInputTokens > 0
+              ? `${formatTokens(usage.total.cachedInputTokens)} (${percentOf(usage.total.cachedInputTokens, usage.total.inputTokens)})`
+              : "0 reported"}
+          </span>
         </BaseTooltip.Trigger>
         <BaseTooltip.Portal>
           <BaseTooltip.Positioner side="top" sideOffset={6}>

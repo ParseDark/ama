@@ -426,7 +426,16 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     };
     const result = streamText({
       model,
-      instructions,
+      instructions:
+        settings.provider === "anthropic"
+          ? {
+              role: "system",
+              content: instructions,
+              providerOptions: {
+                anthropic: { cacheControl: { type: "ephemeral", ttl: "5m" } },
+              },
+            }
+          : instructions,
       messages: modelMessages,
       maxOutputTokens: budget.output,
       prepareStep: async ({ messages: stepMessages }) => {
