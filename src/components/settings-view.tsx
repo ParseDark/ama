@@ -22,6 +22,7 @@ import { DisplaySettings } from "./display-settings";
 import { ModelPicker } from "./model-picker";
 import { ConfigSyncSettings } from "./config-sync-settings";
 import { CompactSettings } from "./compact-settings";
+import { ShortcutSettings } from "./shortcut-settings";
 export function SettingsView({
   settings,
   onChange,
@@ -255,6 +256,8 @@ export function SettingsView({
             your screen.
           </p>
           <DisplaySettings settings={settings} onChange={onChange} />
+          <hr />
+          <ShortcutSettings />
         </TabsContent>
       </Tabs>
     </div>

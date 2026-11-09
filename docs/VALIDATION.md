@@ -1,5 +1,15 @@
 # Validation record
 
+## Composer @ tools and shortcut diagnostics (v0.8.0)
+
+Extended the command menu with live tool discovery. `@tools` (or the Chinese aliases) lists built-in page/file/code/data/web/history/settings/memory tools plus every connected MCP server's tools; typing filters them. Discovery loads only tool schemas: it does not read page or file contents, run code, embed, or call a model, and a failing MCP server is reported in the menu instead of silently disappearing.
+
+Selecting an entry inserts `@tool:<name>` and requires a non-empty task description before sending; the transport verifies the tool still exists, keeps a selected MCP tool available under semantic filtering, and adds an explicit instruction that selection is a request rather than authorization. Normal approval cards, Danger-mode scope and all workspace/browser limits are unchanged; nothing executes while the menu is open.
+
+Removed the always-visible Compact button. `@compact` is now the only trigger and reuses the same single-flight controller, cancellation, persisted handoff and success/error details; the result block appears only after a summary exists. Added a Display → Panel shortcut section that reads Chrome's actual binding via `commands.getAll`, distinguishes an unassigned key from a suggestion, and links to `chrome://extensions/shortcuts` without trying to rewrite the browser's stored shortcut.
+
+Validation: **271 default unit/integration tests across 70 files** passed (one opt-in local-embedding test skipped), plus type/format checks and the production ZIP build. Tests cover leading-`@` parsing, tool-name recognition and rejection of emails/inline mentions/invalid characters, catalog construction without side effects, selection-hint injection, comma-separated binding display and the unassigned state. The unpacked-Chromium scenario confirms the menu lists `@tools` and the MCP tools with no model or MCP `tools/call` request, that `@tool:notes_write` completion requires a task, and that a selected MCP write still shows the normal approval card. Removing the button is asserted directly (`Compact` button count 0) while `@compact` still produces a persisted handoff. Native OS shortcut delivery, live MCP servers and subjective visual review remain unclaimed.
+
 ## Composer @ commands (v0.7.0)
 
 Added a local command registry, searchable leading-`@` menu and deterministic dispatch for `@compact`, `@memory` and `@memory-list`. Chinese search terms, cursor/selection boundaries, mouse, arrows/Tab/Enter, Escape and composition guards are covered. Selection completes without execution; disabled reasons, unknown commands and unexpected arguments are visible. Emails/inline mentions remain ordinary text. Attachments cannot accidentally be consumed by commands. The Compact button and command share one single-flight, cancellable controller with busy/pending-approval/unmount/error handling.

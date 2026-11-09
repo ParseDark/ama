@@ -28,6 +28,10 @@ import { useMemory } from "@/hooks/use-memory";
 import { useActiveTab } from "@/hooks/use-active-tab";
 import { useComposerFocus } from "@/hooks/use-composer-focus";
 import { hostnameOf } from "@/lib/url";
+import {
+  requestedComposerTool,
+  type ComposerToolCatalog,
+} from "@/lib/composer-tools";
 import type { Settings } from "@/lib/settings";
 import { updateSettings } from "@/lib/settings";
 import { Button } from "./ui/button";
@@ -167,7 +171,59 @@ export function ChatView({
     incognito?: boolean;
   } | null>(null);
   const query = commandQuery(text, caret, selectionEnd);
-  const commands = matchingCommands(query?.query ?? "");
+  const [toolCatalog, setToolCatalog] = useState<ComposerToolCatalog>({
+    tools: [],
+    errors: [],
+  });
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [catalogVersion, setCatalogVersion] = useState(0);
+  const wantsTools = active && composerFocused && query !== null;
+  useEffect(() => {
+    if (!wantsTools) return;
+    let alive = true;
+    setToolsLoading(true);
+    const timeout = setTimeout(() => {
+      if (alive) {
+        setToolsLoading(false);
+        setToolCatalog((c) => ({
+          ...c,
+          errors: [
+            "Tool discovery is taking longer than expected. Check MCP settings or retry.",
+          ],
+        }));
+      }
+    }, 8000);
+    void transport
+      .composerTools(id, (catalog) => {
+        if (alive) setToolCatalog(catalog);
+      })
+      .then((catalog) => {
+        if (alive) setToolCatalog(catalog);
+      })
+      .catch((e) => {
+        if (alive)
+          setToolCatalog({
+            tools: [],
+            errors: [e instanceof Error ? e.message : String(e)],
+          });
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        if (alive) setToolsLoading(false);
+      });
+    return () => {
+      alive = false;
+      clearTimeout(timeout);
+    };
+  }, [
+    wantsTools,
+    transport,
+    id,
+    settings.mcpServers,
+    settings.webSearch,
+    catalogVersion,
+  ]);
+  const commands = matchingCommands(query?.query ?? "", toolCatalog.tools);
   const selectedIndex = Math.min(
     commandIndex,
     Math.max(0, commands.length - 1),
@@ -190,6 +246,7 @@ export function ChatView({
         : images.length
           ? "Remove screenshots before running a command."
           : "",
+    tools: images.length ? "Remove screenshots before running a command." : "",
     "memory-list": images.length
       ? "Remove screenshots before running a command."
       : "",
@@ -217,6 +274,34 @@ export function ChatView({
     const command = parseComposerCommand(value);
     setCommandError("");
     setCommandNotice("");
+    if (command?.id === "tools") {
+      if (command.argument) {
+        setCommandError(
+          "@tools does not accept arguments. Choose a tool from the menu.",
+        );
+        return;
+      }
+      setText("@tool:");
+      setCaret(6);
+      setSelectionEnd(6);
+      setMenuDismissed(false);
+      setCatalogVersion((v) => v + 1);
+      requestAnimationFrame(() => composer.current?.focus());
+      return;
+    }
+    const selectedTool = requestedComposerTool(value);
+    if (selectedTool) {
+      if (!toolCatalog.tools.some((t) => t.name === selectedTool.name)) {
+        setCommandError("Tool unavailable. Type @tools to refresh the list.");
+        return;
+      }
+      if (!selectedTool.argument) {
+        setCommandError(
+          "Describe what you want this tool to do before sending. The model prepares arguments; normal approvals still apply.",
+        );
+        return;
+      }
+    }
     if (command) {
       if (images.length) {
         setCommandError(
@@ -248,7 +333,7 @@ export function ChatView({
       else void compactControl.compact();
       return;
     }
-    if (/^\s*@[^\s@]*(?:\s|$)/u.test(value)) {
+    if (!selectedTool && /^\s*@[^\s@]*(?:\s|$)/u.test(value)) {
       setCommandError(
         "Unknown command. Type @ to choose an available command, or write a normal message.",
       );
@@ -447,6 +532,8 @@ export function ChatView({
               reasons={reasons}
               onSelect={completeCommand}
               onHighlight={setCommandIndex}
+              loading={toolsLoading}
+              errors={toolCatalog.errors}
             />
           )}
           {images.length > 0 && (

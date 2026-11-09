@@ -11,6 +11,7 @@ it("opens on a leading @ and filters by command or Chinese keywords", () => {
     "compact",
     "memory",
     "memory-list",
+    "tools",
   ]);
   expect(matchingCommands("mem").map((c) => c.id)).toEqual([
     "memory",

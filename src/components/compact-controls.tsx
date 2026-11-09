@@ -6,28 +6,13 @@ export function CompactControls({
 }: {
   control: ReturnType<typeof useCompact>;
 }) {
-  const {
-    record: latest,
-    running,
-    error,
-    disabledReason,
-    compact,
-    cancel,
-  } = control;
+  const { record: latest, running, error, cancel } = control;
+  if (!latest && !running && !error) return null;
   return (
     <div className="px-1 pb-1 text-xs text-muted-foreground">
-      <Button
-        size="sm"
-        variant="ghost"
-        disabled={!!disabledReason}
-        title={disabledReason || "Summarize older conversation turns"}
-        onClick={() => void compact()}
-      >
-        {running ? "Compacting…" : "Compact"}
-      </Button>
       {running && (
         <Button size="sm" variant="ghost" onClick={cancel}>
-          Cancel compact
+          Compacting… · Cancel compact
         </Button>
       )}
       {latest && (

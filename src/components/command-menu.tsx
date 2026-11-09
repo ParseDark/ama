@@ -9,12 +9,16 @@ export function CommandMenu({
   reasons,
   onSelect,
   onHighlight,
+  loading,
+  errors = [],
 }: {
   commands: ComposerCommand[];
   selected: number;
   reasons: Partial<Record<ComposerCommandId, string>>;
   onSelect: (command: ComposerCommand) => void;
   onHighlight: (index: number) => void;
+  loading?: boolean;
+  errors?: string[];
 }) {
   return (
     <div
@@ -26,6 +30,16 @@ export function CommandMenu({
       <div className="command-menu-heading">
         Commands · ↑ ↓ select · Tab / Enter complete · Esc close
       </div>
+      {loading && (
+        <div className="command-empty" role="status">
+          Loading tools / MCP…
+        </div>
+      )}
+      {errors.map((error, index) => (
+        <div className="command-empty" key={index} role="status">
+          {error}
+        </div>
+      ))}
       {commands.map((command, index) => (
         <div
           role="option"

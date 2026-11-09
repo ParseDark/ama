@@ -666,12 +666,19 @@ test("composer @ commands autocomplete, preview local memories and open the mana
   await expect(
     panel.getByRole("listbox", { name: "Composer commands" }),
   ).toBeVisible();
-  await expect(panel.getByRole("option")).toHaveCount(3);
+  await expect(
+    panel.getByRole("option").filter({ hasText: "Browse tools / MCP" }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Compact", exact: true }),
+  ).toHaveCount(0);
   await expect(
     panel.getByRole("option").filter({ hasText: "@compact" }),
   ).toHaveAttribute("aria-disabled", "true");
   await message.fill("@记忆");
-  await expect(panel.getByRole("option")).toHaveCount(2);
+  await expect(
+    panel.getByRole("option").filter({ hasText: "@memory Save a memory" }),
+  ).toBeVisible();
   await panel.getByRole("option").filter({ hasText: "Save a memory" }).click();
   await expect(message).toHaveValue("@memory ");
   await message.press("Enter");
@@ -683,7 +690,9 @@ test("composer @ commands autocomplete, preview local memories and open the mana
   ).toBeDisabled();
   await panel.getByRole("button", { name: "Cancel", exact: true }).click();
   await message.fill("@mem");
-  await expect(panel.getByRole("option")).toHaveCount(2);
+  await expect(
+    panel.getByRole("option").filter({ hasText: "@memory Save a memory" }),
+  ).toBeVisible();
   await message.press("Enter");
   await expect(message).toHaveValue("@memory ");
   await expect(
@@ -1298,7 +1307,26 @@ test("MCP connects, offers read tools and approves writes", async () => {
     panel.getByText("Notes · get_notes", { exact: true }),
   ).toBeVisible();
   expect(mcpCalls).toEqual(["get_notes"]);
-  await send("write MCP");
+  const composer = panel.getByRole("textbox", { name: "Message", exact: true });
+  const beforeDiscovery = requests.length;
+  await composer.fill("@tools");
+  await composer.press("Enter");
+  await composer.press("Enter");
+  await expect(composer).toHaveValue("@tool:");
+  await expect(
+    panel.getByRole("option").filter({ hasText: "@tool:notes_write_note" }),
+  ).toBeVisible();
+  expect(requests.length).toBe(beforeDiscovery);
+  expect(mcpCalls).toEqual(["get_notes"]);
+  await composer.fill("@tool:notes_write");
+  await composer.press("Enter");
+  await expect(composer).toHaveValue("@tool:notes_write_note ");
+  await composer.press("Enter");
+  await expect(
+    panel.getByRole("alert").filter({ hasText: "Describe what you want" }),
+  ).toBeVisible();
+  expect(mcpCalls).toEqual(["get_notes"]);
+  await send("@tool:notes_write_note write MCP");
   await expect(
     panel.getByRole("group", { name: "Approval required" }),
   ).toContainText("Let Notes run write_note?");
@@ -3558,6 +3586,33 @@ test("text size setting scales both user and assistant message text", async () =
   } finally {
     await setScale(1);
   }
+});
+
+test("display settings report Chrome's real panel shortcut binding and unassigned state", async () => {
+  await clear();
+  const openDisplay = async () => {
+    await panel.getByRole("button", { name: "Settings", exact: true }).click();
+    await panel.getByRole("tab", { name: "Display", exact: true }).click();
+  };
+  await openDisplay();
+  await expect(
+    panel.getByRole("heading", { name: "Panel shortcut", exact: true }),
+  ).toBeVisible();
+  const binding = await sw.evaluate(async () => {
+    const commands = await (globalThis as any).chrome.commands.getAll();
+    return commands.find((c: any) => c.name === "toggle-panel")?.shortcut ?? "";
+  });
+  await expect(panel.getByText(/Current browser binding:/)).toContainText(
+    binding || "Not assigned",
+  );
+  await expect(
+    panel.getByRole("button", {
+      name: "Configure browser shortcuts",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(panel.getByText(/Suggested: ⌘K on macOS/)).toBeVisible();
+  await panel.getByRole("button", { name: "Back to chat" }).click();
 });
 
 test("capture context meter screenshots", async () => {

@@ -37,7 +37,13 @@ import {
 import { createModel } from "./model";
 import { readActivePage, readTabPage } from "./active-tab";
 import { RunContexts } from "./run-context";
-import { McpTools, testMcpServer } from "./mcp-tools";
+import { McpTools, testMcpServer, getMcpToolInfo } from "./mcp-tools";
+import { RunContext } from "./run-context";
+import {
+  describeComposerTools,
+  requestedComposerTool,
+  type ComposerToolCatalog,
+} from "./composer-tools";
 import { buildInstructions } from "./prompt";
 import { createPageTools } from "./page-tools";
 import { createFileTools } from "./files/tools";
@@ -103,6 +109,50 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         ? { type: "abort" }
         : { type: "error", error: "Interrupted" },
     );
+  }
+  /** Discover schemas only: never read page/file contents or execute a tool. */
+  async composerTools(
+    chatId: string,
+    onNative?: (catalog: ComposerToolCatalog) => void,
+  ): Promise<ComposerToolCatalog> {
+    const settings = await (
+      this.options.loadSettings ?? (() => settingsStore.getValue())
+    )();
+    const data = createDataActions({ sessionId: chatId });
+    const native = {
+      ...createPageTools(new RunContext()),
+      ...createFileTools(undefined, data),
+      ...createCodeTools(data, this.options.runCode),
+      ...createDataTools(data),
+      ...createWebTools(settings, []),
+      ...createChatHistoryTool([]),
+      ...createHistoryTools({ search: async () => [] }),
+      ...(this.options.saveSettings
+        ? createSettingsTools({ save: this.options.saveSettings })
+        : {}),
+      ...createMemoryTools({
+        userTexts: [],
+        judgeIntent: async () => false,
+        searchReferences: async () => [],
+      }),
+    };
+    onNative?.({
+      tools: describeComposerTools(native, "Built-in tools"),
+      errors: [],
+    });
+    const remote = await this.mcp.load(getMcpServers(settings));
+    return {
+      tools: [
+        ...describeComposerTools(native, "Built-in tools"),
+        ...describeComposerTools(remote.tools, "MCP").map((tool) => ({
+          ...tool,
+          group: `MCP · ${getMcpToolInfo(tool.name)?.server ?? "server"}`,
+        })),
+      ],
+      errors: remote.servers
+        .filter((s) => !s.ok)
+        .map((s) => `${s.name}: ${s.error ?? "Unavailable"}`),
+    };
   }
   async compact(chatId: string, messages: UIMessage[], signal?: AbortSignal) {
     if (hasPendingTools(messages))
@@ -193,9 +243,12 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     const domain = hostnameOf(page?.url),
       plan = planFor(memory, domain, config),
       models = memoryModels(settings);
+    const selectedTool = requestedComposerTool(query);
+    const retainedTools = toolsUsedIn(messages);
+    if (selectedTool) retainedTools.add(selectedTool.name);
     const remote = await filterMcpTools(mcp.tools, {
       queryVector: await queryVector,
-      used: toolsUsedIn(messages),
+      used: retainedTools,
       config,
     });
     const settingsTools = this.options.saveSettings
@@ -249,6 +302,10 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
           }),
       }),
     };
+    if (selectedTool && !(selectedTool.name in tools))
+      throw new Error(
+        `Selected tool ${selectedTool.name} is unavailable. Refresh the @ tool list or check its settings.`,
+      );
     const pageView = budgetPage(page, budget.input);
     const memoryBlocks = splitMemoryBlocks(plan, domain),
       instructions = buildInstructions(
@@ -257,6 +314,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         memoryBlocks,
         getWebSearchConfig(settings),
         settings.dangerMode === true,
+        selectedTool?.name,
       );
     const autoCompact = settings.compaction?.enabled !== false;
     const modelView = async () => {

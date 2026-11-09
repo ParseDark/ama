@@ -1,4 +1,6 @@
-export type ComposerCommandId = "compact" | "memory" | "memory-list";
+import type { ComposerTool } from "./composer-tools";
+export type ComposerCommandId =
+  "compact" | "memory" | "memory-list" | "tools" | `tool:${string}`;
 export interface ComposerCommand {
   id: ComposerCommandId;
   title: string;
@@ -25,6 +27,13 @@ export const composerCommands: ComposerCommand[] = [
     description: "Open the local memory manager · no model request",
     keywords: ["记忆", "列表", "查看", "list", "manage"],
   },
+  {
+    id: "tools",
+    title: "Browse tools / MCP",
+    description:
+      "Discover configured tools · selection never bypasses approval",
+    keywords: ["工具", "调用", "mcp", "cli", "terminal", "终端"],
+  },
 ];
 export function commandQuery(text: string, start: number, end = start) {
   if (start !== end) return null;
@@ -35,9 +44,25 @@ export function commandQuery(text: string, start: number, end = start) {
     ? { query: match[1], start: text.indexOf("@"), end: start }
     : null;
 }
-export function matchingCommands(query: string) {
+export function matchingCommands(query: string, tools: ComposerTool[] = []) {
   const q = query.toLocaleLowerCase();
-  return composerCommands.filter((c) =>
+  const entries: ComposerCommand[] = [
+    ...composerCommands,
+    ...tools.map((tool) => ({
+      id: `tool:${tool.name}` as const,
+      title: tool.name,
+      description: `${tool.group} · ${tool.description}`,
+      keywords: [
+        tool.name,
+        tool.group,
+        tool.description,
+        "工具",
+        "tools",
+        "mcp",
+      ],
+    })),
+  ];
+  return entries.filter((c) =>
     [c.id, c.title, ...c.keywords].some((s) =>
       s.toLocaleLowerCase().includes(q),
     ),

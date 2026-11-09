@@ -28,6 +28,7 @@ export function buildInstructions(
   },
   webSearch?: WebSearchConfig,
   dangerMode = false,
+  selectedTool?: string,
 ) {
   const escape = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
@@ -50,6 +51,10 @@ export function buildInstructions(
       "The current page could not be read (it may be a browser-internal page). You can still open web pages with open_tab.",
     );
   sections.push(ACTION_GUIDE, MEMORY_GUIDE, FILE_GUIDE, SETTINGS_GUIDE);
+  if (selectedTool)
+    sections.push(
+      `The user chose the tool "${selectedTool}" from the composer. Use it for this request when it fits, and follow its own schema and approval rules. Selecting a tool is a request, not permission to skip confirmation, invent arguments or ignore the user's wording.`,
+    );
   if (webSearch?.enabled && webSearch.apiKey.trim()) sections.push(WEB_GUIDE);
   if (servers.length)
     sections.push(
