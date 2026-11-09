@@ -3401,38 +3401,45 @@ test("learning re-learns an old state, shows noticed rows and accepts a suggesti
   learning = true;
   try {
     await clear();
-    await sw.evaluate(async () => {
-      const c = (globalThis as any).chrome;
-      const { settings } = await c.storage.local.get("settings");
-      settings.embedding = { ...(settings.embedding ?? {}), enabled: false };
-      settings.provider = "openai-compatible";
-      settings.providers["openai-compatible"].model = "test-model";
-      settings.mcpServers = [];
-      const now = Date.now();
-      await c.storage.local.set({
-        settings,
-        memory: { schemaVersion: 1, enabled: true, memories: [] },
-        memoryLearning: {
-          cursors: { s1: 4 },
-          eventCursor: 0,
-          runs: 24,
-          lastRunAt: 0,
-        },
-        activeSessionId: "s1",
-        sessions: [
-          { id: "s1", title: "Brief", createdAt: now, updatedAt: now },
-        ],
-        "session:s1": [
-          {
-            id: "u1",
-            role: "user",
-            metadata: { domain: "example.com" },
-            parts: [{ type: "text", text: "Keep answers brief" }],
+    // Clearing starts learning asynchronously. Unload the panel and wait for
+    // that run before replacing storage, so it cannot overwrite the fixture.
+    const panelURL = panel.url();
+    await panel.goto("about:blank");
+    await sw.evaluate(async () =>
+      navigator.locks.request("ama-memory-learning", async () => {
+        const c = (globalThis as any).chrome;
+        const { settings } = await c.storage.local.get("settings");
+        settings.embedding = { ...(settings.embedding ?? {}), enabled: false };
+        settings.provider = "openai-compatible";
+        settings.providers["openai-compatible"].model = "test-model";
+        settings.mcpServers = [];
+        const now = Date.now();
+        await c.storage.local.set({
+          settings,
+          memory: { schemaVersion: 1, enabled: true, memories: [] },
+          memoryEvents: [],
+          memoryLearning: {
+            cursors: { s1: 4 },
+            eventCursor: 0,
+            runs: 24,
+            lastRunAt: 0,
           },
-        ],
-      });
-    });
-    await panel.reload();
+          activeSessionId: "s1",
+          sessions: [
+            { id: "s1", title: "Brief", createdAt: now, updatedAt: now },
+          ],
+          "session:s1": [
+            {
+              id: "u1",
+              role: "user",
+              metadata: { domain: "example.com" },
+              parts: [{ type: "text", text: "Keep answers brief" }],
+            },
+          ],
+        });
+      }),
+    );
+    await panel.goto(panelURL);
     await expect
       .poll(() =>
         sw.evaluate(
