@@ -174,6 +174,8 @@ Summaries are lossy and add latency/cost, billed by your configured model. They 
 
 ## Learning from chats
 
+**Architecture guide:** [AMA Memory — system overview (中文 HTML)](docs/memory-system.html) explains memory types, evidence, retrieval, background reviews, privacy boundaries and the proposed roadmap. Download and open the single HTML file in a browser; it works offline with no external dependencies. GitHub's file view shows source rather than rendering the page.
+
 Automatic learning reads only your user messages, approvals and stop events (never assistant text, page content or tool output), skips incognito and sensitive-domain signals, and turns repeated habits into suggestions. The judges (extraction, intent, relation, classification) answer through a **forced tool call** whose arguments must match a schema; `response_format` JSON is ignored by some gateways and produced malformed answers that were silently treated as "nothing learned".
 
 If a model returns an unusable answer, learning tries the next configured model and reports `failed` without advancing its cursors, so the same signals are retried on a later run. On the first run after upgrading from a version that lost results, the stored cursors are reset once (the run count is kept) so earlier chats are learned again.

@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="AMA Memory 系统全景：有来源的偏好、按需资料与任务经验，以及检索、后台核验和用户控制的完整闭环。"
+    />
+    <title>AMA Memory — 从对话到有依据的经验</title>
+    <noscript>
+      <style>
+        .demo .tabs {
+          display: none;
+        }
+        .demo .tabpanel[hidden] {
+          display: block;
+        }
+      </style>
+    </noscript>
+    <style>
+      :root {
+        --paper: #f6f5ef;
+        --ink: #20332e;
+        --muted: #58685f;
+        --line: #d7dfd4;
+        --green: #155b46;
+        --lime: #d5ee9b;
+        --orange: #a64425;
+        --white: #fffef9;
+        --radius: 20px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 90px;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        line-height: 1.75;
+      }
+      a {
+        color: var(--green);
+        text-underline-offset: 4px;
+      }
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+      button {
+        font: inherit;
+      }
+      :focus-visible {
+        outline: 3px solid #ab4b27;
+        outline-offset: 5px;
+      }
+      .skip {
+        position: absolute;
+        top: -100px;
+        left: 20px;
+        z-index: 10;
+        background: var(--white);
+        padding: 10px;
+      }
+      .skip:focus {
+        top: 10px;
+      }
+      .wrap {
+        width: min(1160px, calc(100% - 48px));
+        margin: auto;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        border-bottom: 1px solid var(--line);
+        background: rgba(246, 245, 239, 0.97);
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        min-height: 72px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: -0.5px;
+        white-space: nowrap;
+      }
+      .mark {
+        display: inline-grid;
+        place-items: center;
+        width: 31px;
+        height: 31px;
+        border-radius: 9px;
+        background: var(--green);
+        color: var(--lime);
+        font-size: 20px;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        font-size: 13px;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      nav a:hover {
+        color: var(--green);
+        text-decoration: underline;
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 2px;
+        font-weight: 750;
+        text-transform: uppercase;
+        color: var(--green);
+      }
+      .hero {
+        padding: 80px 0 42px;
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 60px;
+        align-items: end;
+      }
+      h1 {
+        font-size: clamp(36px, 4.7vw, 60px);
+        letter-spacing: -2px;
+        line-height: 1.2;
+        margin: 17px 0 22px;
+        font-weight: 650;
+      }
+      h1 em {
+        color: var(--green);
+        font-style: normal;
+      }
+      .lead {
+        font-size: 17px;
+        color: var(--muted);
+        max-width: 620px;
+      }
+      .hero-note {
+        border-left: 2px solid var(--green);
+        padding: 2px 0 2px 24px;
+        margin-bottom: 18px;
+      }
+      .hero-note strong {
+        font-size: 20px;
+        display: block;
+        line-height: 1.5;
+      }
+      .hero-note p {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 0;
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        background: #e9eee3;
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: 0.3px;
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 24px 0 0;
+      }
+      section {
+        padding: 54px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .section-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 30px;
+        margin-bottom: 28px;
+      }
+      h2 {
+        font-size: clamp(25px, 3vw, 34px);
+        line-height: 1.35;
+        letter-spacing: -0.8px;
+        margin: 8px 0 0;
+        font-weight: 650;
+      }
+      .section-head > p {
+        max-width: 410px;
+        margin: 8px 0 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      h3 {
+        margin: 8px 0 12px;
+        font-size: 20px;
+        line-height: 1.4;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      .architecture {
+        background: var(--ink);
+        color: var(--white);
+        border-radius: 26px;
+        padding: 34px;
+      }
+      .arch-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        font-size: 12px;
+        color: #bdcdc0;
+        margin-bottom: 25px;
+      }
+      .arch-top span:last-child {
+        color: var(--lime);
+      }
+      .flow-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .node {
+        padding: 19px 22px;
+        border: 1px solid #6b8377;
+        border-radius: 13px;
+        background: #2a4037;
+      }
+      .node small {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: #c0d2c6;
+        margin-bottom: 4px;
+      }
+      .node strong {
+        font-size: 17px;
+      }
+      .node p {
+        font-size: 13px;
+        color: #cfdbd0;
+        margin: 6px 0 0;
+      }
+      .connector {
+        text-align: center;
+        color: #c5d8b5;
+        font-size: 12px;
+        padding: 9px 0;
+      }
+      .core {
+        background: var(--lime);
+        color: #20332e;
+        border: 0;
+        text-align: center;
+        padding: 22px;
+      }
+      .core small,
+      .core p {
+        color: #35533a;
+      }
+      .core strong {
+        font-size: 22px;
+      }
+      .lanes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .lane {
+        padding: 22px;
+        border: 1px solid #6b8377;
+        border-radius: 13px;
+      }
+      .lane h3 {
+        font-size: 17px;
+        margin-top: 0;
+      }
+      .lane p {
+        font-size: 13px;
+        color: #cfdbd0;
+        margin: 8px 0 0;
+      }
+      .lane b {
+        color: var(--lime);
+        font-weight: 500;
+      }
+      .arch-footer {
+        margin: 22px 0 0;
+        font-size: 12px;
+        color: #c0d2c6;
+        text-align: center;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 25px;
+        background: var(--white);
+      }
+      .card .num {
+        color: var(--green);
+        font:
+          12px ui-monospace,
+          monospace;
+      }
+      .card p {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .example {
+        border-top: 1px solid var(--line);
+        padding-top: 15px;
+        margin-top: 22px;
+        font-size: 14px;
+      }
+      .example small {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        margin-bottom: 5px;
+      }
+      .note {
+        background: #eaf0e3;
+        border-radius: 12px;
+        padding: 16px 20px;
+        font-size: 13px;
+        margin-top: 18px;
+      }
+      .note.warning {
+        background: #f3e9db;
+        color: #784126;
+      }
+      .demo {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--white);
+      }
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--line);
+        background: #eeefe7;
+      }
+      .tabs button {
+        flex: 1;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        background: none;
+        padding: 17px 12px;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .tabs button[aria-selected="true"] {
+        color: var(--green);
+        background: var(--white);
+        border-bottom-color: var(--green);
+        font-weight: 700;
+      }
+      .tabpanel {
+        padding: 28px;
+      }
+      .tabpanel[hidden] {
+        display: none;
+      }
+      .scenario-label {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      blockquote {
+        font-size: 21px;
+        font-weight: 550;
+        margin: 0 0 24px;
+        line-height: 1.5;
+      }
+      .steps {
+        list-style: none;
+        counter-reset: step;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+      }
+      .steps li {
+        counter-increment: step;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+      .steps li::before {
+        content: "0" counter(step);
+        display: block;
+        color: var(--green);
+        font:
+          12px ui-monospace,
+          monospace;
+        margin-bottom: 8px;
+      }
+      .steps strong {
+        font-size: 14px;
+      }
+      .steps p {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 6px 0 0;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .record {
+        background: #e9eee3;
+        padding: 25px;
+        border-radius: var(--radius);
+      }
+      .record h3 {
+        font-size: 17px;
+        margin-top: 0;
+      }
+      dl {
+        margin: 18px 0 0;
+      }
+      .field {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        gap: 12px;
+        border-top: 1px solid #ccd6c6;
+        padding: 10px 0;
+        font-size: 13px;
+      }
+      dt {
+        font-family: ui-monospace, monospace;
+        color: #3c5947;
+      }
+      dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .list {
+        padding-left: 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .list li {
+        padding: 5px 0;
+      }
+      .list strong {
+        color: var(--ink);
+      }
+      .limits {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--line);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .limit {
+        background: var(--white);
+        padding: 24px;
+      }
+      .limit strong {
+        font-size: 30px;
+        color: var(--green);
+        line-height: 1.2;
+        font-weight: 600;
+      }
+      .limit span {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+        min-width: 640px;
+        background: var(--white);
+      }
+      th,
+      td {
+        padding: 15px 18px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        background: #e9eee3;
+        font-weight: 650;
+      }
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      td:first-child {
+        width: 20%;
+        font-weight: 600;
+      }
+      .roadmap {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+      .roadmap li {
+        border-top: 3px solid #becab6;
+        padding-top: 18px;
+      }
+      .roadmap li:first-child {
+        border-color: var(--green);
+      }
+      .roadmap h3 {
+        font-size: 17px;
+        margin: 12px 0 10px;
+      }
+      .roadmap p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .status {
+        color: #465b4c;
+        font-size: 11px;
+        font-weight: 650;
+      }
+      .done {
+        color: var(--green);
+      }
+      details {
+        border-top: 1px solid var(--line);
+        padding: 18px 0;
+      }
+      summary {
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      details p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 12px 0 0;
+        max-width: 850px;
+      }
+      .source-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 24px;
+        font-size: 13px;
+        margin-top: 22px;
+      }
+      footer {
+        padding: 32px 0 45px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .footer-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .print-button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 5px 12px;
+        background: var(--white);
+        color: var(--green);
+        cursor: pointer;
+        font-size: 12px;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.88em;
+        overflow-wrap: anywhere;
+      }
+      @media (max-width: 800px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 26px;
+          padding-top: 48px;
+        }
+        .hero-note {
+          margin-bottom: 0;
+        }
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+        .steps,
+        .roadmap,
+        .limits {
+          grid-template-columns: 1fr 1fr;
+        }
+        .split {
+          grid-template-columns: 1fr;
+        }
+        .section-head {
+          flex-direction: column;
+          gap: 8px;
+        }
+        .section-head > p {
+          max-width: 100%;
+        }
+        .bar {
+          gap: 12px;
+        }
+        nav {
+          gap: 12px;
+        }
+      }
+      @media (max-width: 520px) {
+        .wrap {
+          width: calc(100% - 32px);
+        }
+        .bar {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 12px 0;
+          gap: 8px;
+        }
+        nav {
+          gap: 16px;
+          font-size: 12px;
+        }
+        html {
+          scroll-padding-top: 110px;
+        }
+        h1 {
+          letter-spacing: -1px;
+        }
+        section {
+          padding: 36px 0;
+        }
+        .architecture {
+          padding: 20px 16px;
+        }
+        .flow-inputs,
+        .lanes {
+          grid-template-columns: 1fr;
+        }
+        .node {
+          padding: 16px;
+        }
+        .arch-top {
+          align-items: start;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .tabs button {
+          font-size: 12px;
+          padding: 14px 7px;
+        }
+        .tabpanel {
+          padding: 22px 18px;
+        }
+        blockquote {
+          font-size: 18px;
+        }
+        .steps,
+        .roadmap {
+          grid-template-columns: 1fr;
+        }
+        .limit {
+          padding: 18px;
+        }
+        .field {
+          grid-template-columns: 95px 1fr;
+        }
+        .footer-row {
+          flex-direction: column;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+      @media print {
+        body {
+          background: white;
+          font-size: 11pt;
+        }
+        header,
+        .print-button,
+        .skip {
+          display: none;
+        }
+        .wrap {
+          width: 100%;
+        }
+        .hero {
+          padding-top: 0;
+        }
+        section {
+          padding: 24px 0;
+        }
+        .architecture,
+        .node,
+        .lane,
+        .core {
+          background: white;
+          color: black;
+          border: 1px solid #777;
+        }
+        .architecture p,
+        .architecture small,
+        .arch-top,
+        .arch-top span:last-child,
+        .connector,
+        .lane b,
+        .arch-footer {
+          color: #333;
+        }
+        .tabpanel[hidden] {
+          display: block;
+        }
+        .tabpanel {
+          border-bottom: 1px solid #ccc;
+        }
+        .tabs {
+          display: none;
+        }
+        .card,
+        .record,
+        .lane,
+        .roadmap li,
+        .steps li,
+        details {
+          break-inside: avoid;
+        }
+        .table-scroll {
+          overflow: visible;
+        }
+        table {
+          min-width: 0;
+        }
+        a {
+          color: black;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">跳到正文</a>
+    <header>
+      <div class="wrap bar">
+        <a class="brand" href="#main" aria-label="AMA Memory 首页"
+          ><span class="mark" aria-hidden="true">a</span> AMA / Memory</a
+        >
+        <nav aria-label="章节导航">
+          <a href="#architecture">架构</a><a href="#types">记忆类型</a
+          ><a href="#journeys">工作流程</a><a href="#boundaries">边界</a
+          ><a href="#roadmap">路线图</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="wrap">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">System field guide · AMA Memory</div>
+          <h1>不只是记住。<br />而是<em>有依据地想起。</em></h1>
+          <p class="lead">
+            从一次对话，到长期偏好、可查资料与任务经验。AMA
+            的记忆系统负责决定：什么值得留下、何时应该出现，以及什么时候需要改变。
+          </p>
+          <div class="pill-row">
+            <span class="badge">来源可追溯</span
+            ><span class="badge">按需召回</span
+            ><span class="badge">后台核验</span
+            ><span class="badge">用户可控</span>
+          </div>
+        </div>
+        <aside class="hero-note">
+          <strong>记忆是可修正的判断，<br />不是永久正确的事实。</strong>
+          <p>
+            本文区分当前实现与未来方向。基于 memory 优化提交
+            <code>a7b9eb9</code
+            >；交互内容仅作流程说明，不连接你的真实记忆或任何服务。
+          </p>
+        </aside>
+      </div>
+
+      <section id="architecture" aria-labelledby="architecture-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">01 / Big picture</div>
+            <h2 id="architecture-title">一个有证据底座的闭环</h2>
+          </div>
+          <p>
+            原始对话留下证据；结构化记忆保存提炼后的判断。在线路径解决“现在用什么”，后台路径解决“以后还对不对”。
+          </p>
+        </div>
+        <div
+          class="architecture"
+          role="group"
+          aria-label="记忆架构：两类输入汇入结构化记忆，再分为在线召回和后台维护"
+        >
+          <div class="arch-top">
+            <span>CAPTURE → ORGANIZE → RECALL → REVIEW</span
+            ><span>历史经验 ≠ 当前事实 ≠ 新授权</span>
+          </div>
+          <div class="flow-inputs">
+            <div class="node">
+              <small>INPUT A / 自动学习</small><strong>对话中的用户信号</strong>
+              <p>
+                以用户原话为证据；审批与停止仅作辅助。过滤隐私会话与敏感站点，分批提炼、去重，再形成习惯候选。
+              </p>
+            </div>
+            <div class="node">
+              <small>INPUT B / 明确保存</small
+              ><strong>“请记住这个偏好 / 资料 / 流程”</strong>
+              <p>
+                通过 remember
+                工具保存。按意图、内容和类别决定确认要求，保留全局或当前站点的作用域。
+              </p>
+            </div>
+          </div>
+          <div class="connector" aria-hidden="true">↓ 来源与证据跟随内容 ↓</div>
+          <div class="node core">
+            <small>STRUCTURED MEMORY</small
+            ><strong>偏好 · 资料 · 任务流程</strong>
+            <p>内容 / 作用域 / 状态 / 来源 / 证据 / 确认状态 / 变更记录</p>
+          </div>
+          <div class="connector" aria-hidden="true">↙ 两条使用与维护路径 ↘</div>
+          <div class="lanes">
+            <div class="lane">
+              <h3>在线：为当前任务找回必要内容</h3>
+              <p>
+                当前消息与站点 → 过滤适用记忆 → 相关性检索 →
+                有界上下文注入或按需读取。
+              </p>
+              <p><b>偏好指导回答；资料和流程只是历史参考。</b></p>
+            </div>
+            <div class="lane">
+              <h3>后台：依据原始证据重新检查</h3>
+              <p>
+                有来源的偏好 → 读取原始用户证据与近期信号 → 保留 / 建议修订 /
+                建议停用。
+              </p>
+              <p><b>修订与停用建议必须由用户接受。</b></p>
+            </div>
+          </div>
+          <p class="arch-footer">
+            底座：本地对话与记忆存储 + 可回查来源 + 可选的现有 embedding
+            endpoint / 向量缓存
+          </p>
+        </div>
+      </section>
+
+      <section id="types" aria-labelledby="types-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">02 / Three kinds of memory</div>
+            <h2 id="types-title">不同的记忆，不同的出场方式</h2>
+          </div>
+          <p>不是所有保存内容都应该变成每次回答必须遵守的规则。</p>
+        </div>
+        <div class="grid3">
+          <article class="card">
+            <span class="num">01 · PREFERENCE</span>
+            <h3>偏好</h3>
+            <p>
+              回答“你希望我怎么做”。适用且有效的偏好优先进入有限的上下文；当前用户要求可以覆盖旧偏好。
+            </p>
+            <div class="example">
+              <small>示例 · 全局偏好</small>“默认用中文，先给结论，再给细节。”
+            </div>
+          </article>
+          <article class="card">
+            <span class="num">02 · REFERENCE</span>
+            <h3>资料</h3>
+            <p>
+              回答“你保存过什么”。相关时召回，或通过 recall_memory
+              主动读取；不自动升级为行为指令。
+            </p>
+            <div class="example">
+              <small>示例 · 站点资料</small
+              >“这个项目的发布检查清单在文档目录里。”
+            </div>
+          </article>
+          <article class="card">
+            <span class="num">03 · PROCEDURE</span>
+            <h3>任务流程</h3>
+            <p>
+              回答“类似任务以前怎么完成”。目前由用户明确要求保存，复用资料检索路径，不作为常驻偏好注入。
+            </p>
+            <div class="example">
+              <small>示例 · 需再次验证</small
+              >“导出报表前，先核对日期与筛选条件，再选择 CSV。”
+            </div>
+          </article>
+        </div>
+        <div class="note">
+          <strong>当前边界：</strong
+          >流程记忆仍是一条简短的参考文本，不是自动生成的技能库、可执行脚本或保证成功的任务模板。普通模式下保存流程需要确认；私密或敏感站点会话不允许保存流程。
+        </div>
+      </section>
+
+      <section id="journeys" aria-labelledby="journeys-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">03 / Follow a memory</div>
+            <h2 id="journeys-title">一条记忆如何被学会、找回与修正</h2>
+          </div>
+          <p>
+            选择一个场景查看完整路径。以下是静态讲解，不会保存、发送或修改真实数据。
+          </p>
+        </div>
+        <div class="demo">
+          <div class="tabs" role="tablist" aria-label="记忆流程场景">
+            <button
+              type="button"
+              id="tab-learn"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-learn"
+            >
+              学会一个偏好
+            </button>
+            <button
+              type="button"
+              id="tab-recall"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-recall"
+              tabindex="-1"
+            >
+              找回任务经验
+            </button>
+            <button
+              type="button"
+              id="tab-review"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-review"
+              tabindex="-1"
+            >
+              修正旧的记忆
+            </button>
+          </div>
+          <div
+            id="panel-learn"
+            class="tabpanel"
+            role="tabpanel"
+            aria-labelledby="tab-learn"
+            tabindex="0"
+          >
+            <p class="scenario-label">SCENARIO A · 正常模式下的自动学习</p>
+            <blockquote>“以后回答先给结论。”</blockquote>
+            <ol class="steps">
+              <li>
+                <strong>读取用户证据</strong>
+                <p>
+                  提取原始用户消息，绑定会话、消息 ID
+                  与内容哈希。助手文字和网页内容不能证明用户偏好。
+                </p>
+              </li>
+              <li>
+                <strong>形成习惯候选</strong>
+                <p>
+                  模型必须引用实际提供的 source
+                  ID。去重并累计独立用户消息；同一消息重放不增加证据。
+                </p>
+              </li>
+              <li>
+                <strong>等待用户确认</strong>
+                <p>
+                  通常达到两条独立用户消息的证据门槛后，形成建议。用户可确认，也可拒绝或直接手动保存。
+                </p>
+              </li>
+              <li>
+                <strong>在适用时使用</strong>
+                <p>
+                  确认后成为可用偏好，按作用域和预算选择。用户这次说“只给详细推导”时，以当前要求为准。
+                </p>
+              </li>
+            </ol>
+            <div class="note warning">
+              Danger mode
+              的区别：达到证据门槛的自动习惯可直接激活，不等待建议确认。但隐私过滤仍保留；后台核验的修订与停用仍须用户接受。
+            </div>
+          </div>
+          <div
+            id="panel-recall"
+            class="tabpanel"
+            role="tabpanel"
+            aria-labelledby="tab-recall"
+            tabindex="0"
+            hidden
+          >
+            <p class="scenario-label">SCENARIO B · 用户已经明确保存过流程</p>
+            <blockquote>“按上次的方法帮我准备报表导出。”</blockquote>
+            <ol class="steps">
+              <li>
+                <strong>定位相关经验</strong>
+                <p>
+                  过滤失效、禁用及不适用站点的记忆。有可用向量时做语义匹配，失败则降级处理。
+                </p>
+              </li>
+              <li>
+                <strong>按需展开内容</strong>
+                <p>
+                  相关流程可进入预算内的参考块；未注入的资料通过 recall_memory
+                  读取，而不是全部塞进 prompt。
+                </p>
+              </li>
+              <li>
+                <strong>必要时回看来源</strong>
+                <p>
+                  read_history_source
+                  按会话与用户消息定位原始回合，分页读取文字，不重放历史工具操作。
+                </p>
+              </li>
+              <li>
+                <strong>重新核对并授权</strong>
+                <p>
+                  核对当前页面、字段与目标。旧步骤不保证页面仍相同，过去批准过导出也不等于这次已批准。
+                </p>
+              </li>
+            </ol>
+            <div class="note">
+              没有 embedding
+              也不是“没有记忆”：偏好仍可使用，资料通过有界目录与关键词召回降级。检索失败不应伪装成已找到相关证据。
+            </div>
+          </div>
+          <div
+            id="panel-review"
+            class="tabpanel"
+            role="tabpanel"
+            aria-labelledby="tab-review"
+            tabindex="0"
+            hidden
+          >
+            <p class="scenario-label">
+              SCENARIO C · 通过后台核验发现偏好可能变化
+            </p>
+            <blockquote>“之前要简短，现在默认给完整解释。”</blockquote>
+            <ol class="steps">
+              <li>
+                <strong>独立安排核验</strong>
+                <p>
+                  即使没有新学习信号，也能在后台触发维护；学习尚有待处理批次时，先完成学习再核验。
+                </p>
+              </li>
+              <li>
+                <strong>检查原始依据</strong>
+                <p>
+                  对照原始用户来源和近期消息。原始消息缺失、被删除或无法安全读取，都不等于旧偏好为假。
+                </p>
+              </li>
+              <li>
+                <strong>提出可解释建议</strong>
+                <p>
+                  明确矛盾才能建议 revise 或
+                  archive，并引用提供的用户证据。没有新提及不构成停用理由。
+                </p>
+              </li>
+              <li>
+                <strong>保留原文等确认</strong>
+                <p>
+                  用户可接受修改或保留当前内容。后台不会偷偷重写，即使这条记忆被置顶或开启
+                  Danger mode。
+                </p>
+              </li>
+            </ol>
+            <div class="note">
+              这个场景说明后台核验路径；明确的 remember
+              或用户手动编辑也可以更新记忆，不必等待每日维护。当前核验仅覆盖有来源的偏好，不核验资料与流程内容的正确性。
+            </div>
+          </div>
+        </div>
+        <noscript
+          ><p class="note">
+            JavaScript 已关闭。三个场景已全部展开，仍可直接阅读与打印。
+          </p></noscript
+        >
+      </section>
+
+      <section id="evidence" aria-labelledby="evidence-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">04 / Evidence, not just text</div>
+            <h2 id="evidence-title">每条记忆，带着“为什么”</h2>
+          </div>
+          <p>内容之外的元数据，决定它能否被解释、纠正和安全使用。</p>
+        </div>
+        <div class="split">
+          <div class="record">
+            <h3>一条记忆的结构 · 示意</h3>
+            <dl>
+              <div class="field">
+                <dt>text</dt>
+                <dd>“默认先给结论”</dd>
+              </div>
+              <div class="field">
+                <dt>category</dt>
+                <dd>preference / reference / procedure</dd>
+              </div>
+              <div class="field">
+                <dt>scope</dt>
+                <dd>global 或 domain:example.com</dd>
+              </div>
+              <div class="field">
+                <dt>sources</dt>
+                <dd>来源 ID、会话 ID、消息 ID、信号类型、内容哈希与可选站点</dd>
+              </div>
+              <div class="field">
+                <dt>verification</dt>
+                <dd>inferred 或 user-confirmed</dd>
+              </div>
+              <div class="field">
+                <dt>review</dt>
+                <dd>待确认的修订 / 停用建议、理由与证据</dd>
+              </div>
+              <div class="field">
+                <dt>changes</dt>
+                <dd>最近 20 条变更记录，而非无限审计日志</dd>
+              </div>
+            </dl>
+          </div>
+          <div>
+            <h3>这些字段解决什么问题？</h3>
+            <ul class="list">
+              <li>
+                <strong>追溯：</strong
+                >从记忆回到产生判断的用户原话，而不是只相信模型写的摘要。
+              </li>
+              <li>
+                <strong>防止证据膨胀：</strong
+                >同一消息不能因重复处理或多次改写被计为多个独立证据。
+              </li>
+              <li>
+                <strong>区分推断与确认：</strong
+                >用户确认说明用户接受了内容，不代表系统完成了外部事实认证。
+              </li>
+              <li>
+                <strong>可逆维护：</strong
+                >建议先挂在记忆上，原文不变；接受后再修改或停用。
+              </li>
+              <li>
+                <strong>兼容旧记忆：</strong
+                >来源字段可选。旧数据不伪造出处，也不会为补来源自动重放已消费的历史。
+              </li>
+            </ul>
+            <div class="note warning">
+              来源 ID
+              与哈希用于关联和检查原始内容，不是密码学签名或防篡改证明。模型引用真实
+              source ID，也仍可能误读其含义。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="budgets" aria-labelledby="budgets-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">05 / Bounded by design</div>
+            <h2 id="budgets-title">控制上下文，也控制维护成本</h2>
+          </div>
+          <p>
+            这些是当前实现的处理上限与冷却策略，不是模型准确率或执行时间承诺。
+          </p>
+        </div>
+        <div class="limits">
+          <div class="limit">
+            <strong>450</strong
+            ><span>token 估算预算<br />包含最终偏好块、引用目录与召回提示</span>
+          </div>
+          <div class="limit">
+            <strong>60</strong
+            ><span
+              >常规学习批次信号上限<br />同一消息组与同时间事件原子处理，可能略超</span
+            >
+          </div>
+          <div class="limit">
+            <strong>5</strong
+            ><span
+              >每轮最多核验的偏好数<br />每条最多读取 5 个原始用户来源</span
+            >
+          </div>
+          <div class="limit">
+            <strong>1 天</strong
+            ><span>后台维护全局冷却<br />单条记忆通常至少间隔 7 天再检查</span>
+          </div>
+        </div>
+        <div class="note">
+          学习游标只推进到已消费的位置；未处理批次会安排继续，不先跳过再截断。Token
+          使用 <code>estimateTokens()</code> 估算，并非供应商 tokenizer
+          的硬保证。原始历史读取每页最多 6,000 字符；核验近期信号最多覆盖 10
+          个会话、60 条用户消息。
+        </div>
+        <div class="split" style="margin-top: 24px">
+          <div>
+            <h3>Embedding 是查找基础设施</h3>
+            <p class="lead" style="font-size: 14px">
+              复用当前配置的 endpoint 和向量缓存，可使用本地 Jina 服务。用于资料
+              /
+              流程召回、语义历史搜索、去重候选与核验优先级；它不是记忆数据库，也不负责判断真假。
+            </p>
+          </div>
+          <div>
+            <h3>可选、默认关闭、可降级</h3>
+            <p class="lead" style="font-size: 14px">
+              关闭、离线或忙碌时，不阻断基本记忆功能。关联判断采用有界候选降级，维护保留按核验时间排序；查询与缓存填充避免自相竞争，但服务超时仍可能发生。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="boundaries" aria-labelledby="boundaries-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">06 / Trust & privacy</div>
+            <h2 id="boundaries-title">本地存储，不等于从不离开设备</h2>
+          </div>
+          <p>记忆属于用户。存储、模型处理与执行授权是三件不同的事。</p>
+        </div>
+        <div
+          class="table-scroll"
+          role="region"
+          aria-label="隐私和信任边界表，可横向滚动"
+          tabindex="0"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">边界</th>
+                <th scope="col">当前行为</th>
+                <th scope="col">不要误解为</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>存储与同步</td>
+                <td>
+                  记忆、历史、向量留在本地扩展存储；不随可选配置同步上传。配置同步本身可包含凭证。
+                </td>
+                <td>本地不代表加密，也不是密码保险箱。</td>
+              </tr>
+              <tr>
+                <td>模型与向量服务</td>
+                <td>
+                  学习 /
+                  核验所需证据和召回内容可发给配置的聊天模型；语义功能会将相关文本发给配置的
+                  embedding endpoint。
+                </td>
+                <td>默认使用本地 Jina 的示例，不代表所有用户都只走本机。</td>
+              </tr>
+              <tr>
+                <td>自动学习</td>
+                <td>
+                  排除隐私会话、敏感站点信号；不能从助手、页面或工具输出建立偏好；批准
+                  / 停止单独不足以证明习惯。
+                </td>
+                <td>自动学习不是完整浏览记录抓取。</td>
+              </tr>
+              <tr>
+                <td>明确保存</td>
+                <td>
+                  一般敏感内容经必要确认后可保存为按需资料；流程在私密或敏感站点上下文中被拒绝。
+                </td>
+                <td>
+                  自动学习的排除规则，不等于禁止用户明确保存所有敏感资料。
+                </td>
+              </tr>
+              <tr>
+                <td>原始来源</td>
+                <td>
+                  read_history_source
+                  需要真实会话与用户消息，拒绝隐私回合，分页返回历史文本。其过滤不等同于自动学习的敏感域名过滤。
+                </td>
+                <td>不能据此声称所有敏感站点的历史都不可读取。</td>
+              </tr>
+              <tr>
+                <td>执行授权</td>
+                <td>
+                  历史文字按不可信数据处理；流程先验证当前页面与条件，写入等操作继续遵守当前审批模式。
+                </td>
+                <td>过去点过“允许”，不代表永久允许。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="roadmap" aria-labelledby="roadmap-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">07 / Where next</div>
+            <h2 id="roadmap-title">先证明有用，再扩大记忆</h2>
+          </div>
+          <p>
+            下面只有第一阶段已有基础实现；其余是建议演进方向，不是已交付功能或排期承诺。
+          </p>
+        </div>
+        <ol class="roadmap">
+          <li>
+            <span class="status done">01 / 已建立基础</span>
+            <h3>证据与控制</h3>
+            <p>
+              来源追踪、独立证据计数、原始对话回查、核验建议与用户确认。先回答“为什么记住”。
+            </p>
+          </li>
+          <li>
+            <span class="status">02 / 建议下一步</span>
+            <h3>评测与可观测性</h3>
+            <p>
+              建立召回、误用、纠错与隐私评测；解释每次用了哪些记忆、为何选中、是否降级。回答“到底有没有帮助”。
+            </p>
+          </li>
+          <li>
+            <span class="status">03 / 后续方向</span>
+            <h3>经验证的任务经验</h3>
+            <p>
+              记录适用条件、可观察成功结果、失败恢复与最近验证时间。自动提炼先生成候选，不把助手说“完成”当成成功证据。
+            </p>
+          </li>
+          <li>
+            <span class="status">04 / 按规模决定</span>
+            <h3>项目知识网络</h3>
+            <p>
+              当资料和经验足够丰富，再增加项目索引、主题关系和摘要。不是现在就把所有内容堆成一座
+              Wiki。
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="faq" aria-labelledby="faq-title">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">08 / Read the fine print</div>
+            <h2 id="faq-title">几个容易混淆的问题</h2>
+          </div>
+        </div>
+        <details open>
+          <summary>这次验证能证明什么，不能证明什么？</summary>
+          <p>
+            memory 优化提交已通过 260 项单元 / 集成测试、34 项扩展
+            E2E、独立的真实本地 Jina 集成测试，以及类型、格式和生产构建检查。E2E
+            使用模拟
+            LLM，本地向量测试使用合成文本；它们证明特定路径可运行，不证明线上召回准确率、真实模型核验质量或精确
+            token 上限。本文新增的 HTML 不改变 memory 运行逻辑。
+          </p>
+        </details>
+        <details open>
+          <summary>后台“保留”是否意味着这条记忆已被验证为真？</summary>
+          <p>
+            不是。“保留”只是模型对提供证据做了一次检查。当前确认状态只有
+            inferred 与
+            user-confirmed，没有独立的“事实已认证”状态。缺少来源的旧记忆不会被自动补成有证据的记忆；来源丢失也不等于内容错误。
+          </p>
+        </details>
+        <details open>
+          <summary>Memory 和聊天 Compact 有什么区别？</summary>
+          <p>
+            Compact 是为当前会话压缩较早上下文的有损摘要，原始对话仍保留。Memory
+            是跨对话可复用、带作用域和生命周期的内容。两者都不能提供新的授权，也不应替代对当前页面状态的读取。
+          </p>
+        </details>
+        <details open>
+          <summary>想深入代码，从哪里开始？</summary>
+          <p>
+            从 learning 看入口，从 signals / extractor / merger
+            看证据如何进入，从 selector / retrieval 看内容如何被选中，再读
+            maintenance 与 store
+            看如何维护。页面链接适合在本地仓库中打开；GitHub 的普通文件页只展示
+            HTML 源码，需下载后在浏览器打开。
+          </p>
+        </details>
+        <div class="source-links">
+          <a href="VALIDATION.md">验证与限制</a
+          ><a href="../src/lib/memory/learning.ts">学习入口</a
+          ><a href="../src/lib/memory/signals.ts">信号与来源</a
+          ><a href="../src/lib/memory/selector.ts">预算与注入</a
+          ><a href="../src/lib/memory/retrieval.ts">向量检索</a
+          ><a href="../src/lib/memory/maintenance.ts">后台核验</a
+          ><a href="../src/lib/memory/store.ts">存储与确认</a
+          ><a href="../README.md">项目 README</a>
+        </div>
+      </section>
+    </main>
+    <footer class="wrap">
+      <div class="footer-row">
+        <span
+          >AMA Memory / 架构说明 ·
+          单文件、离线可读、无外部依赖、无追踪请求。</span
+        ><button class="print-button" type="button" id="print">
+          打印 / 保存 PDF
+        </button>
+      </div>
+    </footer>
+    <script>
+      (() => {
+        const tabs = [...document.querySelectorAll('[role="tab"]')];
+        function activate(tab, focus = false) {
+          for (const item of tabs) {
+            const selected = item === tab;
+            item.setAttribute("aria-selected", String(selected));
+            item.tabIndex = selected ? 0 : -1;
+            document.getElementById(item.getAttribute("aria-controls")).hidden =
+              !selected;
+          }
+          if (focus) tab.focus();
+        }
+        tabs.forEach((tab, index) => {
+          tab.addEventListener("click", () => activate(tab));
+          tab.addEventListener("keydown", (event) => {
+            let target;
+            if (event.key === "ArrowRight") target = (index + 1) % tabs.length;
+            if (event.key === "ArrowLeft")
+              target = (index - 1 + tabs.length) % tabs.length;
+            if (event.key === "Home") target = 0;
+            if (event.key === "End") target = tabs.length - 1;
+            if (target !== undefined) {
+              event.preventDefault();
+              activate(tabs[target], true);
+            }
+          });
+        });
+        document
+          .getElementById("print")
+          .addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>
