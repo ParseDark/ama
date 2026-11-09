@@ -327,6 +327,20 @@ test.beforeAll(async () => {
       });
     } else if (body.messages[0].content.includes("Label each saved memory"))
       reply = tool("answer", { items: [] });
+    else if (body.messages[0].content.includes("Review a browser assistant"))
+      reply = tool(
+        "answer",
+        q.includes("audit-e2e")
+          ? {
+              action: "revise",
+              text: "Prefers detailed answers",
+              reason: "User explicitly changed preference",
+              sourceIds: [...q.matchAll(/\[(\[.*?\])\] /g)]
+                .map((m: any) => m[1])
+                .slice(-1),
+            }
+          : { action: "keep", reason: "No contradiction", sourceIds: [] },
+      );
     else if (body.messages[0].content.includes("maintain a short list"))
       reply = tool("answer", {
         ops: learning
@@ -336,6 +350,9 @@ test.beforeAll(async () => {
                 text: "Prefers short answers",
                 kind: "inferred",
                 reason: "Repeated requests for brevity",
+                sourceIds: [...q.matchAll(/\[source=(.*?); session=/g)]
+                  .map((m: any) => m[1])
+                  .slice(0, 1),
               },
             ]
           : [],
@@ -1328,7 +1345,7 @@ test("learning suggests repeated habits without assistant/page data and confirma
   await sw.evaluate(async () => {
     const c = (globalThis as any).chrome;
     const { settings } = await c.storage.local.get("settings");
-    settings.embedding.enabled = false;
+    settings.embedding = { ...(settings.embedding ?? {}), enabled: false };
     settings.providers["openai-compatible"].models = [
       "claude-haiku-5-5",
       "test-model",
@@ -1377,6 +1394,116 @@ test("learning suggests repeated habits without assistant/page data and confirma
   await send("Hello");
   await expect(panel.getByText("Used 1 memories")).toBeVisible();
   learning = false;
+});
+
+test("background memory audit preserves owned text until accepted and UI reads original evidence", async () => {
+  await clear();
+  await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome,
+      ts = Date.now();
+    const { settings } = await c.storage.local.get("settings");
+    settings.embedding = { ...(settings.embedding ?? {}), enabled: false };
+    const text = "Use short answers",
+      sessionId = "audit-e2e",
+      messageId = "original";
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    const hash = (h >>> 0).toString(36);
+    const source = {
+      id: JSON.stringify([sessionId, messageId, "user_msg", "", hash]),
+      sessionId,
+      messageId,
+      type: "user_msg",
+      hash,
+    };
+    const { sessions = [] } = await c.storage.local.get("sessions");
+    await c.storage.local.set({
+      settings,
+      sessions: [
+        {
+          id: sessionId,
+          title: "Audit evidence",
+          createdAt: ts,
+          updatedAt: ts,
+        },
+        ...sessions.filter((s: any) => s.id !== sessionId),
+      ],
+      ["session:" + sessionId]: [
+        { id: messageId, role: "user", parts: [{ type: "text", text }] },
+        {
+          id: "changed",
+          role: "user",
+          parts: [{ type: "text", text: "From now on give detailed answers" }],
+        },
+      ],
+      memory: {
+        schemaVersion: 1,
+        enabled: true,
+        memories: [
+          {
+            id: "audited",
+            kind: "explicit",
+            category: "preference",
+            scope: "global",
+            text: "Prefers short answers",
+            evidence: 1,
+            confidence: 1,
+            lastSeen: ts,
+            createdAt: ts,
+            sources: [source],
+            verification: "user-confirmed",
+          },
+        ],
+      },
+      memoryLearning: {
+        version: 2,
+        cursors: { [sessionId]: 2 },
+        eventCursor: 0,
+        runs: 0,
+        lastRunAt: ts,
+      },
+      memoryMaintenance: { lastRunAt: 0 },
+    });
+    await c.alarms.create("memory-learn-soon", { when: Date.now() + 150 });
+  });
+  const read = () =>
+    sw.evaluate(
+      async () =>
+        (await (globalThis as any).chrome.storage.local.get("memory")).memory
+          .memories[0],
+    );
+  await expect.poll(async () => (await read()).review?.action).toBe("revise");
+  expect((await read()).text).toBe("Prefers short answers");
+  await panel.getByRole("button", { name: "Settings", exact: true }).click();
+  await panel.getByRole("tab", { name: "Memory", exact: true }).click();
+  await panel
+    .getByRole("button", { name: "Manage memories", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("region", { name: "Memory reviews" }),
+  ).toContainText("Prefers detailed answers");
+  await panel
+    .locator("summary")
+    .filter({ hasText: "Evidence & changes" })
+    .click();
+  await panel.getByRole("button", { name: "View source", exact: true }).click();
+  await expect(
+    panel.getByRole("region", { name: "Memory source" }),
+  ).toContainText("Use short answers");
+  await panel
+    .getByRole("button", { name: "Accept review", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await read()).text)
+    .toBe("Prefers detailed answers");
+  expect((await read()).review).toBeUndefined();
+  await panel.getByRole("button", { name: "Back", exact: true }).click();
+  await panel
+    .getByRole("button", { name: "Back to chat", exact: true })
+    .click();
 });
 
 test("semantic contradictions undo, paraphrases reinforce and similar memories merge", async () => {
@@ -1718,7 +1845,7 @@ test("copy feedback, panel shortcuts, alarm learning and no-new-signals guard", 
   await sw.evaluate(async () => {
     const c = (globalThis as any).chrome;
     const { settings } = await c.storage.local.get("settings");
-    settings.embedding.enabled = false;
+    settings.embedding = { ...(settings.embedding ?? {}), enabled: false };
     await c.storage.local.set({
       settings,
       memoryLearning: { cursors: {}, eventCursor: 0, runs: 0, lastRunAt: 0 },

@@ -1,6 +1,6 @@
 import type { EmbeddingConfig } from "../settings";
 import type { Memory } from "./types";
-import { isActive } from "./types";
+import { isActive, isReference } from "./types";
 import { listMemories, isMemoryEnabled } from "./store";
 import { embedQuery, scoreReferences, pickRelevant } from "./retrieval";
 import { planMemories } from "./selector";
@@ -18,7 +18,7 @@ export async function loadMemoryContext(
     memories,
     scores: await scoreReferences(
       memories,
-      memories.filter((m) => m.category === "reference" && isActive(m)),
+      memories.filter((m) => isReference(m) && isActive(m)),
       await queryVector,
       config,
     ),
@@ -38,11 +38,13 @@ export const planFor = (
 export function referenceSearch(
   context: MemoryContext,
   config: EmbeddingConfig,
+  domain?: string,
 ) {
   return async (query: string) => {
     const refs = context.memories.filter(
       (m) =>
-        m.category === "reference" &&
+        isReference(m) &&
+        (m.scope === "global" || m.scope === `domain:${domain}`) &&
         isActive(m) &&
         (!m.expiresAt || m.expiresAt > Date.now()),
     );

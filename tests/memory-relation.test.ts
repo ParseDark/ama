@@ -30,6 +30,22 @@ it("filters unknown ids and picks only similar same-scope candidates", async () 
   ).toEqual({ duplicateOf: undefined, contradicts: ["a"] });
   expect(judge.mock.calls[0][1]).toHaveLength(1);
 });
+it("still checks contradictions with embeddings disabled or unavailable", async () => {
+  const ms = [memory("a", "Reply in Chinese")];
+  const judge = vi.fn(async () => new Map([["a", "contradicts" as const]]));
+  for (const enabled of [false, true]) {
+    expect(
+      await relateToExisting("Reply in English", "global", ms, {
+        config: { ...DEFAULT_EMBEDDING, enabled },
+        embedDocuments: async () => {
+          throw Error("busy");
+        },
+        judge,
+      }),
+    ).toMatchObject({ contradicts: ["a"] });
+  }
+  expect(judge).toHaveBeenCalledTimes(2);
+});
 it("distinct pairs hidden and dismissed duplicate/owned contradiction dropped", async () => {
   const ms = [memory("a", "Bullets"), memory("b", "Bullet points")];
   const args = {

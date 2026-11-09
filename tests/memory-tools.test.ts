@@ -148,6 +148,62 @@ it("does not recall a context captured before memory was switched off", async ()
   });
   expect(searchReferences).not.toHaveBeenCalled();
 });
+it("saves procedures only behind confirmation, as on-demand site data", async () => {
+  const tools = make();
+  expect(
+    await tools.remember.needsApproval(
+      { text: "On export, first select CSV", category: "procedure" },
+      { toolCallId: "procedure" },
+    ),
+  ).toBe(true);
+  expect(getMemoryApprovalReason("procedure")).toContain("procedure");
+  await tools.remember.execute({
+    text: "On export, first select CSV",
+    category: "procedure",
+    topic: "Export steps",
+    scope: "site",
+  });
+  const ms = await listMemories();
+  expect(ms[0]).toMatchObject({
+    category: "procedure",
+    scope: "domain:example.com",
+  });
+  const fallback = splitMemoryBlocks(
+    planMemories(ms, { domain: "example.com" }),
+    "example.com",
+  );
+  expect(fallback.preferences).not.toContain("CSV");
+  expect(fallback.references).toContain("Export steps");
+  expect(
+    planMemories(ms, { domain: "other.com", relevantIds: new Set([ms[0].id]) })
+      .injected,
+  ).toEqual([]);
+  const privateTools = make({ privateContext: true });
+  expect(
+    (
+      await privateTools.remember.execute({
+        text: "Private steps",
+        category: "procedure",
+      })
+    ).saved,
+  ).toBe(false);
+});
+it("does not promote a saved procedure into a standing preference on semantic dedup", async () => {
+  await upsertMemory(
+    memory("proc", "Use export menu", { category: "procedure" }),
+  );
+  const tools = make({
+    relate: async () => ({ duplicateOf: "proc", contradicts: [] }),
+  });
+  await tools.remember.execute({
+    text: "Use concise answers",
+    category: "preference",
+  });
+  expect((await listMemories()).find((m) => m.id === "proc")?.category).toBe(
+    "procedure",
+  );
+  expect(await listMemories()).toHaveLength(2);
+});
 it("semantic duplicates reinforce; contradictions replace and undo restores", async () => {
   await upsertMemory(memory("old", "Reply in Chinese"));
   const tools = make({ relate: async () => ({ contradicts: ["old"] }) });

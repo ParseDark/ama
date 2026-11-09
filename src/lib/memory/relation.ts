@@ -62,19 +62,35 @@ export async function relateToExisting(
     isCandidate?: (m: Memory) => boolean;
   },
 ): Promise<MemoryRelation | null> {
-  if (!config.enabled) return null;
+  const pool = memories.filter((m) => m.scope === scope && isCandidate(m));
+  if (!pool.length) return { contradicts: [] };
+  let candidates: Memory[] | undefined;
+  if (config.enabled) {
+    try {
+      // Use the configured local/remote embedding server and its existing cache.
+      // The local CPU server is single-flight: do not race a cache fill
+      // against the query request (the loser would receive 503 busy).
+      const vectors = await ensureVectors(memories, config, embedDocuments);
+      const [v] = await embedDocuments([text]);
+      candidates = pool
+        .map((m) => ({ m, score: dot(vectors.get(m.id)!, v) }))
+        .filter((x) => x.score >= 0.6)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map((x) => x.m);
+    } catch {
+      /* Service busy/offline: bounded lexical/model fallback below. */
+    }
+  }
+  if (!candidates) {
+    const words = text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+    const score = (m: Memory) =>
+      words.reduce((n, w) => n + Number(m.text.toLowerCase().includes(w)), 0);
+    candidates = [...pool]
+      .sort((a, b) => score(b) - score(a) || b.lastSeen - a.lastSeen)
+      .slice(0, 10);
+  }
   try {
-    const [vectors, [v]] = await Promise.all([
-      ensureVectors(memories, config, embedDocuments),
-      embedDocuments([text]),
-    ]);
-    const candidates = memories
-      .filter((m) => m.scope === scope && isCandidate(m))
-      .map((m) => ({ m, score: dot(vectors.get(m.id)!, v) }))
-      .filter((x) => x.score >= 0.6)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-      .map((x) => x.m);
     if (!candidates.length) return { contradicts: [] };
     const relations = await judgeFn(text, candidates);
     if (!relations) return null;

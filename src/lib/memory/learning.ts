@@ -13,6 +13,17 @@ import { applyMemoryOps, isReadyToSuggest } from "./merger";
 import { memoryModels } from "./models";
 import { refineLearnedOps } from "./dedupe";
 import { relateToExisting, judgeRelations } from "./relation";
+import { runMemoryMaintenance } from "./maintenance";
+import { isReference } from "./types";
+export async function runMemoryBackground() {
+  const result = await runLearning();
+  if (
+    ["done", "nothing", "cooldown"].includes(result.status) &&
+    !("pending" in result && result.pending)
+  )
+    await runMemoryMaintenance();
+  return result;
+}
 export interface LearningState {
   cursors: Record<string, number>;
   eventCursor: number;
@@ -55,8 +66,12 @@ export async function runLearning({ force = false } = {}) {
         state.eventCursor,
       );
       if (!collected.signals.length) {
-        // Persist the reset once, so later runs read the current version.
-        if (migrated) await learningStore.setValue(state);
+        // Commit skipped/private messages too; only consumed positions advance.
+        await learningStore.setValue({
+          ...state,
+          cursors: collected.cursors,
+          eventCursor: collected.eventCursor,
+        });
         return { status: "nothing" };
       }
       const memories = await listMemories(),
@@ -68,9 +83,10 @@ export async function runLearning({ force = false } = {}) {
         relateToExisting(text, scope, memories, {
           config: getEmbeddingConfig(settings),
           judge: (t, c) => judgeRelations(t, c, models),
-          isCandidate: () => true,
+          isCandidate: (m) => !isReference(m),
         }),
       );
+      if (!(await isMemoryEnabled())) return { status: "off" };
       await updateMemories((ms) => {
         const next = applyMemoryOps(ms, refined);
         return settings.dangerMode === true
@@ -83,10 +99,10 @@ export async function runLearning({ force = false } = {}) {
         cursors: collected.cursors,
         eventCursor: collected.eventCursor,
         runs: state.runs + 1,
-        lastRunAt: Date.now(),
+        lastRunAt: collected.pending ? 0 : Date.now(),
         version: LEARNING_VERSION,
       });
-      return { status: "done" };
+      return { status: "done", pending: collected.pending };
     } catch {
       return { status: "failed" };
     }

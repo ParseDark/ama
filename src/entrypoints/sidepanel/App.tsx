@@ -5,7 +5,7 @@ import { getConfigProblem, getFontScale } from "@/lib/settings";
 import { applyFontScale } from "@/lib/font-scale";
 import { activeSessionStore, loadSession, sessionsStore } from "@/lib/sessions";
 import { categorizeStoredMemories } from "@/lib/memory/classify";
-import { runLearning } from "@/lib/memory/learning";
+import { runMemoryBackground } from "@/lib/memory/learning";
 import { ChatView } from "@/components/chat-view";
 import { SettingsView } from "@/components/settings-view";
 import { HistoryView } from "@/components/history-view";
@@ -42,7 +42,7 @@ export default function App() {
       void categorizeStoredMemories();
       // Learning may have missed earlier chats after a bad structured-answer
       // upgrade; opening the panel gives it a chance to catch up.
-      void runLearning();
+      void runMemoryBackground();
     })();
   }, [loaded, settings]);
   const switchSession = (id: string | null) => {
@@ -60,7 +60,7 @@ export default function App() {
       void activeSessionStore
         .setValue(id)
         .catch((e) => report("Could not save active chat", e));
-      void runLearning();
+      void runMemoryBackground();
     };
     if (id) {
       void loadSession(id)

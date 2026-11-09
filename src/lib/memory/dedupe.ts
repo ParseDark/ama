@@ -1,5 +1,5 @@
 import type { Memory, MemoryOp } from "./types";
-import { isActive, userOwned } from "./types";
+import { isActive, isReference, userOwned } from "./types";
 import type { EmbeddingConfig } from "../settings";
 import { embedTexts, dot } from "./embeddings";
 import { ensureVectors } from "./vectors";
@@ -27,7 +27,11 @@ export async function findSimilarPairs(
       for (let j = i + 1; j < ms.length; j++) {
         const a = ms[i],
           b = ms[j];
-        if (a.scope !== b.scope || distinct.includes(distinctKey(a.id, b.id)))
+        if (
+          a.scope !== b.scope ||
+          isReference(a) !== isReference(b) ||
+          distinct.includes(distinctKey(a.id, b.id))
+        )
           continue;
         const score = dot(vectors.get(a.id)!, vectors.get(b.id)!);
         if (score >= 0.7) pairs.push({ a, b, score });
@@ -57,7 +61,7 @@ export async function refineLearnedOps(
     );
     if (r?.duplicateOf) {
       if (memories.find((m) => m.id === r.duplicateOf)?.status !== "dismissed")
-        result.push({ op: "reinforce", id: r.duplicateOf, reason: op.reason });
+        result.push({ ...op, op: "reinforce", id: r.duplicateOf });
       continue;
     }
     if (

@@ -1,6 +1,15 @@
 import { storage } from "wxt/utils/storage";
 import { z } from "zod";
 import type { Memory, MemoryEvent } from "./types";
+import { mergeSources, recordChange } from "./provenance";
+export const sourceSchema = z.object({
+  id: z.string().max(2000),
+  sessionId: z.string().max(200),
+  messageId: z.string().max(200).optional(),
+  type: z.enum(["user_msg", "approval", "stop"]),
+  domain: z.string().max(253).optional(),
+  hash: z.string().max(100),
+});
 const memorySchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["explicit", "inferred", "context"]),
@@ -14,9 +23,33 @@ const memorySchema = z.object({
   pinned: z.boolean().optional(),
   disabled: z.boolean().optional(),
   status: z.enum(["active", "suggested", "dismissed"]).optional(),
-  category: z.enum(["preference", "reference"]).optional(),
+  category: z.enum(["preference", "reference", "procedure"]).optional(),
   topic: z.string().max(60).optional(),
   supersededBy: z.string().optional(),
+  sources: z.array(sourceSchema).max(1000).optional(),
+  verification: z.enum(["inferred", "user-confirmed"]).optional(),
+  reason: z.string().max(1000).optional(),
+  changes: z
+    .array(
+      z.object({
+        at: z.number(),
+        action: z.string().max(100),
+        reason: z.string().max(1000),
+        previousText: z.string().max(10000).optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
+  lastReviewedAt: z.number().optional(),
+  review: z
+    .object({
+      action: z.enum(["revise", "archive"]),
+      text: z.string().max(300).optional(),
+      reason: z.string().max(1000),
+      sources: z.array(sourceSchema).max(20),
+      createdAt: z.number(),
+    })
+    .optional(),
 });
 export const memoryStore = storage.defineItem<{
   schemaVersion: 1;
@@ -57,6 +90,8 @@ export const confirmSuggestion = (m: Memory): Memory => ({
   kind: m.kind === "context" ? "context" : "explicit",
   status: "active",
   confidence: 1,
+  verification: "user-confirmed",
+  changes: recordChange(m, "confirm", "Confirmed by the user", Date.now()),
 });
 export const acceptSuggestion = (id: string) =>
   updateMemories((ms) =>
@@ -90,12 +125,47 @@ export const keepMemory = (keepId: string, dropId: string) =>
         m.id === keepId
           ? {
               ...m,
-              evidence: m.evidence + (drop?.evidence ?? 0),
+              evidence:
+                m.sources && drop?.sources
+                  ? new Set(
+                      mergeSources(m.sources, drop.sources)
+                        .filter((s) => s.type === "user_msg")
+                        .map((s) => `${s.sessionId}:${s.messageId}`),
+                    ).size
+                  : m.evidence + (drop?.evidence ?? 0),
+              sources: mergeSources(m.sources, drop?.sources),
+              changes: recordChange(m, "merge", `Merged ${dropId}`, Date.now()),
               pinned: !!(m.pinned || drop?.pinned),
             }
           : m,
       );
   });
+export const resolveMemoryReview = (id: string, accept: boolean) =>
+  updateMemories((ms) =>
+    ms.map((m) => {
+      if (m.id !== id || !m.review) return m;
+      const { review, ...rest } = m;
+      return {
+        ...rest,
+        ...(accept
+          ? {
+              ...(review.action === "archive"
+                ? { disabled: true }
+                : { text: review.text ?? m.text }),
+              sources: mergeSources(m.sources, review.sources),
+              verification: "user-confirmed" as const,
+            }
+          : {}),
+        changes: recordChange(
+          m,
+          accept ? `accept-${review.action}` : "dismiss-review",
+          review.reason,
+          Date.now(),
+          m.text,
+        ),
+      };
+    }),
+  );
 export async function importMemories(json: string) {
   const parsed = z
     .object({ schemaVersion: z.literal(1), memories: z.array(memorySchema) })

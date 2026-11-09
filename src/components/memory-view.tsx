@@ -19,8 +19,10 @@ import {
   clearMemories,
   acceptSuggestion,
   dismissSuggestion,
+  resolveMemoryReview,
 } from "@/lib/memory/store";
-import type { Memory } from "@/lib/memory/types";
+import { isReference, type Memory } from "@/lib/memory/types";
+import { readHistorySource } from "@/lib/history-search";
 import type { Settings } from "@/lib/settings";
 import { getEmbeddingConfig } from "@/lib/settings";
 import { EVIDENCE_NEEDED, isReadyToSuggest } from "@/lib/memory/merger";
@@ -40,11 +42,34 @@ export function MemoryView({
     { lastRunAt } = useLearningState(),
     [scope, setScope] = useState("all"),
     [error, setError] = useState(""),
+    [sourceText, setSourceText] = useState(""),
     [confirm, setConfirm] = useState(false),
     file = useRef<HTMLInputElement>(null);
   const update = (id: string, patch: Partial<Memory>) =>
     void updateMemories((ms) =>
-      ms.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+      ms.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              ...patch,
+              ...(patch.text
+                ? {
+                    review: undefined,
+                    verification: "user-confirmed" as const,
+                    changes: [
+                      ...(m.changes ?? []),
+                      {
+                        at: Date.now(),
+                        action: "edit",
+                        reason: "Edited by the user",
+                        previousText: m.text,
+                      },
+                    ].slice(-20),
+                  }
+                : {}),
+            }
+          : m,
+      ),
     );
   const active = memories.filter(
       (m) => m.status !== "dismissed" && m.status !== "suggested",
@@ -71,13 +96,49 @@ export function MemoryView({
       </header>
       <div className="settings-body">
         <p className="hint">
-          Preferences shape every reply. References are recalled when relevant.
-          Only confirmed habits are used. Edit or remove anything, anytime.
-          Explicit saves may include sensitive information. Memories stay in
-          local storage without encryption; recalled text goes to your chat
-          model, and semantic matching may send it to your configured embedding
-          service.
+          Preferences shape every reply. References and procedures are recalled
+          when relevant. Only confirmed habits are used. Edit or remove
+          anything, anytime. Explicit saves may include sensitive information.
+          Memories stay in local storage without encryption; recalled text goes
+          to your chat model, and semantic matching may send it to your
+          configured embedding service.
         </p>
+        {sourceText && (
+          <section aria-label="Memory source">
+            <h2>Original source</h2>
+            <pre style={{ whiteSpace: "pre-wrap" }}>{sourceText}</pre>
+            <Button variant="ghost" onClick={() => setSourceText("")}>
+              Close source
+            </Button>
+          </section>
+        )}
+        {memories.some((m) => m.review) && (
+          <section aria-label="Memory reviews">
+            <h2>Evidence review suggestions</h2>
+            {memories
+              .filter((m) => m.review)
+              .map((m) => (
+                <div key={m.id}>
+                  <p>{m.text}</p>
+                  <p>
+                    {m.review!.action === "archive"
+                      ? "Stop using this memory"
+                      : m.review!.text}
+                  </p>
+                  <p className="hint">{m.review!.reason}</p>
+                  <Button onClick={() => void resolveMemoryReview(m.id, true)}>
+                    Accept review
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => void resolveMemoryReview(m.id, false)}
+                  >
+                    Keep current
+                  </Button>
+                </div>
+              ))}
+          </section>
+        )}
         <SimilarMemories
           memories={memories}
           config={getEmbeddingConfig(settings)}
@@ -174,13 +235,19 @@ export function MemoryView({
                       onClick={() =>
                         update(m.id, {
                           category:
-                            m.category === "reference"
+                            m.category === "procedure"
                               ? "preference"
-                              : "reference",
+                              : m.category === "reference"
+                                ? "procedure"
+                                : "reference",
                         })
                       }
                     >
-                      {m.category === "reference" ? "Reference" : "Preference"}
+                      {m.category === "procedure"
+                        ? "Procedure"
+                        : m.category === "reference"
+                          ? "Reference"
+                          : "Preference"}
                     </button>
                     <span className="badge">
                       {m.scope === "global" ? "Global" : m.scope.slice(7)}
@@ -188,7 +255,7 @@ export function MemoryView({
                     <span className="badge">{m.kind}</span>
                     {m.disabled && <span className="badge">Not used</span>}
                   </div>
-                  {m.category === "reference" && (
+                  {isReference(m) && (
                     <input
                       aria-label={`Topic for ${m.text}`}
                       placeholder="Topic"
@@ -197,6 +264,50 @@ export function MemoryView({
                       onChange={(e) => update(m.id, { topic: e.target.value })}
                     />
                   )}
+                  <details>
+                    <summary>
+                      Evidence & changes ({m.sources?.length ?? 0} sources)
+                    </summary>
+                    <p className="hint">
+                      {m.verification ?? "Legacy / unverified"}
+                      {m.reason ? ` · ${m.reason}` : ""}
+                    </p>
+                    {m.sources?.map((s) => (
+                      <div key={s.id}>
+                        <span>
+                          {s.type} · {s.domain ?? "global"}
+                        </span>
+                        {s.messageId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              void readHistorySource(s.sessionId, s.messageId!)
+                                .then((r) =>
+                                  setSourceText(
+                                    r
+                                      ? `${r.text}${r.nextTextOffset !== null ? "\n[More text available through read_history_source]" : ""}`
+                                      : "Source unavailable or private.",
+                                  ),
+                                )
+                                .catch(() =>
+                                  setSourceText("Could not load source."),
+                                )
+                            }
+                          >
+                            View source
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    {m.changes?.map((c, i) => (
+                      <p className="hint" key={i}>
+                        {new Date(c.at).toLocaleString()} · {c.action}:{" "}
+                        {c.reason}
+                        {c.previousText ? ` · Previous: ${c.previousText}` : ""}
+                      </p>
+                    ))}
+                  </details>
                   <div className="row memory-actions">
                     <Button
                       size="icon"

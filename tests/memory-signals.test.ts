@@ -1,5 +1,40 @@
 import { it, expect } from "vitest";
 import { collectSignals } from "@/lib/memory/signals";
+it("batches without advancing past unconsumed sessions or same-time events", () => {
+  const messages: any[] = Array.from({ length: 100 }, (_, i) => ({
+    id: `u${i}`,
+    role: "user",
+    parts: [{ type: "text", text: `Signal ${i}` }],
+  }));
+  const sessions = [
+    { id: "a", messages },
+    { id: "b", messages: messages.slice(0, 1) },
+  ];
+  const events: any[] = Array.from({ length: 3 }, (_, i) => ({
+    ts: 100,
+    type: "stop",
+    sessionId: `s${i}`,
+  }));
+  const first = collectSignals(sessions, events);
+  expect(first.signals).toHaveLength(60);
+  expect(first.cursors).toEqual({ a: 60, b: 0 });
+  expect(first.pending).toBe(true);
+  const second = collectSignals(
+    sessions,
+    events,
+    first.cursors,
+    first.eventCursor,
+  );
+  expect(second.signals).toHaveLength(44);
+  expect(second.cursors).toEqual({ a: 100, b: 1 });
+  expect(
+    collectSignals(sessions, events, second.cursors, second.eventCursor)
+      .signals,
+  ).toEqual([]);
+  const sameTime = collectSignals([], events, {}, 0, 1);
+  expect(sameTime.signals).toHaveLength(3);
+  expect(sameTime.eventCursor).toBe(100);
+});
 it("learns only user text and approval decisions, skips private sources and cursors", () => {
   const sessions: any = [
     {

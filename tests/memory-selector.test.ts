@@ -21,6 +21,22 @@ it("filters expired, disabled, suggested and wrong scope; preferences first", ()
   expect(fallback.injected.map((m) => m.id)).toEqual(["p"]);
   expect(splitMemoryBlocks(fallback).references).toContain("Sprint");
 });
+it("bounds the final reference catalogue with embeddings off or on", () => {
+  const ms = Array.from({ length: 100 }, (_, i) =>
+    memory(`r${i}`, "Fact ".repeat(30), {
+      category: "reference",
+      topic: `Topic ${i} ${"x".repeat(48)}`,
+    }),
+  );
+  for (const relevantIds of [null, new Set(ms.map((m) => m.id))]) {
+    const plan = planMemories(ms, { relevantIds });
+    const blocks = splitMemoryBlocks(plan);
+    expect(
+      estimateTokens(blocks.preferences + "\n" + blocks.references),
+    ).toBeLessThanOrEqual(450);
+    expect(blocks.references).toContain("recall_memory");
+  }
+});
 it("honors budget and decays inferred habits", () => {
   const ms = [
     memory("old", "Old inferred", {

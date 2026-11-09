@@ -1,6 +1,6 @@
 import { browser } from "wxt/browser";
 import { PanelTracker } from "@/lib/panel-connection";
-import { runLearning } from "@/lib/memory/learning";
+import { runMemoryBackground } from "@/lib/memory/learning";
 import { startConfigSync } from "@/lib/config-sync";
 export default defineBackground(() => {
   startConfigSync();
@@ -31,6 +31,11 @@ export default defineBackground(() => {
   });
   browser.alarms.onAlarm.addListener((alarm) => {
     if (["memory-learn-soon", "memory-learn-daily"].includes(alarm.name))
-      void runLearning();
+      void runMemoryBackground().then((result) => {
+        if ("pending" in result && result.pending)
+          void browser.alarms.create("memory-learn-soon", {
+            delayInMinutes: 1,
+          });
+      });
   });
 });

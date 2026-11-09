@@ -3,6 +3,12 @@ import { runLearning, learningStore } from "@/lib/memory/learning";
 import { setMemoryEnabled, listMemories } from "@/lib/memory/store";
 import { settingsStore, DEFAULT_SETTINGS } from "@/lib/settings";
 import { saveSession } from "@/lib/sessions";
+import { sourcedSignal } from "@/lib/memory/provenance";
+const sourceId = (
+  session: string,
+  message: string,
+  text = "Use concise answers",
+) => sourcedSignal(session, message, "user_msg", text).source!.id;
 const answer = (body: unknown) =>
   Response.json({
     choices: [
@@ -51,6 +57,7 @@ it("handles off, cooldown, no signals and busy lock", async () => {
 });
 it("danger mode auto-activates learned habits only after evidence threshold and keeps sensitive exclusions", async () => {
   await settingsStore.setValue({ ...DEFAULT_SETTINGS, dangerMode: true });
+  let messageId = "one";
   vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
     answer({
       ops: [
@@ -58,11 +65,13 @@ it("danger mode auto-activates learned habits only after evidence threshold and 
           op: "add",
           text: "Prefers concise answers",
           reason: "Repeated preference",
+          sourceIds: [sourceId("learn", messageId)],
         },
         {
           op: "add",
           text: "password is test-only",
           reason: "Must still be excluded",
+          sourceIds: [sourceId("learn", messageId)],
         },
       ],
     }),
@@ -77,6 +86,7 @@ it("danger mode auto-activates learned habits only after evidence threshold and 
   expect(await listMemories()).toMatchObject([
     { status: "suggested", evidence: 1 },
   ]);
+  messageId = "two";
   await saveSession("learn", [user("one"), user("two")]);
   expect((await runLearning({ force: true })).status).toBe("done");
   expect(await listMemories()).toMatchObject([
@@ -126,6 +136,7 @@ it("re-learns chats processed by an old version without dropping run history", a
           op: "add",
           text: "Prefers brief answers",
           reason: "asked twice",
+          sourceIds: [sourceId("s1", "u1", "Use short answers")],
         },
       ],
     }),

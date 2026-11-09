@@ -46,6 +46,8 @@ import { latestUserText, messageText, toolsUsedIn } from "./messages";
 import { embedQuery } from "./memory/retrieval";
 import { loadMemoryContext, planFor, referenceSearch } from "./memory/context";
 import { splitMemoryBlocks } from "./memory/selector";
+import { sourcedSignal } from "./memory/provenance";
+import { sensitiveDomain } from "./memory/signals";
 import { createMemoryTools } from "./memory/tools";
 import { memoryModels } from "./memory/models";
 import { judgeMemoryIntent } from "./memory/intent";
@@ -218,10 +220,27 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       ...settingsTools,
       ...createMemoryTools({
         domain,
+        source: (() => {
+          const message = messages.findLast((m) => m.role === "user");
+          return message &&
+            !(message.metadata as any)?.incognito &&
+            !sensitiveDomain(domain)
+            ? sourcedSignal(
+                chatId,
+                message.id,
+                "user_msg",
+                messageText(message).slice(0, 500),
+                domain,
+              ).source
+            : undefined;
+        })(),
+        privateContext:
+          !!(messages.findLast((m) => m.role === "user")?.metadata as any)
+            ?.incognito || sensitiveDomain(domain),
         dangerMode: settings.dangerMode === true,
         userTexts: messages.filter((m) => m.role === "user").map(messageText),
         judgeIntent: () => judgeMemoryIntent(query, models),
-        searchReferences: referenceSearch(memory, config),
+        searchReferences: referenceSearch(memory, config, domain),
         relate: async (text, scope) =>
           relateToExisting(text, scope, await listMemories(), {
             config,
