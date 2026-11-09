@@ -17,6 +17,7 @@ export default function App() {
       "chat",
     ),
     [tab, setTab] = useState("model"),
+    [memoryBack, setMemoryBack] = useState<"chat" | "settings">("settings"),
     [session, setSession] = useState<{
       id: string;
       messages: UIMessage[];
@@ -92,6 +93,10 @@ export default function App() {
           }
           onSettings={() => setView("settings")}
           onHistory={() => setView("history")}
+          onMemory={() => {
+            setMemoryBack("chat");
+            setView("memory");
+          }}
         />
       </div>
       {view === "settings" && (
@@ -101,7 +106,10 @@ export default function App() {
           tab={tab}
           onTab={setTab}
           onBack={() => setView("chat")}
-          onMemory={() => setView("memory")}
+          onMemory={() => {
+            setMemoryBack("settings");
+            setView("memory");
+          }}
         />
       )}{" "}
       {view === "history" && (
@@ -122,7 +130,7 @@ export default function App() {
           settings={settings}
           onBack={() => {
             setTab("memory");
-            setView("settings");
+            setView(memoryBack);
           }}
         />
       )}

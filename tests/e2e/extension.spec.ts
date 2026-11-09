@@ -659,6 +659,149 @@ async function clear() {
     panel.getByRole("heading", { name: "Ask about this page" }),
   ).toBeVisible();
 }
+test("composer @ commands autocomplete, preview local memories and open the manager without a model", async () => {
+  await clear();
+  const message = panel.getByRole("textbox", { name: "Message", exact: true });
+  await message.fill("@");
+  await expect(
+    panel.getByRole("listbox", { name: "Composer commands" }),
+  ).toBeVisible();
+  await expect(panel.getByRole("option")).toHaveCount(3);
+  await expect(
+    panel.getByRole("option").filter({ hasText: "@compact" }),
+  ).toHaveAttribute("aria-disabled", "true");
+  await message.fill("@记忆");
+  await expect(panel.getByRole("option")).toHaveCount(2);
+  await panel.getByRole("option").filter({ hasText: "Save a memory" }).click();
+  await expect(message).toHaveValue("@memory ");
+  await message.press("Enter");
+  await expect(
+    panel.getByRole("textbox", { name: "Memory content", exact: true }),
+  ).toHaveValue("");
+  await expect(
+    panel.getByRole("button", { name: "Save memory", exact: true }),
+  ).toBeDisabled();
+  await panel.getByRole("button", { name: "Cancel", exact: true }).click();
+  await message.fill("@mem");
+  await expect(panel.getByRole("option")).toHaveCount(2);
+  await message.press("Enter");
+  await expect(message).toHaveValue("@memory ");
+  await expect(
+    panel.getByRole("form", { name: "Save memory preview" }),
+  ).toBeHidden();
+  await message.fill("@memory COMMAND-MEMORY default 中文");
+  const before = requests.length;
+  await message.press("Enter");
+  await expect(
+    panel.getByRole("form", { name: "Save memory preview" }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("textbox", { name: "Memory content", exact: true }),
+  ).toHaveValue("COMMAND-MEMORY default 中文");
+  await panel.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(message).toHaveValue("@memory COMMAND-MEMORY default 中文");
+  await message.press("Enter");
+  await panel.getByRole("button", { name: "Save memory", exact: true }).click();
+  await expect(
+    panel.getByRole("status").filter({ hasText: "Memory saved:" }),
+  ).toBeVisible();
+  expect(requests.length).toBe(before);
+  const saved = await sw.evaluate(async () =>
+    (
+      await (globalThis as any).chrome.storage.local.get("memory")
+    ).memory.memories.find((m: any) => m.text.includes("COMMAND-MEMORY")),
+  );
+  expect(saved).toMatchObject({
+    verification: "user-confirmed",
+    category: "preference",
+  });
+  await message.fill("@");
+  await expect(
+    panel.getByRole("listbox", { name: "Composer commands" }),
+  ).toBeVisible();
+  await message.press("ArrowDown");
+  await expect(message).toHaveAttribute(
+    "aria-activedescendant",
+    "command-memory",
+  );
+  await message.press("ArrowDown");
+  await expect(message).toHaveAttribute(
+    "aria-activedescendant",
+    "command-memory-list",
+  );
+  await message.press("Tab");
+  await expect(message).toHaveValue("@memory-list ");
+  await message.press("Enter");
+  await expect(
+    panel.getByRole("heading", { name: "Memory", exact: true }),
+  ).toBeVisible();
+  expect(requests.length).toBe(before);
+  await panel.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(message).toBeVisible();
+  await expect(message).toHaveValue("");
+  await message.fill("@memory-list");
+  await message.dispatchEvent("compositionstart", { data: "记" });
+  await message.dispatchEvent("keydown", {
+    key: "Enter",
+    code: "Enter",
+    isComposing: true,
+  });
+  await expect(
+    panel.getByRole("heading", { name: "Memory", exact: true }),
+  ).toBeHidden();
+  await expect(message).toHaveValue("@memory-list");
+  await message.dispatchEvent("compositionend", { data: "记" });
+  await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome;
+    const { memory } = await c.storage.local.get("memory");
+    await c.storage.local.set({ memory: { ...memory, enabled: false } });
+  });
+  await message.fill("@memory");
+  await expect(
+    panel.getByRole("option").filter({ hasText: "@memory Save" }),
+  ).toHaveAttribute("aria-disabled", "true");
+  await message.press("Escape");
+  await message.press("Enter");
+  await expect(
+    panel.getByRole("alert").filter({ hasText: "Memory is off" }),
+  ).toBeVisible();
+  await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome;
+    const { memory } = await c.storage.local.get("memory");
+    await c.storage.local.set({ memory: { ...memory, enabled: true } });
+  });
+  await message.fill("mail@example.com");
+  await expect(
+    panel.getByRole("listbox", { name: "Composer commands" }),
+  ).toBeHidden();
+  await message.fill("@memory-list extra text");
+  await panel.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(
+    panel.getByRole("alert").filter({ hasText: "does not accept text" }),
+  ).toBeVisible();
+  await expect(message).toHaveValue("@memory-list extra text");
+  await message.fill("@unknown");
+  await message.press("Enter");
+  await expect(
+    panel.getByRole("alert").filter({ hasText: "Unknown command" }),
+  ).toBeVisible();
+  expect(requests.length).toBe(before);
+  await message.fill("@");
+  await message.press("Escape");
+  await expect(
+    panel.getByRole("listbox", { name: "Composer commands" }),
+  ).toBeHidden();
+  await sw.evaluate(async () => {
+    const c = (globalThis as any).chrome;
+    const { memory } = await c.storage.local.get("memory");
+    memory.memories = memory.memories.filter(
+      (m: any) => !m.text.includes("COMMAND-MEMORY"),
+    );
+    await c.storage.local.set({ memory });
+  });
+  await clear();
+});
+
 test("manual Compact preserves original chat and reuses a persisted handoff after reload", async () => {
   await clear();
   for (let i = 0; i < 3; i++) {
@@ -672,7 +815,18 @@ test("manual Compact preserves original chat and reuses a persisted handoff afte
       panel.getByText("Grounded answer", { exact: false }).last(),
     ).toBeVisible();
   }
-  await panel.getByRole("button", { name: "Compact", exact: true }).click();
+  await panel
+    .getByRole("textbox", { name: "Message", exact: true })
+    .fill("@compact");
+  await panel
+    .getByRole("textbox", { name: "Message", exact: true })
+    .press("Enter");
+  await expect(
+    panel.getByRole("textbox", { name: "Message", exact: true }),
+  ).toHaveValue("@compact ");
+  await panel
+    .getByRole("textbox", { name: "Message", exact: true })
+    .press("Enter");
   await expect(panel.getByText(/Compacted history/)).toBeVisible();
   const stored = await sw.evaluate(async () => {
     const all = await (globalThis as any).chrome.storage.local.get(null);

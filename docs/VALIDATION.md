@@ -1,5 +1,13 @@
 # Validation record
 
+## Composer @ commands (v0.7.0)
+
+Added a local command registry, searchable leading-`@` menu and deterministic dispatch for `@compact`, `@memory` and `@memory-list`. Chinese search terms, cursor/selection boundaries, mouse, arrows/Tab/Enter, Escape and composition guards are covered. Selection completes without execution; disabled reasons, unknown commands and unexpected arguments are visible. Emails/inline mentions remain ordinary text. Attachments cannot accidentally be consumed by commands. The Compact button and command share one single-flight, cancellable controller with busy/pending-approval/unmount/error handling.
+
+Memory saves use an editable, always-confirmed literal preview and the existing tool execution rules without calling a model, embedding server or MCP. The site/private context is bound when opening the preview rather than silently following later tab changes. Memory Off, size/scope validation, sensitive-reference conversion, private-procedure rejection, exact dedupe and user-confirmed changes are retained. Form saves do not fabricate original-chat sources; semantic contradiction checking/model drafting are not performed. Cancel preserves the composer draft; memory-list returns directly to chat. No new backend, shell capability, manifest permission or resource-reference mechanism was added. Existing MCP tools/approvals are unchanged.
+
+Validation: **266 unit/integration tests across 68 files** passed (one optional real-local-embedding test skipped), **10 Python embedding HTTP tests**, type/format checks, production v0.7.0 ZIP and **35 unpacked-Chromium scenarios** passed. The command browser scenario verifies prefix/Chinese filtering, mouse and keyboard completion, blank/literal preview, cancel/save/local persistence, no model requests for save/list/errors, return navigation, disabled Memory Off, unknown/extra arguments, email handling, Escape and synthetic IME events. Compact command coverage verifies shared execution and persisted handoff reuse; controller tests cover duplicate starts, cancellation, provider errors, pending approvals and abort on unmount. Existing MCP write approval and file/browser safety scenarios passed in the full suite. Synthetic composition events do not certify every native OS/IME; live provider/real MCP-shell behavior and manual screen-reader/visual review remain unclaimed.
+
 ## Evidence-backed memory maintenance
 
 Fixed incremental signal batching so cursors advance only through consumed messages/events; batches retain pending sessions and treat a message or equal-timestamp events atomically. The final rendered preference/reference blocks, including fallback topic catalogues and recall guidance, stay within the existing 450-token **estimate**, not a provider-tokenizer guarantee.
@@ -56,16 +64,17 @@ Observed another project's Node server on wildcard port 3000 while AMA WXT liste
 
 The production extension was built and exercised in a real unpacked Chromium installation using deterministic local provider, embedding, and MCP endpoints. No production API credentials or model weights were needed.
 
-| Check | Result |
-| --- | --- |
-| `pnpm compile` | Passed |
-| `pnpm format:check` | Passed |
-| `pnpm test` | 30 files, 70 tests passed |
-| `python3 -m unittest discover -s tools/embed-server -p 'test_*.py'` | 2 tests passed with a toy encoder |
-| `pnpm build` | Extension directory and 1.04 MB ZIP generated |
-| `pnpm test:e2e` | 13 scenarios passed |
+| Check                                                               | Result                                        |
+| ------------------------------------------------------------------- | --------------------------------------------- |
+| `pnpm compile`                                                      | Passed                                        |
+| `pnpm format:check`                                                 | Passed                                        |
+| `pnpm test`                                                         | 30 files, 70 tests passed                     |
+| `python3 -m unittest discover -s tools/embed-server -p 'test_*.py'` | 2 tests passed with a toy encoder             |
+| `pnpm build`                                                        | Extension directory and 1.04 MB ZIP generated |
+| `pnpm test:e2e`                                                     | 13 scenarios passed                           |
 
 Build outputs:
+
 - `.output/chrome-mv3/` — load unpacked in Chrome.
 - `.output/ama-0.1.0-chrome.zip` — packaged extension.
 

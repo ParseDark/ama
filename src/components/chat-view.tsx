@@ -37,6 +37,16 @@ import { ChatMessage } from "./chat-message";
 import { MemorySuggestion } from "./memory-suggestion";
 import { ContextMeter, currentModelInfo, lastUsage } from "./context-meter";
 import { CompactControls } from "./compact-controls";
+import { useCompact } from "@/hooks/use-compact";
+import { CommandMenu } from "./command-menu";
+import { MemorySaveForm } from "./memory-save-form";
+import {
+  commandQuery,
+  matchingCommands,
+  parseComposerCommand,
+  type ComposerCommand,
+  type ComposerCommandId,
+} from "@/lib/composer-commands";
 export function ChatView({
   id,
   initialMessages,
@@ -47,6 +57,7 @@ export function ChatView({
   onClearError,
   onHistory,
   onSettings,
+  onMemory,
 }: {
   id: string;
   initialMessages: UIMessage[];
@@ -57,6 +68,7 @@ export function ChatView({
   onClearError: (error: unknown) => void;
   onHistory: () => void;
   onSettings: () => void;
+  onMemory: () => void;
 }) {
   const transport = useMemo(
     () =>
@@ -102,7 +114,6 @@ export function ChatView({
   const tab = useActiveTab(),
     domain = hostnameOf(tab?.url),
     { memories, enabled } = useMemory();
-  const [compacting, setCompacting] = useState(false);
   const [text, setText] = useState(""),
     [images, setImages] = useState<string[]>([]),
     [captureError, setCaptureError] = useState(""),
@@ -140,8 +151,116 @@ export function ChatView({
     window.addEventListener("ama:clear-chat", fn);
     return () => window.removeEventListener("ama:clear-chat", fn);
   }, [clear]);
+  const compactControl = useCompact({ id, messages, busy, transport });
+  const compacting = compactControl.running;
+  const [caret, setCaret] = useState(0),
+    [selectionEnd, setSelectionEnd] = useState(0);
+  const [composerFocused, setComposerFocused] = useState(false),
+    [composing, setComposing] = useState(false);
+  const [menuDismissed, setMenuDismissed] = useState(false),
+    [commandIndex, setCommandIndex] = useState(0);
+  const [commandError, setCommandError] = useState(""),
+    [commandNotice, setCommandNotice] = useState("");
+  const [memoryDraft, setMemoryDraft] = useState<{
+    text: string;
+    domain?: string;
+    incognito?: boolean;
+  } | null>(null);
+  const query = commandQuery(text, caret, selectionEnd);
+  const commands = matchingCommands(query?.query ?? "");
+  const selectedIndex = Math.min(
+    commandIndex,
+    Math.max(0, commands.length - 1),
+  );
+  const menuOpen =
+    active &&
+    composerFocused &&
+    !composing &&
+    !menuDismissed &&
+    query !== null &&
+    memoryDraft === null;
+  const reasons: Partial<Record<ComposerCommandId, string>> = {
+    compact: images.length
+      ? "Remove screenshots before running a command."
+      : compactControl.disabledReason,
+    memory: !enabled
+      ? "Memory is off. Open @memory-list to enable it."
+      : busy || compacting
+        ? "Wait for the current reply or Compact to finish."
+        : images.length
+          ? "Remove screenshots before running a command."
+          : "",
+    "memory-list": images.length
+      ? "Remove screenshots before running a command."
+      : "",
+  };
+  const completeCommand = (command: ComposerCommand) => {
+    if (!query) return;
+    if (reasons[command.id]) {
+      setCommandError(reasons[command.id]!);
+      return;
+    }
+    const value =
+      text.slice(0, query.start) + `@${command.id} ` + text.slice(query.end);
+    const position = query.start + command.id.length + 2;
+    setText(value);
+    setCaret(position);
+    setSelectionEnd(position);
+    setMenuDismissed(true);
+    setCommandError("");
+    requestAnimationFrame(() => {
+      composer.current?.focus();
+      composer.current?.setSelectionRange(position, position);
+    });
+  };
   const send = (value = text) => {
-    if (busy || compacting || (!value.trim() && !images.length)) return;
+    const command = parseComposerCommand(value);
+    setCommandError("");
+    setCommandNotice("");
+    if (command) {
+      if (images.length) {
+        setCommandError(
+          "Commands do not use screenshots. Remove the attachments or send a normal message.",
+        );
+        return;
+      }
+      if (reasons[command.id]) {
+        setCommandError(reasons[command.id]!);
+        return;
+      }
+      if (command.id !== "memory" && command.argument) {
+        setCommandError(
+          `@${command.id} does not accept text. Send the message separately.`,
+        );
+        return;
+      }
+      setMenuDismissed(true);
+      if (command.id === "memory") {
+        setMemoryDraft({
+          text: command.argument,
+          domain,
+          incognito: tab?.incognito,
+        });
+        return;
+      }
+      setText("");
+      if (command.id === "memory-list") onMemory();
+      else void compactControl.compact();
+      return;
+    }
+    if (/^\s*@[^\s@]*(?:\s|$)/u.test(value)) {
+      setCommandError(
+        "Unknown command. Type @ to choose an available command, or write a normal message.",
+      );
+      return;
+    }
+    if (
+      busy ||
+      compacting ||
+      memoryDraft !== null ||
+      (!value.trim() && !images.length)
+    )
+      return;
     const content =
       value.trim() ||
       (images.length ? "What is shown in this screenshot?" : "");
@@ -291,14 +410,45 @@ export function ChatView({
             )}
           </div>
         )}
-        <CompactControls
-          id={id}
-          messages={messages}
-          busy={busy}
-          transport={transport}
-          onBusyChange={setCompacting}
-        />
+        <CompactControls control={compactControl} />
+        {commandError && (
+          <p className="alert" role="alert">
+            {commandError}
+          </p>
+        )}
+        {commandNotice && (
+          <p className="hint" role="status">
+            {commandNotice}
+          </p>
+        )}
+        {memoryDraft !== null && (
+          <MemorySaveForm
+            initialText={memoryDraft.text}
+            domain={memoryDraft.domain}
+            incognito={memoryDraft.incognito}
+            enabled={enabled}
+            onCancel={() => {
+              setMemoryDraft(null);
+              requestAnimationFrame(() => composer.current?.focus());
+            }}
+            onSaved={(saved) => {
+              setMemoryDraft(null);
+              setText("");
+              setCommandNotice(`Memory saved: ${saved}`);
+              requestAnimationFrame(() => composer.current?.focus());
+            }}
+          />
+        )}
         <div className="composer">
+          {menuOpen && (
+            <CommandMenu
+              commands={commands}
+              selected={selectedIndex}
+              reasons={reasons}
+              onSelect={completeCommand}
+              onHighlight={setCommandIndex}
+            />
+          )}
           {images.length > 0 && (
             <div className="attachments">
               {images.map((url, i) => (
@@ -319,10 +469,65 @@ export function ChatView({
           <textarea
             ref={composer}
             aria-label="Message"
-            placeholder="Ask anything about this page…"
+            placeholder="Ask anything, or type @ for commands…"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            aria-controls={menuOpen ? "composer-commands" : undefined}
+            aria-expanded={menuOpen}
+            aria-activedescendant={
+              menuOpen && commands[selectedIndex]
+                ? `command-${commands[selectedIndex].id}`
+                : undefined
+            }
+            disabled={memoryDraft !== null}
+            onFocus={() => setComposerFocused(true)}
+            onBlur={() => setComposerFocused(false)}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={() => setComposing(false)}
+            onSelect={(e) => {
+              setCaret(e.currentTarget.selectionStart);
+              setSelectionEnd(e.currentTarget.selectionEnd);
+            }}
+            onChange={(e) => {
+              setText(e.target.value);
+              setCaret(e.target.selectionStart);
+              setSelectionEnd(e.target.selectionEnd);
+              setMenuDismissed(false);
+              setCommandIndex(0);
+              setCommandError("");
+              setCommandNotice("");
+            }}
             onKeyDown={(e) => {
+              if (e.nativeEvent.isComposing || composing || e.keyCode === 229)
+                return;
+              if (menuOpen) {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setMenuDismissed(true);
+                  return;
+                }
+                if (
+                  (e.key === "ArrowDown" || e.key === "ArrowUp") &&
+                  commands.length
+                ) {
+                  e.preventDefault();
+                  setCommandIndex(
+                    (selectedIndex +
+                      (e.key === "ArrowDown" ? 1 : -1) +
+                      commands.length) %
+                      commands.length,
+                  );
+                  return;
+                }
+                if ((e.key === "Enter" && !e.shiftKey) || e.key === "Tab") {
+                  if (commands[selectedIndex]) {
+                    e.preventDefault();
+                    completeCommand(commands[selectedIndex]);
+                    return;
+                  }
+                }
+              }
               if (
                 e.key === "Enter" &&
                 !e.shiftKey &&
@@ -338,7 +543,7 @@ export function ChatView({
               <Menu.Trigger
                 className="camera-button"
                 aria-label="Attach screenshot"
-                disabled={capturing}
+                disabled={capturing || memoryDraft !== null}
               >
                 <Camera size={17} />
               </Menu.Trigger>
@@ -387,7 +592,10 @@ export function ChatView({
                 size="icon"
                 aria-label="Send"
                 disabled={
-                  capturing || compacting || (!text.trim() && !images.length)
+                  capturing ||
+                  compacting ||
+                  memoryDraft !== null ||
+                  (!text.trim() && !images.length)
                 }
                 onClick={() => send()}
               >
@@ -397,7 +605,7 @@ export function ChatView({
           </div>
         </div>
         <div className="composer-hint">
-          Page context, not guesswork. <kbd>↵</kbd> to send
+          <kbd>@</kbd> commands · <kbd>↵</kbd> to send
         </div>
       </div>
     </div>

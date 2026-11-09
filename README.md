@@ -48,6 +48,20 @@ For E2E, first run `pnpm exec playwright install chromium` and `pnpm build`. If 
 
 The chat composer automatically receives the cursor when opened or when returning to chat. Focus is not moved on streaming updates, and settings/search/approval controls keep their focus.
 
+### Composer commands
+
+Type **`@` at the start of the message** to open a searchable menu. Search by name (`@mem`) or Chinese keywords (`@记忆`, `@压缩`); use ↑/↓, Tab/Enter or the mouse to complete a command, Esc to dismiss. **Completion does not execute it**: press Enter again or Send. IME composition does not submit a command. Unavailable commands explain why; emails and inline `@` text are ordinary messages.
+
+| Command                  | Action                                                                                                                                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@compact`               | Uses the same cancellable Compact action as the button, with the configured chat model. Unavailable while replying, compacting, awaiting tool approval or before a conversation exists.                           |
+| `@memory <literal text>` | Opens an editable save preview: preference/reference/procedure and global/current-site scope. Empty text opens a blank form; Save always requires confirmation, even in Danger mode. Cancel preserves your draft. |
+| `@memory-list`           | Opens the local memory manager without sending memories to a model; Back returns to chat.                                                                                                                         |
+
+Memory commands reuse the existing save rules: Memory Off blocks saves, potential sensitive content becomes a reference, and private/sensitive-site procedures are rejected. The preview discloses local unencrypted storage and later provider processing. Direct form saves are user-confirmed edits, not invented chat-message citations; no historical source is fabricated. Only literal preview text is saved, not a model's interpretation of “remember the previous steps”. Extra text for argument-free commands and unknown leading commands fail visibly without being sent to a model. Commands do not consume screenshot attachments; remove them first.
+
+This release does **not** add resource chips, `@file`, `@history`, `@cli`, or a new execution backend/permission. Existing model-invoked tools and MCP calls keep their normal approvals. Shell commands are possible only if an already configured MCP server actually provides that capability; autocomplete itself grants no shell access.
+
 ### Shortcuts
 
 **macOS uses Command+K (⌘K); Windows/Linux use Ctrl+K.** Existing installations may retain the previous binding: after reloading, open `chrome://extensions/shortcuts` and set AMA → Toggle the AMA side panel to **Command+K** on macOS manually if necessary. Side-panel keyboard handling uses the same platform-specific shortcut, without Alt/Shift or an extra Control/Command modifier.
