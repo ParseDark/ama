@@ -41,23 +41,27 @@ it("recognizes only deliberate leading tool requests", () => {
 it("discovers actual built-in schemas without reading pages, executing code or calling a model", async () => {
   const readActivePage = vi.fn(),
     createModel = vi.fn(),
-    runCode = vi.fn();
+    runCode = vi.fn(),
+    captureImage = vi.fn();
   const native = vi.fn();
   const transport = new LocalChatTransport({
     loadSettings: async () => ({ ...DEFAULT_SETTINGS, mcpServers: [] }),
     readActivePage,
     createModel,
     runCode,
+    captureImage,
   });
   const catalog = await transport.composerTools("catalog", native);
   expect(catalog.errors).toEqual([]);
   expect(catalog.tools.map((t) => t.name)).toEqual(
     expect.arrayContaining([
       "run_js",
-      "read_file",
+      "list_data",
       "click",
       "search_history",
       "remember",
+      "capture_viewport",
+      "capture_full_page",
     ]),
   );
   expect(catalog.tools.some((t) => t.name === "web_search")).toBe(false);
@@ -65,6 +69,7 @@ it("discovers actual built-in schemas without reading pages, executing code or c
   expect(readActivePage).not.toHaveBeenCalled();
   expect(createModel).not.toHaveBeenCalled();
   expect(runCode).not.toHaveBeenCalled();
+  expect(captureImage).not.toHaveBeenCalled();
 });
 
 it("adds a tool-selection hint only when the user chose a tool", async () => {

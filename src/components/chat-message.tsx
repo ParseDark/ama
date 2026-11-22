@@ -6,8 +6,9 @@ import { Markdown } from "./markdown";
 import { ToolPart, PlanPart } from "./tool-parts";
 import { Button } from "./ui/button";
 import { GenerationStatsView } from "./generation-stats";
-import { FileChanges } from "./file-changes";
+import { retiredWorkspaceToolName } from "@/lib/retired-workspace-tools";
 import type { GenerationStats } from "@/lib/generation-stats";
+import type { CaptureFeedback } from "@/lib/page-visual-tools";
 async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
@@ -38,9 +39,11 @@ export function ChatMessage({
   const plans = message.parts.filter((p) => p.type === "tool-plan"),
     firstPlan = message.parts.findIndex((p) => p.type === "tool-plan");
   const memories = (message.metadata as any)?.usedMemories ?? [];
-  const stats = (
-    message.metadata as { generationStats?: GenerationStats } | undefined
-  )?.generationStats;
+  const { generationStats: stats, captureFeedback } = (message.metadata ??
+    {}) as {
+    generationStats?: GenerationStats;
+    captureFeedback?: CaptureFeedback;
+  };
   return (
     <article className={`message message-${message.role}`}>
       <div className="message-label">
@@ -78,13 +81,24 @@ export function ChatMessage({
           return i === firstPlan ? (
             <PlanPart key={i} part={plans.at(-1)} />
           ) : null;
+        const retired = retiredWorkspaceToolName(part);
+        if (retired)
+          return (
+            <small key={i} className="hint">
+              {retired} · Local workspace tool (retired)
+            </small>
+          );
         if (part.type.startsWith("tool-") || part.type === "dynamic-tool")
-          return <ToolPart key={i} part={part} onApproval={onApproval} />;
+          return (
+            <ToolPart
+              key={i}
+              part={part}
+              onApproval={onApproval}
+              captureFeedback={captureFeedback}
+            />
+          );
         return null;
       })}
-      {message.role === "assistant" && !streaming && (
-        <FileChanges message={message} />
-      )}
       {message.role === "assistant" && stats && (
         <GenerationStatsView stats={stats} />
       )}

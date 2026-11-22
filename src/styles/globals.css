@@ -411,15 +411,6 @@ h3 {
 .model-empty {
   padding: 8px;
 }
-.config-sync-actions {
-  flex-wrap: wrap;
-}
-.config-sync-actions > button {
-  max-width: 100%;
-  white-space: normal;
-  height: auto;
-  min-height: 32px;
-}
 .composer-hint {
   display: flex;
   align-items: center;
@@ -628,110 +619,6 @@ kbd {
   max-height: 180px;
   overflow: auto;
   font-size: calc(10px * var(--ama-font-scale));
-}
-.file-changes {
-  margin: 12px 0;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  font-size: calc(12px * var(--ama-font-scale));
-}
-.file-changes ul {
-  list-style: none;
-  padding: 0;
-  margin: 6px 0 0;
-}
-.file-changes li {
-  margin: 4px 0;
-}
-.changed-file-button {
-  width: 100%;
-  justify-content: flex-start;
-  height: auto;
-  min-height: 30px;
-  white-space: normal;
-  text-align: left;
-}
-.changed-file-button > span {
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
-.changed-file-button small {
-  margin-left: auto;
-  color: var(--muted-foreground);
-  flex-shrink: 0;
-  font-size: calc(10px * var(--ama-font-scale));
-}
-.file-workspace {
-  display: block;
-  padding-left: 30px;
-  color: var(--muted-foreground);
-  font-size: calc(10px * var(--ama-font-scale));
-  overflow-wrap: anywhere;
-}
-.file-preview-backdrop {
-  position: fixed;
-  inset: 0;
-  background: #0008;
-  z-index: 100;
-}
-.file-preview {
-  position: fixed;
-  inset: 12px;
-  z-index: 101;
-  background: var(--background);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-  overflow: hidden;
-  box-shadow: 0 8px 40px #0004;
-}
-.file-preview-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.file-preview-header h2 {
-  font-size: calc(14px * var(--ama-font-scale));
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.file-preview-header button {
-  flex-shrink: 0;
-}
-.file-preview-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  font-size: calc(11px * var(--ama-font-scale));
-}
-.file-preview-content {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px;
-  font:
-    calc(12px * var(--ama-font-scale)) / 1.6 ui-monospace,
-    SFMono-Regular,
-    Consolas,
-    monospace;
-  tab-size: 2;
-  white-space: pre;
-}
-.file-preview [role="alert"],
-.file-preview [role="status"] {
-  font-size: calc(12px * var(--ama-font-scale));
 }
 .memory-approval {
   background: #f3edf8;

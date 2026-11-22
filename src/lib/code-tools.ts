@@ -22,7 +22,7 @@ export function createCodeTools(
         "Execute JavaScript for computation or data processing in an isolated sandbox. " +
         "Provide an ES module exporting `export default async function(input) { ... }`. " +
         "npm imports are supported (for example, import _ from 'lodash-es'). " +
-        "Prefer data: {name: dataId} from read_file, list_data or a previous run_js result, " +
+        "Prefer data: {name: dataId} from list_data or a previous run_js result, " +
         "with small JSON params. The extension loads original stored values directly: " +
         "input is {data: {name: originalValue}, params}. Never copy datasets into arguments. " +
         "For small legacy calls, input alone is passed directly (max 16 KiB); do not mix modes. " +

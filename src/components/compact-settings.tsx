@@ -86,8 +86,8 @@ export function CompactSettings({
         {budget.fallback
           ? "Limit unknown: using a conservative 32k total fallback."
           : "Based on model metadata or your override; gateway limits may differ."}{" "}
-        Counts are estimates, not the provider's tokenizer. This setting syncs
-        with optional configuration sync; chat summaries stay local.
+        Counts are estimates, not the provider's tokenizer. This setting and
+        chat summaries stay in this Chrome profile.
       </p>
     </section>
   );

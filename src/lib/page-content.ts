@@ -9,7 +9,15 @@ export interface PageContent {
   truncated: boolean;
   elements: string[];
 }
-export type ActivePage = PageContent & { tabId: number };
+export type ActivePage = PageContent & {
+  tabId: number;
+  captureTarget?: {
+    tabId: number;
+    windowId: number;
+    documentId: string;
+    url: string;
+  };
+};
 export function accessibleName(el: Element, doc: Document) {
   const tag = el.tagName.toLowerCase(),
     control =

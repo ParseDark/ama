@@ -57,7 +57,7 @@ function ServerCard({
       <Field
         label="Headers (JSON)"
         hint={
-          'String values only, e.g. {"X-API-Key": "your-key"}. Custom Authorization overrides Token (case-insensitive). Stored locally; also uploaded to Chrome if configuration sync is enabled. Sent to this MCP server, not injected into the chat model. Browser/transport-reserved headers are rejected.'
+          'String values only, e.g. {"X-API-Key": "your-key"}. Custom Authorization overrides Token (case-insensitive). Stored locally in this Chrome profile. Sent to this MCP server, not injected into the chat model. Browser/transport-reserved headers are rejected.'
         }
       >
         <textarea

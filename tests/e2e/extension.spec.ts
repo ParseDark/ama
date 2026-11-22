@@ -44,6 +44,13 @@ const dataPipelineQuery =
   "Process a large dataset using stored data references";
 const dataPipelineTail = "UNPREVIEWED-DATA-TAIL-9f71c2";
 const form = `<!doctype html><title>Test checkout</title><main><h1>Test checkout</h1><p>Lookup code is ALPHA-42. This page contains a form to exercise browser actions.</p><form onsubmit="event.preventDefault();document.querySelector('#result').textContent='Submitted '+document.querySelector('#name').value"><label>Name<input id="name" placeholder="Full name"></label><label>Region<select><option value="us">United States</option><option value="uk">United Kingdom</option></select></label><label><input type="checkbox">Updates</label><button>Send order</button></form><p id="result"></p></main>`;
+const viewportQuestion = "右边那条紫色线和图例怎么对应？";
+const fullPageQuestion =
+  "Does the footer visually overlap the lower chart? Compare it with the header.";
+const visualPage = `<!doctype html><title>Text-rich report</title>
+<style>html{scroll-behavior:smooth}body{margin:0}main{height:2600px;background:white}h1,article{margin:0;width:40ch}canvas{position:absolute;left:260px;width:300px;height:160px}#visible{top:460px}#footer-chart{top:2180px}header{position:sticky;top:0;background:#eee;height:40px;z-index:1}</style>
+<header>Market report</header><main><h1>Text-rich report</h1><article>${"The report describes units and observations. ".repeat(70)}</article><canvas id="visible" width="300" height="160"></canvas><canvas id="footer-chart" width="300" height="160"></canvas></main>
+<script>for(const [id,color] of [['visible','#a028d0'],['footer-chart','#08bc48']]){const ctx=document.getElementById(id).getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,300,160)}</script>`;
 const gesturePage = `<!doctype html><title>Gesture playground</title>
 <style>body{margin:16px}#scroll-box{overflow:auto;width:300px;height:100px}#scroll-content{width:700px;height:600px}#source,#drop,#pointer,#pointer-target{display:inline-block;width:120px;height:60px;margin:8px;background:#ddd}#tail{height:2000px}</style>
 <button type="button" id="double" onclick="document.querySelector('#click-count').textContent=Number(document.querySelector('#click-count').textContent)+1" ondblclick="document.querySelector('#double-result').textContent='Editing'">Open editor</button><span id="click-count">0</span><p id="double-result"></p>
@@ -191,7 +198,9 @@ test.beforeAll(async () => {
           ? gesturePage
           : req.url === "/tall"
             ? "<!doctype html><title>Tall page</title><style>body{margin:0}header{position:sticky;top:0;height:70px;background:red}main{height:3930px;background:linear-gradient(white,blue)}</style><header>Sticky once</header><main>Tall page</main>"
-            : form,
+            : req.url === "/visual"
+              ? visualPage
+              : form,
       );
       return;
     }
@@ -357,6 +366,10 @@ test.beforeAll(async () => {
             ]
           : [],
       });
+    else if (q === viewportQuestion) reply = tool("capture_viewport", {});
+    else if (q === fullPageQuestion) reply = tool("capture_full_page", {});
+    else if (q.startsWith("AMA visual evidence ("))
+      reply = "Visual evidence processed";
     else if (q === "DeepSeek public web lookup") {
       const calls = body.messages
         .filter((m: any) => m.role === "assistant")
@@ -444,70 +457,7 @@ test.beforeAll(async () => {
       });
     else if (!afterTool && q.includes("像上次那样"))
       reply = tool("search_history", { query: "Kafka retry" });
-    else if (q === "workspace preview batch") {
-      const calls = body.messages
-        .filter((m: any) => m.role === "assistant")
-        .flatMap((m: any) => m.tool_calls ?? []);
-      const operations: [string, any][] = [
-        [
-          "create_file",
-          {
-            path: "preview-one.md",
-            content:
-              "# Preview one\nSAFE <script>window.BAD_PREVIEW=true</script>\n",
-          },
-        ],
-        [
-          "edit_file",
-          {
-            path: "sample.txt",
-            edits: [{ oldText: "PATCHED-99", newText: "BATCH-100" }],
-          },
-        ],
-        ["create_file", { path: "preview-three.txt", content: "third file\n" }],
-        [
-          "edit_file",
-          {
-            path: "preview-one.md",
-            edits: [{ oldText: "Preview one", newText: "Preview final" }],
-          },
-        ],
-      ];
-      reply =
-        calls.length < operations.length
-          ? tool(...operations[calls.length])
-          : "Batch files complete.";
-    } else if (!afterTool && q.startsWith("workspace ")) {
-      const operation = q.slice("workspace ".length);
-      const calls: Record<string, [string, any]> = {
-        list: ["list_files", {}],
-        read: ["read_file", { path: "sample.txt" }],
-        search: ["search_files", { query: "LOCAL-42" }],
-        create: [
-          "create_file",
-          { path: "created.txt", content: "created content\n" },
-        ],
-        edit: [
-          "edit_file",
-          {
-            path: "sample.txt",
-            edits: [{ oldText: "LOCAL-42", newText: "LOCAL-99" }],
-          },
-        ],
-        patch: [
-          "patch_file",
-          {
-            path: "sample.txt",
-            patch:
-              "--- sample.txt\n+++ sample.txt\n@@ -1 +1 @@\n-LOCAL-99\n+PATCHED-99\n",
-          },
-        ],
-        delete: ["delete_file", { path: "created.txt" }],
-        sensitive: ["read_file", { path: ".env" }],
-      };
-      const [name, args] = calls[operation];
-      reply = tool(name, args);
-    } else if (!afterTool && q.includes("select region"))
+    else if (!afterTool && q.includes("select region"))
       reply = tool("select", {
         id: idFor(body, 'select "Region"'),
         option: "United Kingdom",
@@ -1277,6 +1227,132 @@ test("screenshots attach as images and full-page capture restores page state", a
   await site.bringToFront();
 });
 
+for (const { question, scope, name, full } of [
+  {
+    question: viewportQuestion,
+    scope: "Visible area",
+    name: "capture_viewport",
+    full: false,
+  },
+  {
+    question: fullPageQuestion,
+    scope: "Full page",
+    name: "capture_full_page",
+    full: true,
+  },
+]) {
+  test(`AMA sees ${scope.toLowerCase()} pixels without persisting an attachment`, async () => {
+    await clear();
+    await site.goto(base + "/visual");
+    await site.bringToFront();
+    await site.evaluate(() => scrollTo({ top: 320, behavior: "instant" }));
+    const composer = panel.getByRole("textbox", {
+      name: "Message",
+      exact: true,
+    });
+    const before = requests.length;
+    try {
+      await composer.fill("@tools");
+      await composer.press("Enter");
+      await composer.fill(`@tool:${name}`);
+      await expect(
+        panel.getByRole("option").filter({ hasText: `@tool:${name}` }),
+      ).toBeVisible();
+      await composer.press("Enter");
+      await expect(composer).toHaveValue(`@tool:${name} `);
+      expect(requests.length).toBe(before);
+      expect(await site.evaluate(() => scrollY)).toBe(320);
+      await expect(panel.locator(".message-image")).toHaveCount(0);
+      await send(question);
+      await expect(
+        panel.getByText("Visual evidence processed", { exact: true }),
+      ).toBeVisible({ timeout: 20000 });
+      const reply = requests.slice(before).filter((r) => r.stream);
+      expect(reply).toHaveLength(2);
+      expect(reply[0].messages[0].content).toContain(
+        "The report describes units and observations.",
+      );
+      expect(reply[0].messages.at(-1).content).toBe(question);
+      expect(JSON.stringify(reply[0].messages)).not.toContain("data:image/");
+      const next = reply[1].messages;
+      expect(next.at(-3).tool_calls[0].function.name).toBe(name);
+      expect(next.at(-2)).toMatchObject({
+        role: "tool",
+        tool_call_id: next.at(-3).tool_calls[0].id,
+      });
+      expect(next.at(-2).content).not.toContain("base64");
+      expect(next.at(-1).role).toBe("user");
+      const imageUrl = next
+        .at(-1)
+        .content.find((part: any) => part.type === "image_url").image_url.url;
+      expect(imageUrl).toMatch(/^data:image\/jpeg;base64,/);
+      expect(
+        Buffer.from(imageUrl.split(",")[1], "base64").length,
+      ).toBeLessThanOrEqual(768 * 1024);
+      const pixels = await panel.evaluate(async (url) => {
+        const image = await createImageBitmap(await (await fetch(url)).blob());
+        const canvas = new OffscreenCanvas(image.width, image.height);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        const { data } = ctx.getImageData(0, 0, image.width, image.height);
+        let violet = 0,
+          green = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+          if (r > 125 && r < 190 && g < 65 && b > 170) violet++;
+          if (r < 35 && g > 155 && b > 40 && b < 100) green++;
+        }
+        image.close();
+        return { violet, green, width: canvas.width, height: canvas.height };
+      }, imageUrl);
+      expect(pixels.violet).toBeGreaterThan(500);
+      if (full) {
+        expect(pixels.green).toBeGreaterThan(500);
+        expect(pixels.height).toBeGreaterThan(2000);
+      } else {
+        expect(pixels.green).toBe(0);
+        expect(Math.max(pixels.width, pixels.height)).toBeLessThanOrEqual(1600);
+      }
+      expect(await site.evaluate(() => scrollY)).toBe(320);
+      await expect(
+        site.locator(
+          "[data-ama-capture],[data-ama-prev-visibility],[data-ama-capture-hidden]",
+        ),
+      ).toHaveCount(0);
+      await expect(
+        panel.getByRole("status").filter({ hasText: `${scope} screenshot` }),
+      ).toContainText("Image accepted");
+      await expect(panel.locator(".message-image")).toHaveCount(0);
+      await expect
+        .poll(async () =>
+          sw.evaluate(async () => {
+            const local = (globalThis as any).chrome.storage.local;
+            const { activeSessionId } = await local.get("activeSessionId");
+            const key = `session:${activeSessionId}`;
+            return JSON.stringify((await local.get(key))[key]) ?? "";
+          }),
+        )
+        .toContain(`tool-${name}`);
+      await panel.reload();
+      await site.bringToFront();
+      await expect(
+        panel.getByRole("status").filter({ hasText: `${scope} screenshot` }),
+      ).toBeVisible();
+      await expect(panel.locator(".message-image")).toHaveCount(0);
+      await send("Summarize the report's section titles");
+      await expect(
+        panel.getByText("Grounded answer", { exact: false }),
+      ).toBeVisible();
+      expect(JSON.stringify(requests.at(-1).messages)).not.toContain(
+        "data:image/",
+      );
+    } finally {
+      await site.goto(base);
+      await site.bringToFront();
+    }
+  });
+}
+
 test("MCP connects, offers read tools and approves writes", async () => {
   await clear();
   mcpCalls = [];
@@ -1341,6 +1417,179 @@ test("MCP connects, offers read tools and approves writes", async () => {
   expect(requests.filter((r) => r.stream).at(-1).messages[0].content).toContain(
     "Notes contains sprint tasks.",
   );
+});
+
+test("retired workspace parts remain historical and do not block chat or MCP approvals", async () => {
+  await clear();
+  const saved = [
+    {
+      id: "retired-user",
+      role: "user",
+      parts: [{ type: "text", text: "Old workspace conversation" }],
+    },
+    {
+      id: "retired-assistant",
+      role: "assistant",
+      parts: [
+        { type: "text", text: "Previously edited a workspace file." },
+        {
+          type: "tool-edit_file",
+          state: "output-available",
+          toolCallId: "retired-edit",
+          input: {
+            path: "old.txt",
+            edits: [{ oldText: "old file contents", newText: "updated" }],
+          },
+          output: {
+            ok: true,
+            change: {
+              id: "old-edit",
+              workspaceId: "old-project",
+              workspace: "Project",
+              path: "old.txt",
+              action: "edit",
+            },
+          },
+        },
+        { type: "step-start" },
+        {
+          type: "tool-delete_file",
+          state: "approval-requested",
+          toolCallId: "retired-delete",
+          input: { path: "old.txt" },
+          approval: { id: "retired-approval" },
+        },
+      ],
+    },
+  ];
+  const originalSettings = await sw.evaluate(
+    async ({ base, saved }) => {
+      const { local } = (globalThis as any).chrome.storage;
+      const { settings, sessions = [] } = await local.get([
+        "settings",
+        "sessions",
+      ]);
+      await local.set({
+        settings: {
+          ...settings,
+          mcpServers: [
+            {
+              id: "notes",
+              name: "Notes",
+              url: base + "/mcp",
+              token: "",
+              enabled: true,
+            },
+          ],
+        },
+        activeSessionId: "retired-workspace",
+        "session:retired-workspace": saved,
+        sessions: [
+          {
+            id: "retired-workspace",
+            title: "Old workspace conversation",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          ...sessions,
+        ],
+      });
+      return settings;
+    },
+    { base, saved },
+  );
+  try {
+    await panel.reload();
+    await expect(
+      panel.getByText("Previously edited a workspace file."),
+    ).toBeVisible();
+    await expect(
+      panel.getByText("edit_file · Local workspace tool (retired)", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      panel.getByText("delete_file · Local workspace tool (retired)", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole("group", { name: "Approval required" }),
+    ).toHaveCount(0);
+    await expect(
+      panel.getByRole("region", { name: "Changed files" }),
+    ).toHaveCount(0);
+    await panel.getByRole("button", { name: "Settings", exact: true }).click();
+    await panel.getByRole("tab", { name: "Tools", exact: true }).click();
+    await expect(
+      panel.getByRole("region", { name: "Local workspace files" }),
+    ).toHaveCount(0);
+    await expect(
+      panel.getByRole("button", { name: "Choose workspace" }),
+    ).toHaveCount(0);
+    await panel.getByRole("button", { name: "Back to chat" }).click();
+
+    const before = requests.length;
+    const composer = panel.getByRole("textbox", {
+      name: "Message",
+      exact: true,
+    });
+    await composer.fill("@tools");
+    await composer.press("Enter");
+    await composer.press("Enter");
+    await expect(composer).toHaveValue("@tool:");
+    const options = panel.getByRole("option");
+    await expect(options.filter({ hasText: "@tool:run_js" })).toBeVisible();
+    const retired = /^(list|find|search|read|create|edit|patch|delete)_files?$/;
+    await expect(
+      options.filter({
+        hasText:
+          /@tool:(list|find|search|read|create|edit|patch|delete)_files?\b/,
+      }),
+    ).toHaveCount(0);
+    expect(requests.length).toBe(before);
+    mcpCalls = [];
+    await send("write MCP");
+    const approval = panel.getByRole("group", { name: "Approval required" });
+    await expect(approval).toHaveCount(1);
+    await expect(approval).toContainText("Let Notes run write_note?");
+    expect(mcpCalls).toEqual([]);
+    await approval.getByRole("button", { name: "Allow", exact: true }).click();
+    await expect(
+      panel.getByText("Notes · write_note", { exact: true }),
+    ).toBeVisible();
+    expect(mcpCalls).toEqual(["write_note"]);
+    const sent = requests.slice(before).filter((r) => r.stream);
+    expect(sent.length).toBeGreaterThanOrEqual(2);
+    for (const { messages, tools } of sent) {
+      expect(JSON.stringify(messages)).not.toMatch(
+        /retired-(edit|delete|approval)|old file contents/,
+      );
+      const names = tools.map((entry: any) => entry.function.name);
+      expect(names).toEqual(
+        expect.arrayContaining([
+          "run_js",
+          "list_data",
+          "read_tab",
+          "notes_write_note",
+        ]),
+      );
+      expect(names.filter((name: string) => retired.test(name))).toEqual([]);
+    }
+    expect(
+      await sw.evaluate(async () => {
+        const { local } = (globalThis as any).chrome.storage;
+        return (await local.get("session:retired-workspace"))[
+          "session:retired-workspace"
+        ].slice(0, 2);
+      }),
+    ).toEqual(saved);
+  } finally {
+    await sw.evaluate(
+      (settings) => (globalThis as any).chrome.storage.local.set({ settings }),
+      originalSettings,
+    );
+  }
 });
 
 test("doubtful and foreign saves can be declined; memory controls disable injection", async () => {
@@ -2108,325 +2357,6 @@ test("stopped replies retain partial timings instead of claiming complete usage"
   );
 });
 
-test("default workspace tools use real file handles, worker search, approvals and conflict checks", async () => {
-  await clear();
-  await send("workspace list");
-  await expect(
-    panel.getByText(/No workspace connected/, { exact: false }),
-  ).toBeVisible();
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  // Real browser FileSystemHandles backed by OPFS, not mock IO. Native chooser
-  // and OS-directory permission persistence still require manual acceptance.
-  await panel.evaluate(async () => {
-    const root = await navigator.storage.getDirectory();
-    const dir = await root.getDirectoryHandle("ama-test-workspace", {
-      create: true,
-    });
-    for (const [name, text] of [
-      ["sample.txt", "LOCAL-42\n"],
-      [".env", "DO_NOT_READ"],
-      [".gitignore", "ignored.txt\n"],
-      ["ignored.txt", "LOCAL-42"],
-    ]) {
-      const f = await dir.getFileHandle(name, { create: true }),
-        stream = await f.createWritable();
-      await stream.write(text);
-      await stream.close();
-    }
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const req = indexedDB.open("ama-files", 1);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const tx = database.transaction("workspace", "readwrite");
-      tx.objectStore("workspace").put(
-        { id: "e2e-workspace", handle: dir },
-        "current",
-      );
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    database.close();
-  });
-  const read = (name: string) =>
-    panel.evaluate(async (name) => {
-      const dir = await (
-        await navigator.storage.getDirectory()
-      ).getDirectoryHandle("ama-test-workspace");
-      try {
-        return await (await (await dir.getFileHandle(name)).getFile()).text();
-      } catch {
-        return null;
-      }
-    }, name);
-  await clear();
-  await send("workspace read");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  expect(
-    requests
-      .at(-1)
-      .messages.some(
-        (m: any) => m.role === "tool" && m.content.includes("LOCAL-42"),
-      ),
-  ).toBe(true);
-  const names = requests.at(-1).tools.map((t: any) => t.function.name);
-  for (const name of [
-    "list_files",
-    "find_files",
-    "search_files",
-    "read_file",
-    "create_file",
-    "edit_file",
-    "patch_file",
-    "delete_file",
-  ])
-    expect(names).toContain(name);
-  await clear();
-  await send("workspace search");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  const search = JSON.parse(
-    requests.at(-1).messages.find((m: any) => m.role === "tool").content,
-  );
-  expect(search.matches).toEqual([
-    expect.objectContaining({ path: "sample.txt", line: 1, column: 1 }),
-  ]);
-  await clear();
-  await send("workspace sensitive");
-  await expect(panel.getByText(/Sensitive paths are blocked/)).toBeVisible();
-  const approval = panel.getByRole("group", { name: "Approval required" });
-  await clear();
-  await send("workspace create");
-  await expect(approval.getByLabel("File change preview")).toContainText(
-    "+created content",
-  );
-  expect(await read("created.txt")).toBeNull();
-  await approval.getByRole("button", { name: "Deny", exact: true }).click();
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  expect(await read("created.txt")).toBeNull();
-  await clear();
-  await send("workspace create");
-  await approval.getByRole("button", { name: "Allow", exact: true }).click();
-  await expect.poll(() => read("created.txt")).toBe("created content\n");
-  await expect(
-    panel.getByRole("region", { name: "Changed files" }),
-  ).toContainText("1 file changed");
-  await panel
-    .getByRole("button", { name: "Preview created.txt", exact: true })
-    .click();
-  await expect(panel.getByLabel("File preview content")).toHaveText(
-    "created content\n",
-  );
-  await panel.getByRole("button", { name: "Close file preview" }).click();
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  await clear();
-  await send("workspace edit");
-  await expect(approval.getByLabel("File change preview")).toContainText(
-    "+LOCAL-99",
-  );
-  await approval.getByRole("button", { name: "Allow", exact: true }).click();
-  await expect.poll(() => read("sample.txt")).toBe("LOCAL-99\n");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  await clear();
-  await send("workspace patch");
-  await approval.getByRole("button", { name: "Allow", exact: true }).click();
-  await expect.poll(() => read("sample.txt")).toBe("PATCHED-99\n");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  await clear();
-  await send("workspace delete");
-  await expect(approval).toBeVisible();
-  await panel.evaluate(async () => {
-    const dir = await (
-      await navigator.storage.getDirectory()
-    ).getDirectoryHandle("ama-test-workspace");
-    const stream = await (
-      await dir.getFileHandle("created.txt")
-    ).createWritable();
-    await stream.write("external change");
-    await stream.close();
-  });
-  await approval.getByRole("button", { name: "Allow", exact: true }).click();
-  await expect(panel.getByText(/File changed since preview/)).toBeVisible();
-  expect(await read("created.txt")).toBe("external change");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  await clear();
-  await send("workspace delete");
-  await approval.getByRole("button", { name: "Allow", exact: true }).click();
-  await expect.poll(() => read("created.txt")).toBeNull();
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  await expect(
-    panel.getByRole("region", { name: "Changed files" }),
-  ).toContainText("1 file changed");
-  await panel
-    .getByRole("button", { name: "Preview created.txt", exact: true })
-    .click();
-  await expect(panel.getByLabel("File preview content")).toHaveText(
-    "external change",
-  );
-  await expect(panel.getByRole("dialog")).toContainText("Deleted");
-  await panel.getByRole("button", { name: "After", exact: true }).click();
-  await expect(panel.getByLabel("File preview content")).toHaveText(
-    "File was deleted.",
-  );
-  await panel.getByRole("button", { name: "Close file preview" }).click();
-  await clear();
-  await send("workspace preview batch");
-  for (let i = 0; i < 4; i++) {
-    await expect(approval).toBeVisible();
-    await approval.getByRole("button", { name: "Allow", exact: true }).click();
-    if (i < 3)
-      await expect(approval.getByLabel("File change preview")).toBeVisible();
-  }
-  await expect(
-    panel.getByText("Batch files complete.", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    panel.getByRole("region", { name: "Changed files" }),
-  ).toContainText("3 files changed");
-  await expect(
-    panel.getByRole("button", { name: "Preview preview-one.md", exact: true }),
-  ).toHaveCount(1);
-  // Preview snapshot must be stable even if external disk contents later change.
-  await panel.evaluate(async () => {
-    const dir = await (
-      await navigator.storage.getDirectory()
-    ).getDirectoryHandle("ama-test-workspace");
-    const stream = await (
-      await dir.getFileHandle("preview-one.md")
-    ).createWritable();
-    await stream.write("EXTERNAL DISK CHANGE");
-    await stream.close();
-  });
-  await panel
-    .getByRole("button", { name: "Preview preview-one.md", exact: true })
-    .click();
-  const preview = panel.getByRole("dialog");
-  await expect(panel.getByLabel("File preview content")).toContainText(
-    "# Preview final",
-  );
-  expect(
-    await panel.evaluate(() => (window as any).BAD_PREVIEW),
-  ).toBeUndefined();
-  await preview.getByRole("button", { name: "Before", exact: true }).click();
-  await expect(panel.getByLabel("File preview content")).toContainText(
-    "did not exist",
-  );
-  await preview.getByRole("button", { name: "Diff", exact: true }).click();
-  await expect(panel.getByLabel("File preview content")).toContainText(
-    "+# Preview final",
-  );
-  const downloadPromise = panel.waitForEvent("download");
-  await preview.getByRole("button", { name: "Download", exact: true }).click();
-  expect((await downloadPromise).suggestedFilename()).toBe(
-    "preview-one.md.patch",
-  );
-  await panel.keyboard.press("Escape");
-  await expect(preview).not.toBeVisible();
-  await panel.reload();
-  await expect(
-    panel.getByRole("region", { name: "Changed files" }),
-  ).toContainText("3 files changed");
-  await panel
-    .getByRole("button", { name: "Preview preview-one.md", exact: true })
-    .click();
-  await expect(panel.getByLabel("File preview content")).toContainText(
-    "# Preview final",
-  );
-  await panel.getByRole("button", { name: "Close file preview" }).click();
-  await panel.evaluate(async () => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const r = indexedDB.open("ama-file-previews", 1);
-      r.onsuccess = () => resolve(r.result);
-      r.onerror = () => reject(r.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const tx = database.transaction("snapshots", "readwrite");
-      tx.objectStore("snapshots").clear();
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    database.close();
-  });
-  await panel
-    .getByRole("button", { name: "Preview preview-one.md", exact: true })
-    .click();
-  await expect(panel.getByRole("dialog").getByRole("alert")).toContainText(
-    "unavailable or expired",
-  );
-  await panel.getByRole("button", { name: "Close file preview" }).click();
-  await clear();
-  await send("workspace read");
-  await expect(
-    panel.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible();
-  expect(
-    requests
-      .at(-1)
-      .messages.some(
-        (m: any) => m.role === "tool" && m.content.includes("BATCH-100"),
-      ),
-  ).toBe(true);
-  await panel.getByRole("button", { name: "Settings", exact: true }).click();
-  await panel.getByRole("tab", { name: "Tools", exact: true }).click();
-  await expect(panel.getByText("Workspace: ama-test-workspace")).toBeVisible();
-  // Simulate Chrome returning prompt for an existing handle; require an actual
-  // browser click with user activation, not an automatic model-tool request.
-  await panel.evaluate(() => {
-    const proto = FileSystemHandle.prototype as any;
-    const query = proto.queryPermission,
-      request = proto.requestPermission;
-    let granted = false;
-    proto.queryPermission = function (o: any) {
-      return this.name === "ama-test-workspace"
-        ? Promise.resolve(o.mode === "read" || granted ? "granted" : "prompt")
-        : query.call(this, o);
-    };
-    proto.requestPermission = function (o: any) {
-      if (this.name !== "ama-test-workspace") return request.call(this, o);
-      (window as any).__workspaceActivation = navigator.userActivation.isActive;
-      granted = true;
-      return Promise.resolve("granted");
-    };
-    (window as any).__restoreWorkspacePermissions = () => {
-      proto.queryPermission = query;
-      proto.requestPermission = request;
-    };
-    window.dispatchEvent(new Event("focus"));
-  });
-  await expect(panel.getByText(/Read: granted · Write: prompt/)).toBeVisible();
-  await panel.getByRole("button", { name: "Reauthorize", exact: true }).click();
-  await expect(panel.getByText(/Read: granted · Write: granted/)).toBeVisible();
-  expect(
-    await panel.evaluate(() => (window as any).__workspaceActivation),
-  ).toBe(true);
-  await panel.evaluate(() => (window as any).__restoreWorkspacePermissions());
-  await panel.getByText(/Local recovery backups/).click();
-  await expect(
-    panel.getByRole("button", { name: "Download backup" }),
-  ).toHaveCount(5);
-  await panel.getByRole("button", { name: "Disconnect", exact: true }).click();
-  await expect(panel.getByText("Workspace: Not connected")).toBeVisible();
-  await panel.getByRole("button", { name: "Back to chat" }).click();
-});
-
 test("MCP custom headers save, validate and reach both connection test and tool requests", async () => {
   await sw.evaluate(async (url) => {
     const c = (globalThis as any).chrome;
@@ -2503,166 +2433,99 @@ test("MCP custom headers save, validate and reach both connection test and tool 
   expect(JSON.stringify(requests.at(-1))).not.toContain("ignored-bearer");
 });
 
-test("opt-in config sync includes credentials, follows remote changes and leaves history local", async () => {
-  await panel.getByRole("button", { name: "Settings", exact: true }).click();
-  await panel.getByRole("tab", { name: "Model", exact: true }).click();
-  const section = panel.getByRole("region", {
-    name: "Configuration sync",
-    exact: true,
-  });
-  await expect(section.getByRole("status")).toContainText("Disabled");
-  await sw.evaluate(async () => {
-    const c = (globalThis as any).chrome;
-    const { settings } = await c.storage.local.get("settings");
-    settings.providers.openai.apiKey = "sync-provider-test-secret";
-    settings.mcpServers[0].token = "sync-mcp-test-secret";
-    settings.mcpServers[0].headers = {
-      "X-Test-Key": "sync-header-test-secret",
-    };
-    settings.embedding = {
-      ...settings.embedding,
-      token: "sync-embedding-test-secret",
-    };
-    await c.storage.local.set({ settings });
-  });
-  panel.once("dialog", (d) => d.accept());
-  await section
-    .getByRole("button", { name: "Enable · upload this device", exact: true })
-    .click();
-  await expect(section.getByRole("status")).toContainText(
-    "Enabled on this device",
-  );
-  const decodeCloud = async () =>
-    sw.evaluate(async () => {
-      const data = await (globalThis as any).chrome.storage.sync.get(null),
-        m = data["ama.config.manifest"];
-      let encoded = "";
-      for (let i = 0; i < m.parts; i++)
-        encoded += data[`ama.config.chunk.${m.revision.id}.${i}`];
-      const bytes = Uint8Array.from(atob(encoded), (x) => x.charCodeAt(0));
-      return JSON.parse(
-        await new Response(
-          new Blob([bytes])
-            .stream()
-            .pipeThrough(new DecompressionStream("gzip")),
-        ).text(),
-      );
+test("configuration stays local and ignores legacy Chrome sync", async () => {
+  const initial = await sw.evaluate(async () => {
+    const { local, sync } = (globalThis as any).chrome.storage;
+    const { settings } = await local.get("settings");
+    const localSettings = structuredClone(settings);
+    localSettings.providers[settings.provider].apiKey = "local-profile-key";
+    const remote = structuredClone(settings);
+    remote.providers[settings.provider].apiKey = "old-remote-key";
+    const text = JSON.stringify({
+      version: 1,
+      settings: remote,
+      memoryEnabled: false,
     });
-  const snapshot = await decodeCloud();
-  expect(snapshot.settings.providers.openai.apiKey).toBe(
-    "sync-provider-test-secret",
-  );
-  expect(snapshot.settings.mcpServers[0].token).toBe("sync-mcp-test-secret");
-  expect(snapshot.settings.mcpServers[0].headers["X-Test-Key"]).toBe(
-    "sync-header-test-secret",
-  );
-  expect(snapshot.settings.embedding.token).toBe("sync-embedding-test-secret");
-  expect(Object.keys(snapshot).sort()).toEqual([
-    "memoryEnabled",
-    "settings",
-    "version",
-  ]);
-  await sw.evaluate(async () => {
-    const c = (globalThis as any).chrome,
-      { settings } = await c.storage.local.get("settings");
-    settings.providers.openai.apiKey = "sync-provider-new-secret";
-    await c.storage.local.set({ settings });
-  });
-  await expect
-    .poll(async () => (await decodeCloud()).settings.providers.openai.apiKey, {
-      timeout: 12000,
-    })
-    .toBe("sync-provider-new-secret");
-  await sw.evaluate(async () => {
-    const c = (globalThis as any).chrome;
-    const data = await c.storage.sync.get(null),
-      old = data["ama.config.manifest"];
-    let encoded = "";
-    for (let i = 0; i < old.parts; i++)
-      encoded += data[`ama.config.chunk.${old.revision.id}.${i}`];
-    const snapshot = JSON.parse(
-      await new Response(
-        new Blob([Uint8Array.from(atob(encoded), (x) => x.charCodeAt(0))])
-          .stream()
-          .pipeThrough(new DecompressionStream("gzip")),
-      ).text(),
-    );
-    snapshot.settings.providers.openai.apiKey = "remote-synced-secret";
-    const text = JSON.stringify(snapshot),
-      hash = Array.from(
-        new Uint8Array(
-          await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)),
-        ),
-      )
-        .map((x) => x.toString(16).padStart(2, "0"))
-        .join("");
+    const bytes = new TextEncoder().encode(text);
+    const hash = Array.from(
+      new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+      (b) => b.toString(16).padStart(2, "0"),
+    ).join("");
     const compressed = new Uint8Array(
       await new Response(
-        new Blob([text]).stream().pipeThrough(new CompressionStream("gzip")),
+        new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip")),
       ).arrayBuffer(),
     );
-    let raw = "";
-    for (const x of compressed) raw += String.fromCharCode(x);
-    const contents = btoa(raw);
-    const revision = { time: Date.now() + 100000, id: crypto.randomUUID() },
-      parts = Math.ceil(contents.length / 7000),
-      values: any = {};
-    values["ama.config.manifest"] = {
-      version: 1,
-      revision,
-      hash,
-      parts,
-      encoding: "gzip-base64",
+    const revision = { time: Date.now() + 100000, id: crypto.randomUUID() };
+    const snapshot = {
+      "ama.config.manifest": {
+        version: 1,
+        revision,
+        hash,
+        parts: 1,
+        encoding: "gzip-base64",
+      },
+      [`ama.config.chunk.${revision.id}.0`]: btoa(
+        String.fromCharCode(...compressed),
+      ),
     };
-    for (let i = 0; i < parts; i++)
-      values[`ama.config.chunk.${revision.id}.${i}`] = contents.slice(
-        i * 7000,
-        (i + 1) * 7000,
-      );
-    await c.storage.sync.set(values);
+    await local.set({
+      settings: localSettings,
+      "ama.configSync": { enabled: true },
+    });
+    await sync.set(snapshot);
+    return { settings, snapshot };
   });
-  await expect
-    .poll(() =>
-      sw.evaluate(
-        async () =>
-          (await (globalThis as any).chrome.storage.local.get("settings"))
-            .settings.providers.openai.apiKey,
-      ),
-    )
-    .toBe("remote-synced-secret");
-  await panel.reload();
-  await panel.getByRole("button", { name: "Settings", exact: true }).click();
-  await expect(section.getByRole("status")).toContainText(
-    "Enabled on this device",
-  );
-  await section
-    .getByRole("button", { name: "Disable sync", exact: true })
-    .click();
-  await expect(section.getByRole("status")).toContainText(
-    "Disabled on this device",
-  );
-  expect((await decodeCloud()).settings.providers.openai.apiKey).toBe(
-    "remote-synced-secret",
-  );
-  panel.once("dialog", (d) => d.accept());
-  await section
-    .getByRole("button", { name: "Clear cloud config", exact: true })
-    .click();
-  await expect
-    .poll(() =>
-      sw.evaluate(async () =>
-        Object.keys(await (globalThis as any).chrome.storage.sync.get(null)),
-      ),
-    )
-    .toEqual([]);
-  expect(
-    await sw.evaluate(
-      async () =>
-        !!(await (globalThis as any).chrome.storage.local.get("sessions"))
-          .sessions?.length,
-    ),
-  ).toBe(true);
-  await panel.getByRole("button", { name: "Back to chat" }).click();
+  const openModel = async () => {
+    await panel.getByRole("button", { name: "Settings", exact: true }).click();
+    await panel.getByRole("tab", { name: "Model", exact: true }).click();
+  };
+  const key = panel
+    .getByRole("tabpanel", { name: "Model" })
+    .locator('input[type="password"]');
+  try {
+    await panel.reload();
+    await openModel();
+    await expect(
+      panel.getByText("Chrome configuration sync", { exact: true }),
+    ).toHaveCount(0);
+    await expect(key).toHaveValue("local-profile-key");
+    await key.fill("changed-local-profile-key");
+    await expect
+      .poll(() =>
+        sw.evaluate(async () => {
+          const { settings } = await (
+            globalThis as any
+          ).chrome.storage.local.get("settings");
+          return settings.providers[settings.provider].apiKey;
+        }),
+      )
+      .toBe("changed-local-profile-key");
+    await panel.reload();
+    await openModel();
+    await expect(key).toHaveValue("changed-local-profile-key");
+    const legacy = await sw.evaluate(async () => {
+      const { storage, alarms } = (globalThis as any).chrome;
+      return {
+        snapshot: await storage.sync.get(null),
+        state: (await storage.local.get("ama.configSync"))["ama.configSync"],
+        alarm: await alarms.get("ama-config-sync"),
+      };
+    });
+    expect(legacy).toEqual({
+      snapshot: initial.snapshot,
+      state: { enabled: true },
+      alarm: undefined,
+    });
+  } finally {
+    await sw.evaluate(async ({ settings, snapshot }) => {
+      const { local, sync } = (globalThis as any).chrome.storage;
+      await local.set({ settings });
+      await local.remove("ama.configSync");
+      await sync.remove(Object.keys(snapshot));
+    }, initial);
+    await panel.getByRole("button", { name: "Back to chat" }).click();
+  }
 });
 
 test("settings buttons retain readable shadcn variants in light and dark themes", async () => {

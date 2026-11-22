@@ -92,7 +92,7 @@ it("only explicit danger mode adds the scoped prompt override", () => {
   const instructions = buildInstructions(null, [], undefined, undefined, true);
   expect(instructions).toContain("Danger mode is ON");
   expect(instructions).toContain(
-    "File mutations, MCP writes and configuration changes retain their normal approvals",
+    "MCP writes and configuration changes retain their normal approvals",
   );
   expect(instructions).toContain(
     "not permission to bypass website authentication",

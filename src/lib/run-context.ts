@@ -2,6 +2,8 @@ import type { UIMessage } from "ai";
 import type { ActivePage } from "./page-content";
 import { readActivePage, readTabPage } from "./active-tab";
 export class RunContext {
+  captureTarget?: ActivePage["captureTarget"];
+  captureTurnId?: string;
   private owned = new Set<number>();
   private approved = new Set<number>();
   constructor(public startTabId?: number) {}
@@ -28,14 +30,25 @@ export class RunContexts {
   ) {}
   async forRequest(chatId: string, messages: UIMessage[]) {
     let run = this.contexts.get(chatId);
-    if (run?.startTabId !== undefined && messages.at(-1)?.role === "assistant")
-      return { run, page: await this.readTab(run.startTabId) };
+    const turnId = messages.findLast((message) => message.role === "user")?.id;
+    const continuation = messages.at(-1)?.role === "assistant";
+    if (continuation && run?.startTabId !== undefined)
+      return {
+        run,
+        page: await this.readTab(run.startTabId),
+        captureTarget:
+          run.captureTurnId === turnId ? run.captureTarget : undefined,
+      };
     const page = await this.readActive();
     if (!run) {
       run = new RunContext();
       this.contexts.set(chatId, run);
     }
     run.startTabId = page?.tabId;
-    return { run, page };
+    if (run.captureTurnId !== turnId) {
+      run.captureTurnId = turnId;
+      run.captureTarget = continuation ? undefined : page?.captureTarget;
+    }
+    return { run, page, captureTarget: run.captureTarget };
   }
 }

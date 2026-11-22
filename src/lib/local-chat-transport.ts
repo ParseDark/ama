@@ -2,6 +2,8 @@ import {
   streamText,
   convertToModelMessages,
   isStepCount,
+  wrapLanguageModel,
+  generateId,
   type ChatTransport,
   type LanguageModelUsage,
   type UIMessage,
@@ -46,9 +48,27 @@ import {
 } from "./composer-tools";
 import { buildInstructions } from "./prompt";
 import { createPageTools } from "./page-tools";
-import { createFileTools } from "./files/tools";
+import type { CaptureImage } from "./capture-image";
+import {
+  capturePageImage,
+  createPageVisualTools,
+  isPageVisualTool,
+  nativeCapturePart,
+  CaptureAttempts,
+  type CaptureFeedback,
+  type PageVisualTool,
+} from "./page-visual-tools";
+import {
+  captureEvidence,
+  captureTokens,
+  imageInputError,
+  IMAGE_INPUT_ERROR,
+  LiveCapture,
+  pairedCapture,
+} from "./live-capture";
 import { createWebTools } from "./web-search/tools";
 import { latestUserText, messageText, toolsUsedIn } from "./messages";
+import { withoutRetiredWorkspaceTools } from "./retired-workspace-tools";
 import { embedQuery } from "./memory/retrieval";
 import { loadMemoryContext, planFor, referenceSearch } from "./memory/context";
 import { splitMemoryBlocks } from "./memory/selector";
@@ -101,8 +121,16 @@ const counts = (usage: LanguageModelUsage | undefined) => ({
 export class LocalChatTransport implements ChatTransport<UIMessage> {
   private runs: RunContexts;
   private mcp = new McpTools();
+  private captureAttempts = new CaptureAttempts();
+  private liveCapture: LiveCapture;
+  private captureEpoch = 0;
+  clearCapture() {
+    this.captureEpoch++;
+    this.liveCapture.clear();
+  }
   private trackers = new Map<string, GenerationTracker>();
   interruptStats(chatId: string, status: "stopped" | "error") {
+    this.clearCapture();
     const tracker = this.trackers.get(chatId);
     return tracker?.observe(
       status === "stopped"
@@ -110,7 +138,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         : { type: "error", error: "Interrupted" },
     );
   }
-  /** Discover schemas only: never read page/file contents or execute a tool. */
+  /** Discover schemas only: never read page contents or execute a tool. */
   async composerTools(
     chatId: string,
     onNative?: (catalog: ComposerToolCatalog) => void,
@@ -121,7 +149,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     const data = createDataActions({ sessionId: chatId });
     const native = {
       ...createPageTools(new RunContext()),
-      ...createFileTools(undefined, data),
+      ...createPageVisualTools(),
       ...createCodeTools(data, this.options.runCode),
       ...createDataTools(data),
       ...createWebTools(settings, []),
@@ -195,9 +223,11 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       webFetch?: typeof fetch;
       runCode?: typeof runCode;
       now?: () => number;
+      captureImage?: typeof capturePageImage;
     } = {},
   ) {
     this.runs = new RunContexts(options.readActivePage, options.readTabPage);
+    this.liveCapture = new LiveCapture(options.now);
   }
   async sendMessages({
     chatId,
@@ -208,6 +238,10 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     // An approval continuation extends the same assistant turn. New user turns
     // and retries after a user message start a fresh measurement.
     const last = messages.at(-1);
+    const continuation =
+      trigger !== "regenerate-message" && last?.role === "assistant";
+    const captureEpoch = ++this.captureEpoch;
+    if (!continuation) this.liveCapture.clear();
     const previous =
       trigger !== "regenerate-message" && last?.role === "assistant"
         ? (last.metadata as { generationStats?: GenerationStats } | undefined)
@@ -219,16 +253,32 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       this.options.loadSettings ?? (() => settingsStore.getValue());
     const settings = await loadSettings();
     const problem = getConfigProblem(settings);
-    if (problem)
+    if (problem) {
+      this.liveCapture.clear();
       throw new Error(
         `${problem} Open settings to configure ${settings.provider}.`,
       );
+    }
+    const currentModel = settings.providers[settings.provider];
+    const turnId =
+      messages.findLast((message) => message.role === "user")?.id ?? "";
+    const captureKey = {
+      chatId,
+      turnId,
+      model: JSON.stringify([
+        settings.provider,
+        currentModel.model,
+        currentModel.baseURL,
+        currentModel.apiKey,
+      ]),
+    };
+    this.liveCapture.resume(captureKey, continuation);
     const config = getEmbeddingConfig(settings),
       query = latestUserText(messages),
       queryVector = embedQuery(query, config, {
         fetchFn: this.options.embeddingFetch,
       });
-    const [{ run, page }, mcp, memory] = await Promise.all([
+    const [{ run, page, captureTarget }, mcp, memory] = await Promise.all([
       this.runs.forRequest(chatId, messages),
       this.mcp.load(getMcpServers(settings)),
       loadMemoryContext(queryVector, config),
@@ -244,7 +294,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       plan = planFor(memory, domain, config),
       models = memoryModels(settings);
     const selectedTool = requestedComposerTool(query);
-    const retainedTools = toolsUsedIn(messages);
+    const retainedTools = toolsUsedIn(withoutRetiredWorkspaceTools(messages));
     if (selectedTool) retainedTools.add(selectedTool.name);
     const remote = await filterMcpTools(mcp.tools, {
       queryVector: await queryVector,
@@ -259,10 +309,37 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         })
       : {};
     const data = createDataActions({ sessionId: chatId });
+    let candidate = this.liveCapture.candidate(captureKey);
+    if (!candidate && continuation && last?.role === "assistant") {
+      const part = last.parts.find(
+        (p) =>
+          nativeCapturePart(p) &&
+          "state" in p &&
+          p.state === "output-available" &&
+          (p.output as { ok?: boolean } | undefined)?.ok,
+      );
+      if (part && "toolCallId" in part)
+        candidate = {
+          id: part.toolCallId,
+          name: part.type.slice(5) as PageVisualTool,
+        };
+    }
     const tools = {
       ...remote,
       ...createPageTools(run, { dangerMode: settings.dangerMode === true }),
-      ...createFileTools(undefined, data),
+      ...createPageVisualTools({
+        target: captureTarget,
+        claim: () =>
+          !!turnId && this.captureAttempts.claim(chatId, turnId, messages),
+        capture: this.options.captureImage,
+        receive: (image, name, id, target) => {
+          if (this.captureEpoch !== captureEpoch || abortSignal?.aborted)
+            return false;
+          this.liveCapture.put(captureKey, id, name, image, target);
+          candidate = { id, name };
+          return true;
+        },
+      }),
       ...createCodeTools(data, this.options.runCode),
       ...createDataTools(data),
       ...createWebTools(settings, messages, this.options.webFetch),
@@ -319,7 +396,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     const autoCompact = settings.compaction?.enabled !== false;
     const modelView = async () => {
       const tail = await convertToModelMessages(
-        messages.slice(compact?.covered ?? 0),
+        withoutRetiredWorkspaceTools(messages.slice(compact?.covered ?? 0)),
         { tools },
       );
       return compact ? [handoffMessage(compact.summary), ...tail] : tail;
@@ -424,8 +501,97 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         total: totalCounts,
       };
     };
+    // The SDK carries prepareStep's messages into step history. Strip the
+    // evidence label before processing; pixels are added only at dispatch.
+    const transient = new WeakSet<ModelMessage>();
+    let imageStep:
+      | {
+          id: string;
+          sent: boolean;
+          image?: CaptureImage;
+          watch: {
+            check: (signal?: AbortSignal) => Promise<void>;
+            dispose: () => void;
+          };
+        }
+      | undefined;
+    let captureFeedback: CaptureFeedback | undefined;
+    let waitingForApproval = false;
+    const disposeImageStep = () => {
+      if (!imageStep) return;
+      imageStep.image = undefined;
+      imageStep.watch.dispose();
+    };
+    const discard = () => {
+      disposeImageStep();
+      if (this.captureEpoch === captureEpoch) this.clearCapture();
+    };
+    abortSignal?.addEventListener("abort", discard, { once: true });
+    if (abortSignal?.aborted) discard();
     const result = streamText({
-      model,
+      model: wrapLanguageModel({
+        model,
+        middleware: {
+          specificationVersion: "v4",
+          wrapStream: async ({ doStream, params }) => {
+            const step = imageStep;
+            if (!step) return doStream();
+            const last = params.prompt.at(-1);
+            if (last?.role !== "user")
+              throw new Error(
+                "The screenshot evidence could not be paired with its tool result.",
+              );
+            try {
+              await step.watch.check(params.abortSignal);
+              if (this.captureEpoch !== captureEpoch || !step.image)
+                throw new Error();
+            } catch {
+              params.abortSignal?.throwIfAborted();
+              const note =
+                "The starting page or chat changed before the screenshot could be sent.";
+              last.content = [
+                {
+                  type: "text",
+                  text: `AMA visual evidence unavailable: ${note} Continue with text, not guesses.`,
+                },
+              ];
+              captureFeedback = { toolCallId: step.id, note, failed: true };
+              disposeImageStep();
+              imageStep = undefined;
+              return doStream();
+            }
+            const content = last.content;
+            last.content = [
+              ...content,
+              {
+                type: "file",
+                data: { type: "data", data: step.image.bytes },
+                mediaType: "image/jpeg",
+              },
+            ];
+            step.sent = true;
+            disposeImageStep();
+            try {
+              // The adapter has the image only for this call. Do not keep a
+              // second copy in request metadata or in the SDK's model history.
+              return { ...(await doStream()), request: undefined };
+            } catch (error) {
+              params.abortSignal?.throwIfAborted();
+              // A plain Error is non-retryable in the AI SDK. Keep normal text
+              // request retries unchanged and do not retain provider request bodies.
+              throw new Error(
+                imageInputError(error)
+                  ? IMAGE_INPUT_ERROR
+                  : error instanceof Error
+                    ? error.message
+                    : "The model request with the screenshot failed.",
+              );
+            } finally {
+              last.content = content;
+            }
+          },
+        },
+      }),
       instructions:
         settings.provider === "anthropic"
           ? {
@@ -440,9 +606,13 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
       maxOutputTokens: budget.output,
       prepareStep: async ({ messages: stepMessages }) => {
         abortSignal?.throwIfAborted();
+        imageStep = undefined;
+        const textHistory = stepMessages.filter(
+          (message) => !transient.has(message),
+        );
         let working: ModelMessage[] = autoCompact
-          ? thinToolResults(stepMessages)
-          : stepMessages;
+          ? thinToolResults(textHistory)
+          : textHistory;
         let size = fixedTokens + modelMessageTokens(working);
         if (autoCompact && size > budget.input * COMPACT_TRIGGER_RATIO) {
           const cut = stepCut(working);
@@ -488,8 +658,39 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
           throw new Error(
             `Context budget exceeded (${size.toLocaleString()} estimated tokens; safe input budget ${budget.input.toLocaleString()}). Original history is retained. Use Compact, reduce the current request, or adjust the context-window override in Settings. Pending tools are never discarded.`,
           );
+        if (candidate && pairedCapture(working, candidate.id)) {
+          const { id, name } = candidate;
+          candidate = undefined;
+          const live = await this.liveCapture.take(captureKey, id, abortSignal);
+          const note = !live
+            ? "The screenshot is no longer available or its starting page changed. Continue with text or ask again from that page."
+            : size + captureTokens(live.image) > budget.input
+              ? "The screenshot did not fit the safe context budget. Continue with text or shorten the conversation before asking again."
+              : undefined;
+          if (note) {
+            live?.watch.dispose();
+            captureFeedback = { toolCallId: id, note, failed: true };
+          } else if (live) {
+            imageStep = {
+              id,
+              sent: false,
+              image: live.image,
+              watch: live.watch,
+            };
+          }
+          const evidence = captureEvidence(
+            name,
+            note ? undefined : live?.image,
+            note,
+          );
+          if (!note || size + modelMessageTokens([evidence]) <= budget.input) {
+            transient.add(evidence);
+            return { messages: [...working, evidence] };
+          }
+        }
         return { messages: working };
       },
+      onAbort: discard,
       tools,
       stopWhen: isStepCount(60),
       abortSignal,
@@ -520,9 +721,47 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
         : {}),
     };
     return result.toUIMessageStream({
-      onError: (e) => (e instanceof Error ? e.message : String(e)),
+      originalMessages: messages,
+      generateMessageId: generateId,
+      onEnd: ({ isAborted, isCancelled, outcome }) => {
+        abortSignal?.removeEventListener("abort", discard);
+        disposeImageStep();
+        if (
+          isAborted ||
+          isCancelled ||
+          outcome.status !== "completed" ||
+          !waitingForApproval
+        )
+          discard();
+      },
+      onError: (error) => {
+        const rejected = imageStep?.sent && imageInputError(error);
+        return rejected
+          ? IMAGE_INPUT_ERROR
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      },
       messageMetadata: ({ part }) => {
+        if (part.type === "start-step") waitingForApproval = false;
+        if (part.type === "tool-approval-request") waitingForApproval = true;
+        if (part.type === "error") {
+          if (imageStep?.sent)
+            captureFeedback = {
+              toolCallId: imageStep.id,
+              note: imageInputError(part.error)
+                ? IMAGE_INPUT_ERROR
+                : "The model request with the screenshot failed.",
+              failed: true,
+            };
+          discard();
+        }
         if (part.type === "finish-step") {
+          if (imageStep?.sent && !captureFeedback)
+            captureFeedback = {
+              toolCallId: imageStep.id,
+              note: "Image accepted by the selected model",
+            };
           firstStep ??= part.usage;
           lastStep = part.usage;
           const step = counts(part.usage);
@@ -539,12 +778,14 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
             usage,
             ...(runCompact ? { runCompaction: runCompact } : {}),
             ...(generationStats ? { generationStats } : {}),
+            ...(captureFeedback ? { captureFeedback } : {}),
           };
         }
-        if (!generationStats) return undefined;
+        if (!generationStats && !captureFeedback) return undefined;
         return {
           ...(part.type === "start" ? metadata : {}),
-          generationStats,
+          ...(generationStats ? { generationStats } : {}),
+          ...(captureFeedback ? { captureFeedback } : {}),
         };
       },
     });

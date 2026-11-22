@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Menu } from "@base-ui/react/menu";
 import { LocalChatTransport } from "@/lib/local-chat-transport";
+import { withoutRetiredWorkspaceTools } from "@/lib/retired-workspace-tools";
 import { saveSession, deleteSession } from "@/lib/sessions";
 import { captureActiveTab } from "@/lib/active-tab";
 import { captureFullPage } from "@/lib/full-page-capture";
@@ -113,8 +114,23 @@ export function ChatView({
         ),
       );
     },
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    sendAutomaticallyWhen: ({ messages }) =>
+      lastAssistantMessageIsCompleteWithApprovalResponses({
+        messages: withoutRetiredWorkspaceTools(messages.slice(-1)),
+      }),
   });
+  const currentModel = settings.providers[settings.provider];
+  useEffect(
+    () => () => transport.clearCapture(),
+    [
+      transport,
+      id,
+      settings.provider,
+      currentModel.model,
+      currentModel.baseURL,
+      currentModel.apiKey,
+    ],
+  );
   const tab = useActiveTab(),
     domain = hostnameOf(tab?.url),
     { memories, enabled } = useMemory();
@@ -143,13 +159,14 @@ export function ChatView({
   // old ID is tombstoned afterwards; a running tool cannot resurrect its data.
   const clear = useCallback(() => {
     clearing.current = true;
+    transport.clearCapture();
     stop();
     setMessages([]);
     setImages([]);
     setCaptureError("");
     onNew();
     void deleteSession(id).catch(onClearError);
-  }, [id, stop, setMessages, onNew, onClearError]);
+  }, [id, stop, setMessages, onNew, onClearError, transport]);
   useEffect(() => {
     const fn = () => void clear();
     window.addEventListener("ama:clear-chat", fn);

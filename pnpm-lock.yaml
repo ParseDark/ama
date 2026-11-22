@@ -56,18 +56,12 @@ importers:
       cn:
         specifier: latest
         version: 0.4.0
-      diff:
-        specifier: 9.0.0
-        version: 9.0.0
       es-module-lexer:
         specifier: 2.3.2
         version: 2.3.2
       idb:
         specifier: 8.0.4
         version: 8.0.4
-      ignore:
-        specifier: 7.0.12
-        version: 7.0.12
       lucide-react:
         specifier: latest
         version: 1.57.0(@types/react@19.3.0)(react@19.3.1)
@@ -934,10 +928,6 @@ packages:
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
 
-  diff@9.0.0:
-    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
-    engines: {node: '>=0.3.1'}
-
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
 
@@ -1114,10 +1104,6 @@ packages:
 
   idb@8.0.4:
     resolution: {integrity: sha512-jd0ITCrN+Zah4J7R/Z2jnR3W7A4BXDAjmo62MwWuSjxCiueUAf7X5rbodEdidWzeknwXHmLpdZkoiiCppNi30Q==}
-
-  ignore@7.0.12:
-    resolution: {integrity: sha512-/8UvqAPU9DGTI9k4mxtf49U37Isfwr8Uts96+SBHIkFxPJnHS0Ew4f00sM4Scd8V8EjM0jUNtVDdv1kPdt35lg==}
-    engines: {node: '>= 4'}
 
   inline-style-parser@0.2.7:
     resolution: {integrity: sha512-Nb2ctOyNR8DqQoR0OwRG95uNWIC0C1lCgf5Naz5H6Ji72KZ8OcFZLz2P5sNgwlyoJ8Yif11oMuYs5pBQa86csA==}
@@ -2736,8 +2722,6 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  diff@9.0.0: {}
-
   dom-serializer@2.0.0:
     dependencies:
       domelementtype: 2.3.0
@@ -2956,8 +2940,6 @@ snapshots:
       entities: 7.0.1
 
   idb@8.0.4: {}
-
-  ignore@7.0.12: {}
 
   inline-style-parser@0.2.7: {}
 

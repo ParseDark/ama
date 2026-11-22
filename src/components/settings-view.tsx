@@ -16,11 +16,9 @@ import { Field } from "./ui/field";
 import { Switch } from "./ui/switch";
 import { EmbeddingSettings } from "./embedding-settings";
 import { McpSettings } from "./mcp-settings";
-import { FileSettings } from "./file-settings";
 import { WebSearchSettings } from "./web-search-settings";
 import { DisplaySettings } from "./display-settings";
 import { ModelPicker } from "./model-picker";
-import { ConfigSyncSettings } from "./config-sync-settings";
 import { CompactSettings } from "./compact-settings";
 import { ShortcutSettings } from "./shortcut-settings";
 export function SettingsView({
@@ -106,10 +104,7 @@ export function SettingsView({
               ))}
             </select>
           </Field>
-          <Field
-            label="API key"
-            hint="Stored locally; included in Chrome configuration sync only when you enable it below."
-          >
+          <Field label="API key" hint="Stored locally in this Chrome profile.">
             <input
               type="password"
               placeholder={p === "openai-compatible" ? "Optional" : "Required"}
@@ -198,8 +193,6 @@ export function SettingsView({
           {error && <p role="alert">{error}</p>}
           <hr />
           <CompactSettings settings={settings} onChange={onChange} />
-          <hr />
-          <ConfigSyncSettings />
         </TabsContent>
         <TabsContent value="memory" className="settings-body">
           <h2>A little continuity</h2>
@@ -237,15 +230,12 @@ export function SettingsView({
             <p className="hint">
               Off by default. Changes apply to the next request; stop a running
               reply before switching. Existing approval cards still need a
-              decision. Memory Off, file/MCP approvals, workspace boundaries and
-              browser permissions remain in force. This setting is included in
-              optional configuration sync.
+              decision. Memory Off, MCP and settings approvals, and browser
+              permissions remain in force.
             </p>
           </section>
           <hr />
           <WebSearchSettings settings={settings} onChange={onChange} />
-          <hr />
-          <FileSettings />
           <hr />
           <McpSettings settings={settings} onChange={onChange} />
         </TabsContent>

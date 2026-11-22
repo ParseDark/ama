@@ -1,5 +1,7 @@
 # Validation record
 
+The entries below describe behavior at the time of each change. Chrome configuration sync and the built-in local Files workspace have since been removed. See the [README](../README.md) for current behavior.
+
 ## Composer @ tools and shortcut diagnostics (v0.8.0)
 
 Extended the command menu with live tool discovery. `@tools` (or the Chinese aliases) lists built-in page/file/code/data/web/history/settings/memory tools plus every connected MCP server's tools; typing filters them. Discovery loads only tool schemas: it does not read page or file contents, run code, embed, or call a model, and a failing MCP server is reported in the menu instead of silently disappearing.

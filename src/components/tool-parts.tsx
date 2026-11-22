@@ -10,8 +10,6 @@ import {
   Settings,
 } from "lucide-react";
 import { getApprovalDetails } from "@/lib/page-tools";
-import { FILE_TOOLS } from "@/lib/files/workspace";
-import { getFilePreview, discardFilePreview } from "@/lib/files/tools";
 import { getMemoryApprovalReason } from "@/lib/memory/tools";
 import { getMcpToolInfo } from "@/lib/mcp-tools";
 import { SETTINGS_TOOLS, describeSettingsChange } from "@/lib/settings-tools";
@@ -22,6 +20,11 @@ import { switchTab } from "@/lib/tabs";
 import { Button } from "./ui/button";
 import { WebToolPart } from "./web-tool-part";
 import { WEB_TOOLS } from "@/lib/web-search/tools";
+import {
+  captureScope,
+  isPageVisualTool,
+  type CaptureFeedback,
+} from "@/lib/page-visual-tools";
 export function PlanPart({ part }: { part: any }) {
   const steps = part.input?.steps ?? [];
   return (
@@ -46,7 +49,6 @@ export function PlanPart({ part }: { part: any }) {
   );
 }
 const builtins = new Set([
-  ...FILE_TOOLS,
   ...WEB_TOOLS,
   ...SETTINGS_TOOLS,
   "highlight",
@@ -73,9 +75,11 @@ const builtins = new Set([
 export function ToolPart({
   part,
   onApproval,
+  captureFeedback,
 }: {
   part: any;
   onApproval: (v: { id: string; approved: boolean }) => void;
+  captureFeedback?: CaptureFeedback;
 }) {
   const name =
       part.type === "dynamic-tool" ? part.toolName : part.type.slice(5),
@@ -84,9 +88,7 @@ export function ToolPart({
     details = getApprovalDetails(part.toolCallId),
     approval = part.state === "approval-requested",
     isMemory = ["remember", "forget", "recall_memory"].includes(name),
-    isFile = FILE_TOOLS.includes(name),
     isSettings = (SETTINGS_TOOLS as readonly string[]).includes(name),
-    filePreview = isFile ? getFilePreview(part.toolCallId) : undefined,
     isMcp = !builtins.has(name),
     info = getMcpToolInfo(name),
     tab = out.tabId ?? details?.tabId ?? input.tab;
@@ -103,6 +105,32 @@ export function ToolPart({
         "Waiting for your approval",
       ]).catch(() => {});
   }, [approval, tab, input.id, input.sourceId]);
+  if (part.type !== "dynamic-tool" && isPageVisualTool(name)) {
+    const scope = captureScope(name);
+    const feedback =
+      captureFeedback?.toolCallId === part.toolCallId
+        ? captureFeedback
+        : undefined;
+    const error =
+      feedback?.failed || out.ok === false || part.state === "output-error";
+    const label = pending
+      ? `Capturing ${scope.toLowerCase()}…`
+      : `${scope} screenshot · ${out.error ?? part.errorText ?? out.detail ?? "No image captured"}${feedback ? ` · ${feedback.note}` : ""}`;
+    return (
+      <div className={`tool-chip${error ? " warning" : ""}`} role="status">
+        <span>
+          {pending ? (
+            <Loader2 size={14} className="spin" />
+          ) : error ? (
+            <AlertTriangle size={14} />
+          ) : (
+            <Check size={14} />
+          )}{" "}
+          {label}
+        </span>
+      </div>
+    );
+  }
   if (name === "plan") return <PlanPart part={part} />;
   if (name === "web_search" || name === "web_fetch")
     return <WebToolPart part={part} name={name} />;
@@ -117,12 +145,6 @@ export function ToolPart({
           ? `Save to memory: "${input.text}"?`
           : `Forget memories matching: ${input.query}?`;
       reason = getMemoryApprovalReason(part.toolCallId) ?? "";
-    } else if (isFile) {
-      question = filePreview
-        ? `${filePreview.action} ${filePreview.workspace.handle.name}/${filePreview.path}?`
-        : "File preview expired — deny and request a fresh preview.";
-      reason =
-        "Local file change. Review the complete diff below. External file changes will reject this operation. Deleted/edited originals are kept in local recovery backups (latest 20).";
     } else if (isMcp) {
       question = `Let ${info?.server ?? "server"} run ${info?.tool ?? name}?`;
       reason = "This tool may change data on the server.";
@@ -163,26 +185,19 @@ export function ToolPart({
         <strong>{question}</strong>
         <p>{reason}</p>
         {isMcp && <pre>{JSON.stringify(input, null, 2).slice(0, 1200)}</pre>}
-        {isFile && filePreview && (
-          <pre className="file-diff" aria-label="File change preview">
-            {filePreview.diff}
-          </pre>
-        )}
         <div className="row">
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => {
-              if (isFile) discardFilePreview(part.toolCallId);
-              onApproval({ id: part.approval.id, approved: false });
-            }}
+            onClick={() =>
+              onApproval({ id: part.approval.id, approved: false })
+            }
           >
             {isMemory ? (name === "forget" ? "Keep" : "Don't save") : "Deny"}
           </Button>
           <Button
             size="sm"
             variant="outline"
-            disabled={isFile && !filePreview}
             onClick={() => onApproval({ id: part.approval.id, approved: true })}
           >
             {isMemory ? (name === "forget" ? "Forget" : "Save") : "Allow"}
@@ -196,8 +211,6 @@ export function ToolPart({
     label = `Skipped: ${name} ${details?.label ?? ""}`;
   else if (part.state === "output-error")
     label = part.errorText ?? "Tool failed";
-  else if (isFile)
-    label = `${name} · ${input.path ?? input.query ?? input.pattern ?? "workspace"}${pending ? "…" : ""}`;
   else if (isMcp) {
     label = `${info?.server ?? "MCP"} · ${info?.tool ?? name}`;
     if (out.isError)

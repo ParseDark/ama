@@ -34,3 +34,34 @@ it("resumes on start tab but moves for new user messages preserving rights", asy
   expect(next.run.isAllowed(4)).toBe(true);
   expect(next.run.isAllowed(1)).toBe(false);
 });
+
+it("pins the capture document across continuation and regeneration", async () => {
+  const target = {
+    tabId: 1,
+    windowId: 2,
+    documentId: "original",
+    url: page(1).url,
+  };
+  const active = vi
+    .fn()
+    .mockResolvedValueOnce({ ...page(1), captureTarget: target })
+    .mockResolvedValue({
+      ...page(1),
+      captureTarget: { ...target, documentId: "new" },
+    });
+  const contexts = new RunContexts(active, async () => page(1));
+  const user = { id: "u", role: "user" as const, parts: [] };
+  const approval = { id: "a", role: "assistant" as const, parts: [] };
+  expect((await contexts.forRequest("chat", [user])).captureTarget).toEqual(
+    target,
+  );
+  expect(
+    (await contexts.forRequest("chat", [user, approval])).captureTarget,
+  ).toEqual(target);
+  expect((await contexts.forRequest("chat", [user])).captureTarget).toEqual(
+    target,
+  );
+  expect(
+    (await contexts.forRequest("reloaded", [user, approval])).captureTarget,
+  ).toBeUndefined();
+});

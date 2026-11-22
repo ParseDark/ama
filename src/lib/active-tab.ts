@@ -6,21 +6,43 @@ export async function getActiveTab() {
     null
   );
 }
-export async function readTabPage(tabId: number): Promise<ActivePage | null> {
+export async function readTabPage(
+  tabId: number,
+  startTab?: { windowId: number; incognito: boolean; url?: string },
+): Promise<ActivePage | null> {
   try {
     const r = await browser.scripting.executeScript({
       target: { tabId },
       files: ["/extract.js"],
     });
     const p = r[0]?.result as PageContent | undefined;
-    return p ? { ...p, tabId } : null;
+    if (!p) return null;
+    const documentId = r[0]?.documentId;
+    return {
+      ...p,
+      tabId,
+      ...(startTab &&
+      !startTab.incognito &&
+      startTab.url === p.url &&
+      /^https?:\/\//i.test(p.url) &&
+      documentId
+        ? {
+            captureTarget: {
+              tabId,
+              windowId: startTab.windowId,
+              documentId,
+              url: p.url,
+            },
+          }
+        : {}),
+    };
   } catch {
     return null;
   }
 }
 export async function readActivePage() {
   const tab = await getActiveTab();
-  return tab?.id ? readTabPage(tab.id) : null;
+  return tab?.id ? readTabPage(tab.id, tab) : null;
 }
 export async function runInTab<T, A extends unknown[]>(
   tabId: number,

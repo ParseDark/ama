@@ -61,8 +61,8 @@ export function DisplaySettings({
         ))}
       </div>
       <p className="hint">
-        Stored with your settings and included in Chrome configuration sync. It
-        changes only how AMA looks, not what is sent to the model.
+        Stored in this Chrome profile. It changes only how AMA looks, not what
+        is sent to the model.
       </p>
     </section>
   );

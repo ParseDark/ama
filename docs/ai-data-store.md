@@ -5,8 +5,8 @@
 ## 数据流
 
 ```text
-read_file / 上一次 run_js 结果
-        ↓ 自动保存原始值（截断、预览之前）
+run_js 执行结果
+        ↓ 自动保存原始值（生成预览之前）
 扩展 IndexedDB（ama-data）
         ↓ 模型只看到 dataId、类型、字节数、有界预览
 run_js({ code, data: { name: dataId }, params })
@@ -23,7 +23,6 @@ Worker: module.default({ data: { name: 原始值 }, params })
 - 成功结果的 `result` 是数据描述符，不含原始大数据；后续脚本用其 `dataId` 继续处理。
 - `params` 上限 4 KiB，最多 8 个数据引用。
 - `logs` 每条最多 2,000 字符，总计最多 8 KiB / 50 条，返回 `logsTruncated`。
-- `read_file` 在返回摘录前保存**完整原文**；`storeOnly=true` 时只返回描述符。存储失败不会让普通读取失败，而是返回 `dataWarning`。
 - `list_data` 返回最多 100 条元信息（不含预览）；`inspect_data` 用 `offset`/`limit` 获取有界预览。
 
 ## 存储约束
@@ -50,7 +49,6 @@ Worker: module.default({ data: { name: 原始值 }, params })
 - `src/lib/data/actions.ts`：会话绑定的 `save/load/inspect/list/remove`。
 - `src/lib/data/tools.ts`：`list_data`、`inspect_data`。
 - `src/lib/code-tools.ts`：解析数据引用、执行、保存结果、有界日志。
-- `src/lib/files/tools.ts`：`read_file` 自动保存完整原文。
 - `src/lib/local-chat-transport.ts`：按 `chatId` 创建数据作用域并注册工具。
 - `src/lib/sessions.ts`：删除聊天时清理关联数据。
 

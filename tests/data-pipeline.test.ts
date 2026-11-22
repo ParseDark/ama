@@ -1,96 +1,82 @@
 import "fake-indexeddb/auto";
 import { beforeEach, expect, it, vi } from "vitest";
-import { z } from "zod";
 import { createDataActions } from "@/lib/data/actions";
 import { clearDataStore } from "@/lib/data/store";
-import { createFileTools } from "@/lib/files/tools";
-import type { FileWorkspace } from "@/lib/files/workspace";
+import { createDataTools } from "@/lib/data/tools";
 import { createCodeTools } from "@/lib/code-tools";
 
 beforeEach(async () => {
   await clearDataStore();
 });
 
-it("passes the full original file into run_js by ID, not the model excerpt", async () => {
-  const text = Array.from({ length: 1000 }, (_, n) => `row-${n},${n}`).join(
-    "\n",
-  );
-  const workspace = {
-    read: vi.fn(async () => ({ text })),
-  } as unknown as FileWorkspace;
+const success = (result: unknown) => ({
+  id: "run",
+  ok: true,
+  result,
+  logs: [],
+  error: null,
+});
+const options = (toolCallId: string) => ({
+  toolCallId,
+  messages: [],
+  context: {},
+});
+
+it("discovers a large run_js result and passes its original value, not its preview, to another run", async () => {
+  const text = "row\n".repeat(1000) + "tail-marker";
   const data = createDataActions({ sessionId: "pipeline" });
-  const read = createFileTools(workspace, data).read_file;
-  const input = (read.inputSchema as z.ZodType).parse({
-    path: "rows.csv",
-    limit: 2,
-  });
-  const file = (await read.execute!(
-    input as any,
-    { toolCallId: "read-1" } as any,
-  )) as any;
-  expect(file.content).toBe("row-0,0\nrow-1,1");
-  expect(file.truncated).toBe(true);
-  expect(file.data.source).toBe("read_file");
-  expect(await data.load(file.data.dataId)).toBe(text);
-  const execute = vi.fn(async (_code, input) => ({
-    id: "run",
-    ok: true,
-    result: input.data.csv.split("\n").at(-1),
-    logs: [],
-    error: null,
-  }));
-  const result = (await createCodeTools(data, execute).run_js.execute!(
-    { code: "code", data: { csv: file.data.dataId }, params: {} },
-    { toolCallId: "js-1" } as any,
-  )) as any;
-  expect(execute).toHaveBeenCalledWith("code", {
+  const execute = vi.fn(async (code, input) =>
+    success(code === "generate" ? text : input.data.csv.split("\n").at(-1)),
+  );
+  const { run_js } = createCodeTools(data, execute);
+  const { list_data, inspect_data } = createDataTools(data);
+  const first = await run_js.execute!({ code: "generate" }, options("js-1"));
+  expect(first).toMatchObject({ ok: true, result: { previewTruncated: true } });
+
+  const listed = await list_data.execute!({}, options("list"));
+  if (!("items" in listed)) throw new Error("Expected a single list result");
+  const { items } = listed;
+  expect(items).toHaveLength(1);
+  const [{ dataId, source }] = items;
+  expect(source).toBe("run_js");
+  expect(items[0]).not.toHaveProperty("preview");
+  const excerpt = await inspect_data.execute!(
+    { dataId, limit: 6 },
+    options("inspect"),
+  );
+  expect(excerpt).toMatchObject({ preview: "row\nro", previewTruncated: true });
+  expect(JSON.stringify({ first, items, excerpt })).not.toContain(
+    "tail-marker",
+  );
+  await expect(
+    createDataActions({ sessionId: "other" }).load(dataId),
+  ).rejects.toThrow();
+
+  const next = await run_js.execute!(
+    { code: "last-row", data: { csv: dataId }, params: {} },
+    options("js-2"),
+  );
+  expect(execute).toHaveBeenLastCalledWith("last-row", {
     data: { csv: text },
     params: {},
   });
-  expect(await data.load(result.result.dataId)).toBe("row-999,999");
+  expect(next).toMatchObject({ ok: true, result: { preview: "tail-marker" } });
 });
 
-it("keeps ordinary reads working when storing the full file fails", async () => {
-  const workspace = {
-    read: vi.fn(async () => ({ text: "line\n".repeat(200) })),
-  } as unknown as FileWorkspace;
+it("rejects oversized run_js results without exposing the data or leaving a dangling ID", async () => {
   const data = createDataActions({
     sessionId: "pipeline",
     limits: { maxEntryBytes: 10 },
   });
-  const read = createFileTools(workspace, data).read_file;
-  const input = (read.inputSchema as z.ZodType).parse({
-    path: "big.txt",
-    limit: 1,
+  const { run_js } = createCodeTools(data, async () =>
+    success("private-marker".repeat(100)),
+  );
+  const result = await run_js.execute!({ code: "generate" }, options("js-1"));
+  expect(result).toMatchObject({
+    ok: false,
+    result: null,
+    error: expect.stringContaining("Could not store execution result"),
   });
-  const file = (await read.execute!(
-    input as any,
-    { toolCallId: "read-3" } as any,
-  )) as any;
-  expect(file.content).toBe("line");
-  expect(file.data).toBeUndefined();
-  expect(file.dataWarning).toContain("not stored");
+  expect(JSON.stringify(result)).not.toContain("private-marker");
   await expect(data.list()).resolves.toEqual([]);
-});
-
-it("supports store-only file reads without leaking full content or invalid references", async () => {
-  const text = "a".repeat(30000) + "private-tail-marker";
-  const workspace = {
-    read: vi.fn(async () => ({ text })),
-  } as unknown as FileWorkspace;
-  const data = createDataActions({ sessionId: "pipeline" });
-  const read = createFileTools(workspace, data).read_file;
-  const input = (read.inputSchema as z.ZodType).parse({
-    path: "big.txt",
-    storeOnly: true,
-  });
-  const file = (await read.execute!(
-    input as any,
-    { toolCallId: "read-2" } as any,
-  )) as any;
-  expect(file.content).toBeUndefined();
-  expect(JSON.stringify(file)).not.toContain("private-tail-marker");
-  expect(await data.load(file.data.dataId)).toBe(text);
-  const foreign = createDataActions({ sessionId: "foreign" });
-  await expect(foreign.load(file.data.dataId)).rejects.toThrow();
 });

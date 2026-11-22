@@ -11,7 +11,7 @@ export default async function ({ data, params }) {
 }
 ```
 
-调用时用 `data: { orders: dataId }` 引用已保存的原始数据（来自 `read_file`、`list_data` 或上一次执行结果），`params` 只放小参数。旧的 `input` 仍可用于不超过 16 KiB 的小对象。
+调用时用 `data: { orders: dataId }` 引用已保存的原始数据（`dataId` 来自 `list_data` 或上一次 `run_js` 的执行结果），`params` 只放小参数。旧的 `input` 仍可用于不超过 16 KiB 的小对象。
 
 成功结果返回数据描述符，不把原始大数据重新输出给模型：
 

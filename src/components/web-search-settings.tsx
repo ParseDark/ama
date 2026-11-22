@@ -39,7 +39,7 @@ export function WebSearchSettings({
         <>
           <Field
             label="DeepSeek search API key"
-            hint="Use an official DeepSeek API key, not your chat gateway key. Stored locally without encryption; included if Chrome configuration sync is enabled."
+            hint="Use an official DeepSeek API key, not your chat gateway key. Stored locally without AMA encryption."
           >
             <input
               type="password"
