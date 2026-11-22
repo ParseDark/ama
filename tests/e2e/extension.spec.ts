@@ -1252,16 +1252,14 @@ for (const { question, scope, name, full } of [
     });
     const before = requests.length;
     try {
+      // Browsing the tool catalog must not capture anything by itself.
       await composer.fill("@tools");
-      await composer.press("Enter");
-      await composer.fill(`@tool:${name}`);
       await expect(
-        panel.getByRole("option").filter({ hasText: `@tool:${name}` }),
-      ).toBeVisible();
-      await composer.press("Enter");
-      await expect(composer).toHaveValue(`@tool:${name} `);
+        panel.getByRole("option").filter({ hasText: "Browse tools / MCP" }),
+      ).toBeVisible({ timeout: 15000 });
       expect(requests.length).toBe(before);
       expect(await site.evaluate(() => scrollY)).toBe(320);
+      expect(await site.locator("[data-ama-capture]").count()).toBe(0);
       await expect(panel.locator(".message-image")).toHaveCount(0);
       await send(question);
       await expect(
