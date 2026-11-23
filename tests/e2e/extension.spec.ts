@@ -3107,11 +3107,19 @@ test("settings tools deny, connect, update and switch the model without echoing 
 });
 
 test("context ring marks the real compact threshold, disabled mode and fallback scale", async () => {
-  await clear();
+  // clear() remounts the UI before its asynchronous session deletion completes.
+  // Seed the fixture with the panel unloaded so no chat can overwrite it.
+  const panelUrl = panel.url();
+  await panel.goto("about:blank");
   const original = await sw.evaluate(async () => {
     const c = (globalThis as any).chrome;
-    const { settings: original } = await c.storage.local.get("settings");
-    const settings = structuredClone(original);
+    const original = await c.storage.local.get([
+      "settings",
+      "sessions",
+      "activeSessionId",
+    ]);
+    const settings = structuredClone(original.settings);
+    settings.providers[settings.provider].model = "test-model";
     settings.compaction = { enabled: true, contextTokens: 100000 };
     const usage = {
       model: "test-model",
@@ -3163,7 +3171,10 @@ test("context ring marks the real compact threshold, disabled mode and fallback 
     return original;
   });
   try {
-    await panel.reload();
+    await panel.goto(panelUrl);
+    await expect(
+      panel.getByText("Context is preserved.", { exact: true }),
+    ).toBeVisible();
     const ring = panel.locator(".context-meter [data-compact-threshold]");
     await expect(ring).toHaveAttribute("data-compact-enabled", "true");
     const ratio = Number(await ring.getAttribute("data-compact-ratio"));
@@ -3209,12 +3220,18 @@ test("context ring marks the real compact threshold, disabled mode and fallback 
       "Ring scale uses the fallback 32.8k total window",
     );
     await expect(ring).toHaveAttribute("data-compact-enabled", "true");
-    await clear();
   } finally {
-    await sw.evaluate(async (settings) => {
-      await (globalThis as any).chrome.storage.local.set({ settings });
+    await panel.goto("about:blank");
+    await sw.evaluate(async (snapshot) => {
+      const storage = (globalThis as any).chrome.storage.local;
+      await storage.remove([
+        "session:meter-compact-test",
+        "compact:meter-compact-test",
+        ...["sessions", "activeSessionId"].filter((key) => !(key in snapshot)),
+      ]);
+      await storage.set(snapshot);
     }, original);
-    await panel.reload();
+    await panel.goto(panelUrl);
   }
 });
 
