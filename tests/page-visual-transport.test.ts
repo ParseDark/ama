@@ -272,6 +272,15 @@ it("discovers annotation without injection, returns handles, and leaves the capt
 it("distinguishes drawn guides from indexed highlights and disallows guessing price coordinates", () => {
   const instructions = buildInstructions(page);
   expect(instructions).toContain("annotate_page rather than highlight");
+  expect(instructions).toMatch(
+    /call capture_viewport yourself.*inspect the returned image, then call annotate_page/i,
+  );
+  expect(instructions).toContain(
+    "Do not ask the user to click a screenshot button",
+  );
+  expect(createAnnotationTools().annotate_page.description).toMatch(
+    /call capture_viewport yourself.*then draw/i,
+  );
   expect(instructions).toContain("do not guess where a price is");
   expect(instructions).toContain("清除批注");
 });

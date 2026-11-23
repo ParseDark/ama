@@ -25,7 +25,7 @@ export function createAnnotationTools(options?: { target?: CaptureTarget }) {
   const definition = {
     inputSchema: annotationInput,
     description:
-      "Draw temporary marks on the starting webpage using normalized viewport coordinates (0,0 top left; 1,1 bottom right). Add up to 32 shapes in order; use two opposite corners for an ellipse or a horizontal line for an underline. Returned IDs can replace/remove individual marks. Clear removes only AMA annotations.",
+      "Draw on the starting viewport (0,0 top left; 1,1 bottom right). If placement is unclear, call capture_viewport yourself, inspect the image, then draw; never request a manual screenshot. Add up to 32 shapes; ellipse: opposite corners; underline: horizontal line. Replace/remove by ID; clear only AMA marks.",
   };
   return {
     annotate_page: options

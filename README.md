@@ -86,7 +86,7 @@ AMA requests broad tab/scripting/host permissions to support user-selected pages
 
 ## Page annotations
 
-Ask “圈出这根突破的 K 线，在前高下方画线，并标上价格” or select `annotate_page` in `@tools`. AMA can combine lines (including underlines), ellipses, arrows, polylines and plain-text labels on the active webpage, including on top of a canvas. Positions are fractions of the visible viewport: `(0,0)` is top left, `(1,1)` bottom right. If a price is known but its location is not visible, AMA should explain rather than guess. For locating an indexed control, the existing `highlight` tool is unchanged.
+Ask “圈出这根突破的 K 线，在前高下方画线，并标上价格” or select `annotate_page` in `@tools`. AMA can combine lines (including underlines), ellipses, arrows, polylines and plain-text labels on the active webpage, including on top of a canvas. Positions are fractions of the visible viewport: `(0,0)` is top left, `(1,1)` bottom right. If placement is unclear, AMA should call `capture_viewport` itself, inspect the image, then draw in the same turn. There is no need to click a screenshot button. If the target still cannot be located, AMA should explain rather than guess. For locating an indexed control, the existing `highlight` tool is unchanged.
 
 Strokes are drawn with a locally bundled [Rough.js](https://roughjs.com/) pen: thin lines keep their endpoints, while circles have a looser hand-drawn outline. The default ink is indigo on light backgrounds and pale blue on dark ones; labels have a small backing for legibility. Colors use the CSS background around each mark, not a readback of chart pixels.
 
