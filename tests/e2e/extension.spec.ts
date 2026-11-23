@@ -1263,12 +1263,31 @@ test("viewport annotations align over a canvas, pass clicks through, and clear l
       const svg = site
         .locator("svg")
         .filter({ has: site.locator("text", { hasText: "Breakout" }) });
-      await expect(svg.locator("path")).toHaveAttribute(
-        "d",
-        "M280,520 L520,520",
+      const paths = svg.locator("path");
+      await expect(paths).toHaveCount(2);
+      await expect(paths.first()).toHaveAttribute("d", /C/); // Rough.js Bézier stroke
+      const boxes = await paths.evaluateAll((nodes) =>
+        nodes
+          .map((node) => (node as SVGPathElement).getBBox())
+          .map((b) => [b.x, b.y, b.width, b.height]),
       );
-      await expect(svg.locator("ellipse")).toHaveAttribute("cx", "400");
-      await expect(svg.locator("text")).toHaveAttribute("y", "520");
+      for (const [i, expected] of [
+        [280, 520, 240, 0],
+        [360, 480, 80, 80],
+      ].entries()) {
+        expected.forEach((value, j) =>
+          expect(Math.abs(boxes[i][j] - value)).toBeLessThan(7),
+        );
+      }
+      await expect(svg.locator("text").locator("..")).toHaveAttribute(
+        "transform",
+        "translate(400 520)",
+      );
+      expect(
+        await svg
+          .locator("rect")
+          .evaluate((el) => el.getBoundingClientRect().width),
+      ).toBeGreaterThan(15);
       await site
         .locator("#visible")
         .evaluate((el) =>

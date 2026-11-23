@@ -1,11 +1,25 @@
 import { tool } from "ai";
-import { ANNOTATION_LIMITS, annotationInput } from "./annotation-schema";
-import { applyAnnotations, type AnnotationResult } from "./annotation-layer";
+import {
+  ANNOTATION_LIMITS,
+  annotationInput,
+  type AnnotationOperation,
+} from "./annotation-schema";
+import type { AnnotationResult } from "./annotation-layer";
+import { browser } from "wxt/browser";
 import {
   inCaptureDocument,
   verifyCaptureTarget,
   type CaptureTarget,
 } from "./capture-target";
+
+// chrome.scripting serializes this function without its module scope.
+export function drawInDocument(
+  op: AnnotationOperation,
+  url: string,
+  limit: number,
+) {
+  return window.__amaApplyAnnotations!(op, url, limit);
+}
 
 export function createAnnotationTools(options?: { target?: CaptureTarget }) {
   const definition = {
@@ -37,7 +51,17 @@ export function createAnnotationTools(options?: { target?: CaptureTarget }) {
             try {
               await verifyCaptureTarget(target);
               abortSignal?.throwIfAborted();
-              return await inCaptureDocument(target, applyAnnotations, [
+              await browser.scripting.executeScript({
+                target: {
+                  tabId: target.tabId,
+                  documentIds: [target.documentId],
+                },
+                files: ["/annotation-pen.js"],
+              });
+              // The tab may have changed while the local bundle was loading.
+              await verifyCaptureTarget(target);
+              abortSignal?.throwIfAborted();
+              return await inCaptureDocument(target, drawInDocument, [
                 parsed.data.operation,
                 target.url,
                 ANNOTATION_LIMITS.marks,

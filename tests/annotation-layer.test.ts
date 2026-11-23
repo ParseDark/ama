@@ -1,10 +1,21 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import { applyAnnotations } from "@/lib/annotation-layer";
 import {
   ANNOTATION_LIMITS,
   type AnnotationOperation,
   type AnnotationShape,
 } from "@/lib/annotation-schema";
+// happy-dom has neither viewport hit testing nor SVG text layout.
+beforeEach(() => {
+  Object.defineProperty(document, "elementFromPoint", {
+    configurable: true,
+    value: () => document.body,
+  });
+  Object.defineProperty(SVGElement.prototype, "getBBox", {
+    configurable: true,
+    value: () => ({ x: 0, y: 0, width: 55, height: 16 }),
+  });
+});
 const run = (op: AnnotationOperation) =>
   applyAnnotations(op, location.href, ANNOTATION_LIMITS.marks);
 const from = { x: 0, y: 0 },
@@ -25,28 +36,44 @@ const root = () => document.documentElement.lastElementChild?.shadowRoot;
 afterEach(() => {
   run({ action: "clear" });
   document.body.replaceChildren();
+  document.body.style.backgroundColor = "";
+  Reflect.deleteProperty(document, "elementFromPoint");
+  Reflect.deleteProperty(SVGElement.prototype, "getBBox");
 });
 it("renders viewport geometry in CSS pixels, literal text and stable replace/remove handles", () => {
   const ids = add();
   expect(new Set(ids).size).toBe(5);
   const svg = root()!.querySelector("svg")!;
   expect(svg.children.length).toBe(5);
-  expect(svg.querySelector("path")!.getAttribute("d")).toBe(
-    `M0,0 L${innerWidth / 2},${innerHeight / 2}`,
-  );
-  expect(svg.querySelector("path")!.getAttribute("stroke-width")).toBe("3");
-  expect(svg.querySelector("text")!.style.font).toContain("16px");
+  const path = svg.querySelector("path")!;
+  expect(path.getAttribute("d")).toContain("C");
+  expect(path.getAttribute("stroke-width")).toBe("1.8");
+  const oldEllipse = svg.children[1];
+  expect(oldEllipse.querySelector("path")).not.toBeNull();
+  expect(svg.children[3].querySelectorAll("path")).toHaveLength(2);
+  expect(svg.querySelector("text")!.style.font).toContain("15px");
   expect(svg.querySelector("text")!.textContent).toBe("<b>peak</b>");
   expect(svg.querySelector("b")).toBeNull();
   expect(
     run({ action: "replace", id: ids[1], shape: shapes[0] }),
   ).toMatchObject({ ok: true, ids: [ids[1]], count: 5 });
-  expect(svg.querySelector("ellipse")).toBeNull();
+  expect(oldEllipse.isConnected).toBe(false);
   expect(run({ action: "remove", id: ids[2] })).toMatchObject({
     ok: true,
     count: 4,
   });
   expect(run({ action: "remove", id: ids[2] }).ok).toBe(false);
+});
+it("uses different inks for light and dark CSS surfaces and preserves the explicit accent", () => {
+  document.body.style.backgroundColor = "rgb(255, 255, 255)";
+  add([shapes[0]]);
+  document.body.style.backgroundColor = "rgb(28, 34, 48)";
+  add([shapes[0], { ...shapes[0], color: "orange" }]);
+  expect(
+    Array.from(root()!.querySelectorAll("path"), (p) =>
+      p.getAttribute("stroke"),
+    ),
+  ).toEqual(["#4658a6", "#adbfff", "#f2c879"]);
 });
 it("rejects exceeding the layer cap without drawing any part of the batch", () => {
   for (let i = 0; i < 4; i++) add(Array(32).fill(shapes[0]));

@@ -11,8 +11,7 @@ import {
   type ProviderId,
 } from "@/lib/settings";
 import { buildInstructions } from "@/lib/prompt";
-import { createAnnotationTools } from "@/lib/annotation-tool";
-import { applyAnnotations } from "@/lib/annotation-layer";
+import { createAnnotationTools, drawInDocument } from "@/lib/annotation-tool";
 import { captureTokens } from "@/lib/live-capture";
 import {
   createPageVisualTools,
@@ -223,7 +222,10 @@ it("binds drawing to the eligible starting document and respects abort", async (
   expect(
     vi
       .mocked(browser.scripting.executeScript)
-      .mock.calls.filter(([o]) => o.func === applyAnnotations),
+      .mock.calls.filter(
+        ([o]) =>
+          o.func === drawInDocument || o.files?.includes("/annotation-pen.js"),
+      ),
   ).toHaveLength(0);
 });
 
@@ -247,7 +249,7 @@ it("discovers annotation without injection, returns handles, and leaves the capt
       documentId: target.documentId,
       frameId: 0,
       result:
-        func === applyAnnotations
+        func === drawInDocument
           ? { ok: true, ids: ["mark-id"], count: 1 }
           : target.url,
     },
@@ -263,7 +265,7 @@ it("discovers annotation without injection, returns handles, and leaves the capt
   expect(capture).toHaveBeenCalledTimes(1);
   await send(transport, [user(), response, user("u2", "Thanks")]);
   expect(
-    scripting.mock.calls.filter(([o]) => o.func === applyAnnotations),
+    scripting.mock.calls.filter(([o]) => o.func === drawInDocument),
   ).toHaveLength(1);
 });
 

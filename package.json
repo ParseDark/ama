@@ -48,6 +48,7 @@
     "lucide-react": "latest",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "roughjs": "4.6.6",
     "shiki": "3.23.0",
     "streamdown": "latest",
     "tailwind-merge": "latest",
