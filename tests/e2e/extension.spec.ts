@@ -366,6 +366,27 @@ test.beforeAll(async () => {
             ]
           : [],
       });
+    else if (q === "Annotate the canvas fixture")
+      reply = afterTool
+        ? "Canvas annotated"
+        : tool("annotate_page", {
+            operation: {
+              action: "add",
+              shapes: [
+                {
+                  kind: "line",
+                  from: { x: 0.35, y: 0.65 },
+                  to: { x: 0.65, y: 0.65 },
+                },
+                {
+                  kind: "ellipse",
+                  from: { x: 0.45, y: 0.6 },
+                  to: { x: 0.55, y: 0.7 },
+                },
+                { kind: "label", at: { x: 0.5, y: 0.65 }, text: "Breakout" },
+              ],
+            },
+          });
     else if (q === viewportQuestion) reply = tool("capture_viewport", {});
     else if (q === fullPageQuestion) reply = tool("capture_full_page", {});
     else if (q.startsWith("AMA visual evidence ("))
@@ -1225,6 +1246,54 @@ test("screenshots attach as images and full-page capture restores page state", a
   await other.close();
   await site.goto(base);
   await site.bringToFront();
+});
+
+test("viewport annotations align over a canvas, pass clicks through, and clear locally", async () => {
+  await clear();
+  await site.goto(base + "/visual");
+  await site.bringToFront();
+  const button = site.getByRole("button", { name: "清除批注" });
+  try {
+    for (const action of ["keyboard", "mouse", "reload"]) {
+      await send("Annotate the canvas fixture");
+      await expect(button).toBeVisible();
+      await expect(
+        panel.getByText("Canvas annotated", { exact: true }).last(),
+      ).toBeVisible();
+      const svg = site
+        .locator("svg")
+        .filter({ has: site.locator("text", { hasText: "Breakout" }) });
+      await expect(svg.locator("path")).toHaveAttribute(
+        "d",
+        "M280,520 L520,520",
+      );
+      await expect(svg.locator("ellipse")).toHaveAttribute("cx", "400");
+      await expect(svg.locator("text")).toHaveAttribute("y", "520");
+      await site
+        .locator("#visible")
+        .evaluate((el) =>
+          el.addEventListener(
+            "click",
+            () => el.setAttribute("data-hit", "yes"),
+            { once: true },
+          ),
+        );
+      await site.mouse.click(400, 520);
+      await expect(site.locator("#visible")).toHaveAttribute("data-hit", "yes");
+      if (action === "keyboard") {
+        await site.keyboard.press("Tab");
+        await expect(button).toBeFocused();
+        await site.keyboard.press("Enter");
+      } else if (action === "mouse") await button.click();
+      else await site.reload();
+      await expect(button).toHaveCount(0);
+      await expect(svg).toHaveCount(0);
+      await clear();
+    }
+  } finally {
+    await site.goto(base);
+    await site.bringToFront();
+  }
 });
 
 for (const { question, scope, name, full } of [

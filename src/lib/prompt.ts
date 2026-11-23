@@ -39,6 +39,7 @@ export function buildInstructions(
     MEMORY_GUIDE,
     SETTINGS_GUIDE,
     HIGHLIGHT_GUIDE,
+    "For requested drawings use annotate_page rather than highlight (indexed controls). E.g. circle a visible candle and underline its price. Use current viewport evidence with (0,0)–(1,1) fractions, not full-page coordinates; do not guess where a price is from data alone. Marks do not follow chart movement. Edit by ID; clear all with clear or 清除批注.",
     VISUAL_GUIDE,
   );
   if (dangerMode === true) sections.push(DANGER_GUIDE);

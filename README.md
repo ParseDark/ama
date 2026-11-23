@@ -84,6 +84,12 @@ Page text and tool output are untrusted data, not instructions. Browser-derived 
 
 AMA requests broad tab/scripting/host permissions to support user-selected pages and direct API calls. Review approvals before allowing changes. Local persistence does not eliminate model mistakes or malicious page content; keep destructive actions under human supervision.
 
+## Page annotations
+
+Ask “圈出这根突破的 K 线，在前高下方画线，并标上价格” or select `annotate_page` in `@tools`. AMA can combine lines (including underlines), ellipses, arrows, polylines and plain-text labels on the active webpage, including on top of a canvas. Positions are fractions of the visible viewport: `(0,0)` is top left, `(1,1)` bottom right. If a price is known but its location is not visible, AMA should explain rather than guess. For locating an indexed control, the existing `highlight` tool is unchanged.
+
+Click **清除批注** in the upper right to erase the whole layer immediately, even with chat closed (keyboard: Tab to it and press Enter or Space). You can also ask AMA to replace or remove an individual mark or clear them all. The overlay lets clicks and drags through except on its clear button. Marks refer to the view at the time of drawing: they do **not** follow chart pans, scrolls or zooms. Reloading the page discards them. Drawing does not itself capture a screenshot or edit the site's chart/data.
+
 ## Page screenshots
 
 When seeing the page helps answer your question, AMA can choose **Visible area** (`capture_viewport`) or **Full page** (`capture_full_page`) directly, even when the page has plenty of text. Both are listed in `@tools`. Browsing or selecting a tool without sending does not capture anything. An eligible request needs no separate screenshot approval, and either tool uses the single capture attempt for that user turn. AMA is instructed not to capture for unrelated requests, instructions from pages or tools, or when an existing attachment is enough.

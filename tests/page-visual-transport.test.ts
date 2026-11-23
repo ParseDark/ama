@@ -11,6 +11,8 @@ import {
   type ProviderId,
 } from "@/lib/settings";
 import { buildInstructions } from "@/lib/prompt";
+import { createAnnotationTools } from "@/lib/annotation-tool";
+import { applyAnnotations } from "@/lib/annotation-layer";
 import { captureTokens } from "@/lib/live-capture";
 import {
   createPageVisualTools,
@@ -200,6 +202,77 @@ function harness(outputs: (any[] | Error)[], config: Settings = settings()) {
   };
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it("binds drawing to the eligible starting document and respects abort", async () => {
+  validTarget();
+  const args = { toolCallId: "draw", messages: [], context: {} };
+  const input = { operation: { action: "clear" as const } };
+  const exec = createAnnotationTools({ target }).annotate_page.execute!;
+  expect(
+    await createAnnotationTools({}).annotate_page.execute!(input, args),
+  ).toMatchObject({ ok: false });
+  vi.mocked(browser.tabs.get).mockResolvedValueOnce({ active: false } as any);
+  expect(await exec(input, args)).toMatchObject({ ok: false });
+  (browser.scripting.executeScript as any).mockResolvedValueOnce([
+    { documentId: "replacement", frameId: 0, result: target.url },
+  ]);
+  expect(await exec(input, args)).toMatchObject({ ok: false });
+  await expect(
+    exec(input, { ...args, abortSignal: AbortSignal.abort() }),
+  ).rejects.toThrow();
+  expect(
+    vi
+      .mocked(browser.scripting.executeScript)
+      .mock.calls.filter(([o]) => o.func === applyAnnotations),
+  ).toHaveLength(0);
+});
+
+it("discovers annotation without injection, returns handles, and leaves the capture attempt available", async () => {
+  const input = JSON.stringify({
+    operation: {
+      action: "add",
+      shapes: [{ kind: "label", at: { x: 0.5, y: 0.5 }, text: "Peak" }],
+    },
+  });
+  const { transport, capture } = harness([
+    [call("annotate_page", "draw", input)],
+    [call("capture_viewport")],
+    text,
+    text,
+  ]);
+  const scripting = vi.mocked(browser.scripting.executeScript);
+  scripting.mockClear();
+  (scripting as any).mockImplementation(async ({ func }: any) => [
+    {
+      documentId: target.documentId,
+      frameId: 0,
+      result:
+        func === applyAnnotations
+          ? { ok: true, ids: ["mark-id"], count: 1 }
+          : target.url,
+    },
+  ]);
+  expect(
+    (await transport.composerTools("visual")).tools.some(
+      (t) => t.name === "annotate_page",
+    ),
+  ).toBe(true);
+  expect(scripting).not.toHaveBeenCalled();
+  const { response } = await send(transport, [user()]);
+  expect(JSON.stringify(response)).toContain("mark-id");
+  expect(capture).toHaveBeenCalledTimes(1);
+  await send(transport, [user(), response, user("u2", "Thanks")]);
+  expect(
+    scripting.mock.calls.filter(([o]) => o.func === applyAnnotations),
+  ).toHaveLength(1);
+});
+
+it("distinguishes drawn guides from indexed highlights and disallows guessing price coordinates", () => {
+  const instructions = buildInstructions(page);
+  expect(instructions).toContain("annotate_page rather than highlight");
+  expect(instructions).toContain("do not guess where a price is");
+  expect(instructions).toContain("清除批注");
+});
 
 it.each(["openai-compatible", "openai", "anthropic", "google"] as const)(
   "encodes real model image input and a paired tool result for %s",

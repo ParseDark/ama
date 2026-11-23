@@ -47,6 +47,7 @@ import {
   type ComposerToolCatalog,
 } from "./composer-tools";
 import { buildInstructions } from "./prompt";
+import { createAnnotationTools } from "./annotation-tool";
 import { createPageTools } from "./page-tools";
 import type { CaptureImage } from "./capture-image";
 import {
@@ -149,6 +150,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     const data = createDataActions({ sessionId: chatId });
     const native = {
       ...createPageTools(new RunContext()),
+      ...createAnnotationTools(),
       ...createPageVisualTools(),
       ...createCodeTools(data, this.options.runCode),
       ...createDataTools(data),
@@ -327,6 +329,7 @@ export class LocalChatTransport implements ChatTransport<UIMessage> {
     const tools = {
       ...remote,
       ...createPageTools(run, { dangerMode: settings.dangerMode === true }),
+      ...createAnnotationTools({ target: captureTarget }),
       ...createPageVisualTools({
         target: captureTarget,
         claim: () =>
